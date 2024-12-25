@@ -46,7 +46,8 @@ export default function CartPage() {
     { id: 1, name: 'Apel Malang Segar', price: 25000, quantity: 2 },
     { id: 4, name: 'Wortel Organik', price: 15000, quantity: 1 },
   ])
-  const [points, setPoints] = useState(100) // Assume user has 100 points
+  // const [points, setPoints] = useState(100) // Assume user has 100 points
+  const [points] = useState(100) // Assume user has 100 points
 
   const updateQuantity = (id: number, newQuantity: number) => {
     setCartItems(cartItems.map(item => 
