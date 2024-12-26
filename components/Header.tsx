@@ -30,35 +30,60 @@
 
 
 // components/Header.tsx
-'use client'  // Tambahkan ini di paling atas file
+'use client'  // Pastikan ini ada di paling atas file
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { Database } from '@/lib/database.types';
 import Link from 'next/link';
 
 const Header = () => {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser ] = useState<Database['public']['Tables']['users']['Row'] | null>(null);
 
     useEffect(() => {
-        const fetchSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setUser(session?.user ?? null);
-        };
-
-        fetchSession();
-
-        const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
-            setUser(session?.user ?? null);
-        });
-
-        return () => {
-            authListener.subscription.unsubscribe();
-        };
+      const fetchUser = async () => {
+          const { data: { session } } = await supabase.auth.getSession();
+  
+          if (session?.user) {
+              const { data: userData } = await supabase
+                  .from('users')
+                  .select('*')
+                  .eq('email', session.user.email)
+                  .single();
+  
+              if (userData) {
+                  setUser(userData);
+              }
+          }
+      };
+  
+      fetchUser();
+  
+      const { data: authListener } = supabase.auth.onAuthStateChange(async (_, session) => {
+          if (session?.user) {
+              const { data: userData } = await supabase
+                  .from('users')
+                  .select('*')
+                  .eq('email', session.user.email)
+                  .single();
+  
+              if (userData) {
+                  setUser(userData);
+              }
+          } else {
+              setUser(null);
+          }
+      });
+  
+      return () => {
+          authListener.subscription.unsubscribe();
+      };
     }, []);
+  
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
-        setUser(null);
+        setUser (null);
     };
 
     return (

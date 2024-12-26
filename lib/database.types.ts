@@ -14,21 +14,21 @@ export interface Database {
           id: number
           email: string
           password: string
-          name: string | null
+          name: string
           created_at: string
         }
         Insert: {
           id?: number
           email: string
           password: string
-          name?: string | null
+          name?: string
           created_at?: string
         }
         Update: {
           id?: number
           email?: string
           password?: string
-          name?: string | null
+          name?: string
           created_at?: string
         }
       }

@@ -4,7 +4,7 @@ interface CategoriesProps {
     categories?: Database['public']['Tables']['categories']['Row'][];
 }
 
-export const Categories: React.FC<CategoriesProps> = ({ categories }) => {
+const Categories: React.FC<CategoriesProps> = ({ categories }) => {
     return (
         <div>
             <h2>Categories</h2>
@@ -16,4 +16,6 @@ export const Categories: React.FC<CategoriesProps> = ({ categories }) => {
         </div>
     );
 };
+
+export default Categories;
 
