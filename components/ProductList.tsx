@@ -1,8 +1,11 @@
-import ProductCard from './ProductCard'
-import { Product } from '@/lib/products'
+// components/ProductList.tsx
+import ProductCard from './ProductCard';
+import { Database } from '@/lib/database.types';
+
+type Product = Database['public']['Tables']['products']['Row'];
 
 interface ProductListProps {
-  products: Product[]
+  products: Product[];
 }
 
 export function ProductList({ products }: ProductListProps) {
@@ -18,4 +21,3 @@ export function ProductList({ products }: ProductListProps) {
     </div>
   )
 }
-

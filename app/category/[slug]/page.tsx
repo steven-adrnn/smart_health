@@ -1,34 +1,18 @@
-// import { ProductList } from '@/components/ProductList'
-// import { getProductsByCategory } from '@/lib/products'
-
-// export default function CategoryPage({ params }: { params: { slug: string } }) {
-//   const products = getProductsByCategory(params.slug)
-
-//   return (
-//     <div className="container mx-auto px-4 py-8">
-//       <h1 className="text-3xl font-bold mb-6 capitalize">{params.slug}</h1>
-//       {products.length > 0 ? (
-//         <ProductList products={products} />
-//       ) : (
-//         <p>No products found in this category.</p>
-//       )}
-//     </div>
-//   )
-// }
-
-
-
 // app/category/[slug]/page.tsx
+'use client' 
+
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import { Database } from '@/lib/database.types';
 import { ProductList } from '@/components/ProductList';
 
-const CategoryPage = () => {
-    const router = useRouter();
-    const { slug } = router.query;
+type Product = Database['public']['Tables']['products']['Row'];
 
-    const [products, setProducts] = useState([]);
+const CategoryPage = () => {
+    const params = useParams();
+    const slug = params.slug as string;
+    const [products, setProducts] = useState<Product[]>([]);
 
     useEffect(() => {
         const getProducts = async () => {
@@ -36,12 +20,14 @@ const CategoryPage = () => {
                 .from('products')
                 .select('*')
                 .eq('category', slug);
+            
             if (error) {
-                alert('Error fetching products: ' + error.message);
+                console.error('Error fetching products:', error);
             } else {
-                setProducts(productsData);
+                setProducts(productsData || []);
             }
         };
+        
         getProducts();
     }, [slug]);
 

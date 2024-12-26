@@ -88,16 +88,18 @@
 
 
 // app/product/[id]/page.tsx
+'use client'  // Tambahkan ini di paling atas file
+
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useParams } from 'next/navigation';  // Ganti dari next/router
 import { supabase } from '@/lib/supabaseClient';
+import { Database } from '@/lib/database.types';
 import ProductCard from '@/components/ProductCard';
 
 const ProductPage = () => {
-    const router = useRouter();
-    const { id } = router.query;
-
-    const [product, setProduct] = useState(null);
+    const params = useParams();
+    const id = params.id as string;
+    const [product, setProduct] = useState<Database['public']['Tables']['products']['Row'] | null>(null);
 
     useEffect(() => {
         const getProduct = async () => {
@@ -106,20 +108,20 @@ const ProductPage = () => {
                 .select('*')
                 .eq('id', id)
                 .single();
+
             if (error) {
-                alert('Error fetching product: ' + error.message);
+                console.error('Error fetching product:', error);
             } else {
                 setProduct(productData);
             }
         };
+
         getProduct();
     }, [id]);
 
-    return (
-        <div>
-            {product && <ProductCard product={product} />}
-        </div>
-    );
+    if (!product) return <div>Loading...</div>;
+
+    return <ProductCard product={product} />;
 };
 
 export default ProductPage;

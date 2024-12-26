@@ -30,20 +30,25 @@
 
 
 // components/Header.tsx
+'use client'  // Tambahkan ini di paling atas file
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import Link from 'next/link';
 
 const Header = () => {
-    const [user, setUser ] = useState<any>(null);
+    const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
-        const session = supabase.auth.getSession();
-        session.then(({ data }) => {
-            setUser (data.session?.user ?? null);
-        });
+        const fetchSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            setUser(session?.user ?? null);
+        };
+
+        fetchSession();
 
         const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
-            setUser (session?.user ?? null);
+            setUser(session?.user ?? null);
         });
 
         return () => {
@@ -53,7 +58,7 @@ const Header = () => {
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
-        setUser (null);
+        setUser(null);
     };
 
     return (
@@ -65,7 +70,10 @@ const Header = () => {
                     <button onClick={handleLogout}>Logout</button>
                 </div>
             ) : (
-                <p>Please log in</p>
+                <div>
+                    <Link href="/login">Login</Link>
+                    <Link href="/register">Register</Link>
+                </div>
             )}
         </header>
     );
