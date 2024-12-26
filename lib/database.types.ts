@@ -11,21 +11,21 @@ export interface Database {
     Tables: {
       users: {
         Row: {
-          id: number
+          id: string
           email: string
           password: string
           name: string
           created_at: string
         }
         Insert: {
-          id?: number
+          id?: string
           email: string
           password: string
           name?: string
           created_at?: string
         }
         Update: {
-          id?: number
+          id?: string
           email?: string
           password?: string
           name?: string
@@ -34,7 +34,7 @@ export interface Database {
       }
       products: {
         Row: {
-            id: number;
+            id: string;
             name: string;
             price: number;
             image: string | null;
@@ -42,9 +42,10 @@ export interface Database {
             description: string | null;
             farm: string;
             rating: number;
+            created_at: string
         }
         Insert: {
-            id?: number;
+            id?: string;
             name: string;
             price: number;
             image?: string | null;
@@ -52,9 +53,10 @@ export interface Database {
             description: string | null;
             farm: string;
             rating: number;
+            created_at?: string
         }
         Update: {
-            id: number;
+            id: string;
             name: string;
             price: number;
             image: string | null;
@@ -62,69 +64,70 @@ export interface Database {
             description: string | null;
             farm: string;
             rating: number;
+            created_at?: string
         }
       }
       categories: {
         Row: {
-            id: number;
+            id: string;
             name: string;
-            image: string | null;
+            image: string;
         }
         Insert: {
-            id?: number;
+            id?: string;
             name?: string;
-            image?: string | null;
+            image?: string;
         }
         Update: {
-            id?: number;
+            id?: string;
             name?: string;
-            image?: string | null;
+            image?: string;
         }
       }
       cart: {
         Row: {
-          id: number
-          user_id: number
-          product_id: number
+          id: string
+          user_id: string
+          product_id: string
           quantity: number
           created_at: string
         }
         Insert: {
-          id?: number
-          user_id: number
-          product_id: number
+          id?: string
+          user_id: string
+          product_id: string
           quantity?: number
           created_at?: string
         }
         Update: {
-          id?: number
-          user_id?: number
-          product_id?: number
+          id?: string
+          user_id?: string
+          product_id?: string
           quantity?: number
           created_at?: string
         }
       }
       reviews: {
         Row: {
-          id: number
-          user_id: number
-          product_id: number
-          rating: number
+          id: string
+          user_id: string
+          product_id: string
+          rating: string
           comment: string | null
           created_at: string
         }
         Insert: {
-          id?: number
-          user_id: number
-          product_id: number
+          id?: string
+          user_id: string
+          product_id: string
           rating: number
           comment?: string | null
           created_at?: string
         }
         Update: {
-          id?: number
-          user_id?: number
-          product_id?: number
+          id?: string
+          user_id?: string
+          product_id?: string
           rating?: number
           comment?: string | null
           created_at?: string
@@ -132,61 +135,61 @@ export interface Database {
       }
       addresses: {
         Row: {
-          id: number
-          user_id: number
+          id: string
+          user_id: string
           address: string
           created_at: string
         }
         Insert: {
-          id?: number
-          user_id: number
+          id?: string
+          user_id: string
           address: string
           created_at?: string
         }
         Update: {
-          id?: number
-          user_id?: number
+          id?: string
+          user_id?: string
           address?: string
           created_at?: string
         }
       }
       points: {
         Row: {
-          id: number
-          user_id: number
+          id: string
+          user_id: string
           points: number
           created_at: string
         }
         Insert: {
-          id?: number
-          user_id: number
+          id?: string
+          user_id: string
           points?: number
           created_at?: string
         }
         Update: {
-          id?: number
-          user_id?: number
+          id?: string
+          user_id?: string
           points?: number
           created_at?: string
         }
       }
       recipes: {
         Row: {
-          id: number
+          id: string
           name: string
           ingredients: string[]
           instructions: string[]
           created_at: string
         }
         Insert: {
-          id?: number
+          id?: string
           name: string
           ingredients: string[]
           instructions: string[]
           created_at?: string
         }
         Update: {
-          id?: number
+          id?: string
           name?: string
           ingredients?: string[]
           instructions?: string[]
