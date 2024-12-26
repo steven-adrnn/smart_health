@@ -30,79 +30,33 @@ export default function LoginPage() {
     };
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        
-        try {
-            // Cek user di tabel custom
-            const { data: userData, error: userError } = await supabase
-                .from('users')
-                .select('*')
-                .eq('email', email)
-                .single();
-
-            if (userError || !userData) {
-                toast.error('Email tidak terdaftar');
-                return;
-            }
-
-            // Verifikasi password
-            const isPasswordCorrect = await bcrypt.compare(
-                password, 
-                userData.password || ''
-            );
-
-            if (!isPasswordCorrect) {
-                toast.error('Password salah');
-                return;
-            }
-
-            // Tambahan: Verifikasi manual di Supabase Auth
-            const { data: authData, error: authError } = await supabase.auth.getUser(userData.id);
-
-            if (authError) {
-                toast.error('Gagal mendapatkan informasi pengguna: ' + authError.message);
-                return;
-            }
-
-            console.log(authData);
-
-            // Login dengan metode alternatif
-            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
-
-            if (signInError) {
-                // Handle spesifik error email tidak terkonfirmasi
-                if (signInError.message === 'Email not confirmed') {
-                    toast.error('Email belum dikonfirmasi');
-                    
-                    // Tampilkan dialog konfirmasi
-                    const confirmResend = window.confirm(
-                        'Email Anda belum dikonfirmasi. Kirim ulang email konfirmasi?'
-                    );
-
-                    if (confirmResend) {
-                        await handleResendConfirmation();
-                    }
-                    return;
-                }
-
-                // Error lainnya
-                toast.error('Login gagal: ' + signInError.message);
-                return;
-            }
-
-            console.log(signInData);
-
-            // Redirect setelah login berhasil
-            toast.success('Login berhasil!');
-            router.push('/dashboard');
-
-        } catch (error) {
-            console.error('Login Error:', error);
-            toast.error('Terjadi kesalahan saat login');
-        }
+      e.preventDefault();
+      
+      try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+              email,
+              password
+          });
+  
+          if (error) {
+              toast.error(error.message);
+              return;
+          }
+  
+          // Pastikan token ada
+          if (data.session) {
+              console.log('Token:', data.session.access_token);
+              // Simpan token jika perlu
+          }
+  
+          // Redirect setelah login berhasil
+          toast.success('Login berhasil!');
+          router.push('/dashboard');
+  
+      } catch (error) {
+          console.error('Login Error:', error);
+          toast.error('Terjadi kesalahan saat login');
+      }
     };
 
     return (
