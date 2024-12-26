@@ -88,21 +88,27 @@
 
 
 // app/product/[id]/page.tsx
-'use client'  // Tambahkan ini di paling atas file
+'use client'  // Pastikan ini ada di paling atas file
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';  // Ganti dari next/router
+import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { Database } from '@/lib/database.types';
 import ProductCard from '@/components/ProductCard';
 
 const ProductPage = () => {
     const params = useParams();
-    const id = params.id as string;
+    
+    // Pastikan params tidak null dan id ada
+    const id = params?.id as string | undefined; 
+
     const [product, setProduct] = useState<Database['public']['Tables']['products']['Row'] | null>(null);
 
     useEffect(() => {
         const getProduct = async () => {
+            // Pastikan id tidak null atau undefined
+            if (!id) return;
+
             const { data: productData, error } = await supabase
                 .from('products')
                 .select('*')
@@ -119,7 +125,8 @@ const ProductPage = () => {
         getProduct();
     }, [id]);
 
-    if (!product) return <div>Loading...</div>;
+    // Tampilkan loading atau pesan jika produk tidak ditemukan
+    if (!product) return <div>Loading or Product Not Found</div>;
 
     return <ProductCard product={product} />;
 };
