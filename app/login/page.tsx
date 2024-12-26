@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import * as bcrypt from 'bcryptjs';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
