@@ -1,90 +1,10 @@
-// 'use client'
-
-// import { useState } from 'react'
-// import { Button } from '@/components/ui/button'
-// import { Input } from '@/components/ui/input'
-// import Link from 'next/link'
-// import { BackButton } from '@/components/BackButton'
-
-// export default function RegisterPage() {
-//   const [name, setName] = useState('')
-//   const [email, setEmail] = useState('')
-//   const [password, setPassword] = useState('')
-
-//   const handleSubmit = (e: React.FormEvent) => {
-//     e.preventDefault()
-//     // Handle registration logic here
-//     console.log('Registration attempt with:', name, email, password)
-//   }
-
-//   const handleGoogleRegister = () => {
-//     // Handle Google registration logic here
-//     console.log('Google registration attempted')
-//   }
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-//       <div className="bg-white p-8 rounded-lg shadow-md w-96">
-//         <BackButton />
-//         <h1 className="text-2xl font-bold mb-6 text-center">Register</h1>
-//         <form onSubmit={handleSubmit} className="space-y-4">
-//           <div>
-//             <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-//             <Input
-//               type="text"
-//               id="name"
-//               value={name}
-//               onChange={(e) => setName(e.target.value)}
-//               required
-//               className="mt-1 block w-full"
-//             />
-//           </div>
-//           <div>
-//             <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-//             <Input
-//               type="email"
-//               id="email"
-//               value={email}
-//               onChange={(e) => setEmail(e.target.value)}
-//               required
-//               className="mt-1 block w-full"
-//             />
-//           </div>
-//           <div>
-//             <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-//             <Input
-//               type="password"
-//               id="password"
-//               value={password}
-//               onChange={(e) => setPassword(e.target.value)}
-//               required
-//               className="mt-1 block w-full"
-//             />
-//           </div>
-//           <Button type="submit" className="w-full">Register</Button>
-//         </form>
-//         <div className="mt-4">
-//           <Button onClick={handleGoogleRegister} className="w-full bg-red-500 hover:bg-red-600">
-//             Register with Google
-//           </Button>
-//         </div>
-//         <p className="mt-4 text-center text-sm">
-//           Already have an account? <Link href="/login" className="text-green-500 hover:text-green-600">Login</Link>
-//         </p>
-//       </div>
-//     </div>
-//   )
-// }
-
-
-
-
-// app/register/page.tsx
 'use client'
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+import * as bcrypt from 'bcryptjs';  // Install bcryptjs
 
 export default function RegisterPage() {
     const [email, setEmail] = useState('');
@@ -92,49 +12,79 @@ export default function RegisterPage() {
     const [name, setName] = useState('');
     const router = useRouter();
 
-    // app/register/page.tsx
     const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      try {
-          // Step 1: Registrasi Autentikasi
-          const { data: authData, error: authError } = await supabase.auth.signUp({
-              email,
-              password,
-              options: {
-                  data: { name } // Ini hanya di Auth, TIDAK masuk ke tabel users
-              }
-          });
-          
-          if (authError) throw authError;
+        e.preventDefault();
 
-          // Step 2: Tambahkan data ke tabel users
-          const { error: userError } = await supabase
-              .from('users')
-              .insert({
-                  id: authData.user?.id, // Gunakan ID dari autentikasi
-                  email,
-                  name,
-                  created_at: new Date().toISOString()
-              });
+        // Validasi Input
+        if (!email || !password || !name) {
+            toast.error('Harap isi semua field');
+            return;
+        }
 
-          if (userError) throw userError;
+        try {
+            // Hash Password (PENTING!)
+            const hashedPassword = await bcrypt.hash(password, 10);
 
-          router.push('/login');
-      } catch (error) {
-          console.error('Registration error:', error);
-          alert('Error registering');
-      }
+            // Registrasi Autentikasi Supabase
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: { 
+                        name,
+                        registeredAt: new Date().toISOString()
+                    }
+                }
+            });
+            
+            // Tangani Error Autentikasi
+            if (authError) {
+                throw authError;
+            }
+
+            // Pastikan User Terbuat
+            if (!authData.user) {
+                throw new Error('Gagal membuat user');
+            }
+
+            // Insert Data ke Tabel Users dengan Password Terenkripsi
+            const { error: userError } = await supabase
+                .from('users')
+                .upsert({
+                    id: authData.user.id,
+                    email: authData.user.email || email,
+                    name: name,
+                    password: hashedPassword,  // Simpan password terenkripsi
+                    created_at: new Date().toISOString()
+                })
+                .select();
+
+            // Tangani Error Insert
+            if (userError) {
+                throw userError;
+            }
+
+            toast.success('Registrasi Berhasil!');
+            router.push('/login');
+
+        } catch (error) {
+            console.error('Registration Error:', error);
+            
+            // Error Handling Spesifik
+            if (error instanceof Error) {
+                toast.error(error.message);
+            }
+        }
     };
 
     return (
         <div>
-            <h1>Register</h1>
             <form onSubmit={handleRegister}>
                 <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Name"
+                    placeholder="Nama"
                     required
                 />
                 <input
@@ -151,8 +101,8 @@ export default function RegisterPage() {
                     placeholder="Password"
                     required
                 />
-                <button type="submit">Register</button>
+                <button type="submit">Daftar</button>
             </form>
         </div>
     );
-};
+}
