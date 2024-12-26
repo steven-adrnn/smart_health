@@ -2,28 +2,53 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { Database } from '@/lib/database.types';
 
 const DashboardPage = () => {
-    const [user, setUser ] = useState<any>(null);
-    const [addresses, setAddresses] = useState<any[]>([]);
+    const [user, setUser] = useState<Database['public']['Tables']['users']['Row'] | null>(null);
+    const [addresses, setAddresses] = useState<Database['public']['Tables']['addresses']['Row'][]>([]);
     const [points, setPoints] = useState<number>(0);
 
     useEffect(() => {
         const fetchUserData = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
-                setUser (session.user);
-                const { data: addressData } = await supabase
+                const { data: userData, error: userError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (userError) {
+                    console.error('Error fetching user:', userError);
+                    return;
+                }
+
+                setUser(userData);
+
+                const { data: addressData, error: addressError } = await supabase
                     .from('addresses')
                     .select('*')
                     .eq('user_id', session.user.id);
+
+                if (addressError) {
+                    console.error('Error fetching addresses:', addressError);
+                    return;
+                }
+
                 setAddresses(addressData || []);
                 
-                const { data: pointsData } = await supabase
+                const { data: pointsData, error: pointsError } = await supabase
                     .from('points')
                     .select('points')
                     .eq('user_id', session.user.id);
-                setPoints(pointsData?.[0]?.points || 0);
+
+                if (pointsError) {
+                    console.error('Error fetching points:', pointsError);
+                    return;
+                }
+
+                setPoints(pointsData[0]?.points || 0);
             }
         };
 

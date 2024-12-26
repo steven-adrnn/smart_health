@@ -123,36 +123,17 @@
 
 
 
-import { supabase } from '@/lib/supabaseClient';
+import { Database } from '@/lib/database.types';
 
-interface Product {
-    id: number;
-    name: string;
-    price: number;
-    image: string | null;
-    description: string | null;
+interface ProductCardProps {
+    product: Database['public']['Tables']['products']['Row'];
 }
 
-const ProductCard = ({ product }: { product: Product }) => {
-    const addToCart = async () => {
-        const { data, error } = await supabase
-            .from('cart')
-            .insert([{ user_id: 1, product_id: product.id, quantity: 1 }]); // Replace user_id with actual user id
-
-        if (error) {
- console.error('Error adding to cart:', error);
-        } else {
-            console.log('Product added to cart:', data);
-        }
-    };
-
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     return (
         <div>
-            <h2>{product.name}</h2>
+            <h3>{product.name}</h3>
             <p>Price: ${product.price}</p>
-            {product.image && <img src={product.image} alt={product.name} />}
-            <p>{product.description}</p>
-            <button onClick={addToCart}>Add to Cart</button>
         </div>
     );
 };

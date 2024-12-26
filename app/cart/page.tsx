@@ -134,19 +134,25 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { Database } from '@/lib/database.types';
 
 const CartPage = () => {
-    const [cartItems, setCartItems] = useState<any[]>([]);
+    const [cartItems, setCartItems] = useState<Database['public']['Tables']['cart']['Row'][]>([]);
 
     useEffect(() => {
         const fetchCartItems = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session?.user) return;
 
-            const { data, error } = await supabase
+            const { data, error: fetchError } = await supabase
                 .from('cart')
                 .select('*')
                 .eq('user_id', session.user.id);
+
+            if (fetchError) {
+                console.error('Error fetching cart items:', fetchError);
+                return;
+            }
 
             if (data) setCartItems(data);
         };
@@ -166,3 +172,5 @@ const CartPage = () => {
         </div>
     );
 };
+
+export default CartPage;

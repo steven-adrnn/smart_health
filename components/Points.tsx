@@ -9,7 +9,7 @@ const Points = () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session?.user) return;
 
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('points')
                 .select('points')
                 .eq('user_id', session.user.id);

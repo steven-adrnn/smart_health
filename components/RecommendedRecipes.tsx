@@ -13,7 +13,7 @@ const RecommendedRecipes = () => {
 
     useEffect(() => {
         const fetchRecipes = async () => {
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('recipes')
                 .select('*');
 

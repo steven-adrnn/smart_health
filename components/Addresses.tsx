@@ -1,32 +1,30 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { Database } from '@/lib/database.types';
 
-interface Address {
-    id: number;
-    user_id: number;
-    address: string;
+interface AddressesProps {
+    onSelectAddress?: (address: string) => void;
 }
 
-// In Addresses.tsx
-interface AddressesProps {
-    onSelectAddress: (selectedAddress: string) => void;
-  }
-  
-const Addresses: React.FC<AddressesProps> = ({ onSelectAddress, ...props }) => {
-// component implementation
-    const [addresses, setAddresses] = useState<Address[]>([]);
+const Addresses: React.FC<AddressesProps> = ({ onSelectAddress }) => {
+    const [addresses, setAddresses] = useState<Database['public']['Tables']['addresses']['Row'][]>([]);
 
     useEffect(() => {
         const fetchAddresses = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session?.user) return;
 
-            const { data, error } = await supabase
+            const { data, error: fetchError } = await supabase
                 .from('addresses')
-                .select('*')
+                .select('id, user_id, address, created_at')
                 .eq('user_id', session.user.id);
 
-            if (data) setAddresses(data as Address[]);
+            if (fetchError) {
+                console.error('Error fetching addresses:', fetchError);
+                return;
+            }
+
+            setAddresses(data || []);
         };
 
         fetchAddresses();
@@ -34,9 +32,11 @@ const Addresses: React.FC<AddressesProps> = ({ onSelectAddress, ...props }) => {
 
     return (
         <div>
-            <h1>Your Addresses</h1>
+            <h2>Your Addresses</h2>
             {addresses.map(address => (
-                <p key={address.id}>{address.address}</p>
+                <div key={address.id} onClick={() => onSelectAddress && onSelectAddress(address.address)}>
+                    <p>{address.address}</p>
+                </div>
             ))}
         </div>
     );
