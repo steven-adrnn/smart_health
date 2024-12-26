@@ -11,6 +11,20 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const router = useRouter();
 
+    const resendConfirmationEmail = async (email: string) => {
+      const { error } = await supabase.auth.resend({
+          type: 'signup',
+          email: email
+      });
+  
+      if (error) {
+          console.error('Error resending confirmation email:', error);
+          toast.error('Gagal mengirim ulang email konfirmasi');
+      } else {
+          toast.success('Email konfirmasi telah dikirim ulang');
+      }
+    };
+    
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
@@ -23,10 +37,16 @@ export default function LoginPage() {
             console.log('Login data:', data);
 
             if (error) {
-                console.error('Login Error:', error);
-                toast.error(error.message);
-                return;
-            }
+              console.error('Login Error:', error);
+              if (error.message === 'Email not confirmed') {
+                  // Kirim ulang email konfirmasi
+                  await resendConfirmationEmail(email);
+                  toast.error('Email belum dikonfirmasi. Cek email untuk konfirmasi.');
+              } else {
+                  toast.error(error.message);
+              }
+              return;
+          }
 
             // Redirect setelah login berhasil
             toast.success('Login berhasil!');
