@@ -10,7 +10,7 @@ type Product = Database['public']['Tables']['products']['Row'];
 
 const CategoryPage = () => {
     const params = useParams();
-    const slug = params.slug as string | undefined; // Menambahkan undefined untuk menghindari error
+    const slug = params?.slug as string | undefined; // Menambahkan undefined untuk menghindari error
 
     const [products, setProducts] = useState<Product[]>([]);
 
