@@ -32,8 +32,10 @@ export default async function handler(
                     email: data.user?.email 
                 });
             } catch (catchError) {
+                console.error('Sign-up error:', catchError);
                 return res.status(500).json({ error: 'Server error' });
             }
+            
 
         default:
             res.setHeader('Allow', ['POST']);
