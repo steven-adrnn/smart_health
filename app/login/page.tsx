@@ -20,6 +20,8 @@ export default function LoginPage() {
                 password
             });
 
+            console.log('Login data:', data);
+
             if (error) {
                 console.error('Login Error:', error);
                 toast.error(error.message);
