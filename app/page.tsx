@@ -1,20 +1,18 @@
-import { Header } from '@/components/Header'
-import { Hero } from '@/components/Hero'
-import { Categories } from '@/components/Categories'
-import { Footer } from '@/components/Footer'
-import { PersonalizedRecipes } from '@/components/PersonalizedRecipes'
+// app/page.tsx
+import Header from '@/components/Header';
+import { Hero } from '@/components/Hero';
+import { Categories } from '@/components/Categories';
+import { Footer } from '@/components/Footer';
 
-export default function Home() {
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow">
-        <Hero />
-        <Categories />
-        <PersonalizedRecipes />
-      </main>
-      <Footer />
-    </div>
-  )
-}
+const HomePage = () => {
+    return (
+        <div>
+            <Header />
+            <Hero />
+            <Categories />
+            <Footer />
+        </div>
+    );
+};
 
+export default HomePage;

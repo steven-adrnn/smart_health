@@ -2,22 +2,13 @@ export interface Product {
   id: number;
   name: string;
   price: number;
-  image: string;
+  image: string | null;
   category: string;
-  description: string;
+  description: string | null;
   farm: string;
   rating: number;
-  reviews: Review[];
 }
 
-export interface Review {
-  id: number;
-  userId: number;
-  userName: string;
-  rating: number;
-  comment: string;
-  date: string;
-}
 
 export const products: Product[] = [
   // Fruits
@@ -30,7 +21,6 @@ export const products: Product[] = [
     description: "Apel segar langsung dari perkebunan Malang",
     farm: "Perkebunan Apel Batu, Malang",
     rating: 4.5,
-    reviews: []
   },
   {
     id: 2,
@@ -41,7 +31,6 @@ export const products: Product[] = [
     description: "Pisang organik kaya nutrisi",
     farm: "Kebun Pisang Lumajang",
     rating: 4.3,
-    reviews: []
   },
   // Add 18 more fruit products here...
 
@@ -55,7 +44,6 @@ export const products: Product[] = [
     description: "Wortel segar tanpa pestisida",
     farm: "Kebun Sayur Lembang",
     rating: 4.4,
-    reviews: []
   },
   {
     id: 22,
@@ -66,7 +54,6 @@ export const products: Product[] = [
     description: "Brokoli segar kaya serat",
     farm: "Perkebunan Sayur Dieng",
     rating: 4.6,
-    reviews: []
   },
   // Add 18 more vegetable products here...
 
@@ -80,7 +67,6 @@ export const products: Product[] = [
     description: "Daging sapi wagyu premium",
     farm: "Peternakan Sapi Wonosobo",
     rating: 4.9,
-    reviews: []
   },
   {
     id: 42,
@@ -91,7 +77,6 @@ export const products: Product[] = [
     description: "Ayam kampung bebas hormon",
     farm: "Peternakan Ayam Cianjur",
     rating: 4.7,
-    reviews: []
   },
   // Add 18 more meat products here...
 
@@ -105,7 +90,6 @@ export const products: Product[] = [
     description: "Susu sapi segar pasteurisasi",
     farm: "Peternakan Sapi Perah Bandung",
     rating: 4.8,
-    reviews: []
   },
   {
     id: 62,
@@ -116,7 +100,6 @@ export const products: Product[] = [
     description: "Keju cheddar buatan lokal",
     farm: "Pabrik Keju Salatiga",
     rating: 4.5,
-    reviews: []
   },
   // Add 18 more dairy products here...
 ];
