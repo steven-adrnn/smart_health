@@ -92,23 +92,38 @@ export default function RegisterPage() {
     const [name, setName] = useState('');
     const router = useRouter();
 
+    // app/register/page.tsx
     const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        try {
-            const { error } = await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: { name }
-                }
-            });
-            
-            if (error) throw error;
-            router.push('/login');
-        } catch (error) {
-            console.error('Registration error:', error);
-            alert('Error registering');
-        }
+      e.preventDefault();
+      try {
+          // Step 1: Registrasi Autentikasi
+          const { data: authData, error: authError } = await supabase.auth.signUp({
+              email,
+              password,
+              options: {
+                  data: { name } // Ini hanya di Auth, TIDAK masuk ke tabel users
+              }
+          });
+          
+          if (authError) throw authError;
+
+          // Step 2: Tambahkan data ke tabel users
+          const { error: userError } = await supabase
+              .from('users')
+              .insert({
+                  id: authData.user?.id, // Gunakan ID dari autentikasi
+                  email,
+                  name,
+                  created_at: new Date().toISOString()
+              });
+
+          if (userError) throw userError;
+
+          router.push('/login');
+      } catch (error) {
+          console.error('Registration error:', error);
+          alert('Error registering');
+      }
     };
 
     return (
