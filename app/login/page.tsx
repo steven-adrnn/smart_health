@@ -64,6 +64,8 @@ export default function LoginPage() {
                 return;
             }
 
+            console.log(authData);
+
             // Login dengan metode alternatif
             const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
                 email,
@@ -90,6 +92,8 @@ export default function LoginPage() {
                 toast.error('Login gagal: ' + signInError.message);
                 return;
             }
+
+            console.log(signInData);
 
             // Redirect setelah login berhasil
             toast.success('Login berhasil!');
