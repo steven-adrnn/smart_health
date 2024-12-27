@@ -3,7 +3,11 @@ import { supabase } from '@/lib/supabaseClient';
 import { Database } from '@/lib/database.types';
 
 type Product = Database['public']['Tables']['products']['Row'];
-// type Recipe = Database['public']['Tables']['recipes']['Row'];
+
+interface Ingredient {
+    product_id: string;
+    quantity: number;
+}
 
 export async function getPersonalizedRecipes(selectedProducts: Product[]) {
     // Ekstrak kategori dan ID produk
@@ -35,8 +39,8 @@ export async function getPersonalizedRecipes(selectedProducts: Product[]) {
         });
 
         // Scoring berdasarkan ingredient match
-        const recipeIngredients = JSON.parse(recipe.ingredients as string);
-        recipeIngredients.forEach((ingredient: any) => {
+        const recipeIngredients: Ingredient[] = JSON.parse(recipe.ingredients as string);
+        recipeIngredients.forEach((ingredient: Ingredient) => {
             if (productIds.includes(ingredient.product_id)) {
                 matchScore += 20; // Tambah skor untuk bahan yang cocok
             }
