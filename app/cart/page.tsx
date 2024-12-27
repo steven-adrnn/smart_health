@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-// import { Database } from '@/lib/database.types';
 
 interface CartItem {
     id: string;
@@ -28,12 +27,14 @@ export default function CartPage() {
     const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
     const router = useRouter();
 
+    // Load cart dari localStorage
     useEffect(() => {
         const storedCart = JSON.parse(localStorage.getItem('cart') || '[]') as CartItem[];
         setCartItems(storedCart);
         calculateTotal(storedCart);
     }, []);
 
+    // Ambil daftar alamat
     useEffect(() => {
         const fetchAddresses = async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -54,11 +55,46 @@ export default function CartPage() {
         fetchAddresses();
     }, []);
 
+    // Hitung total harga
     const calculateTotal = (items: CartItem[]) => {
         const totalAmount = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
         setTotal(totalAmount);
     };
 
+    // Tambah kuantitas
+    const incrementQuantity = (itemId: string) => {
+        const updatedCart = cartItems.map(item => 
+            item.id === itemId 
+                ? { ...item, quantity: item.quantity + 1 } 
+                : item
+        );
+        setCartItems(updatedCart);
+        localStorage.setItem('cart', JSON.stringify(updatedCart));
+        calculateTotal(updatedCart);
+    };
+
+    // Kurangi kuantitas
+    const decrementQuantity = (itemId: string) => {
+        const updatedCart = cartItems.map(item => 
+            item.id === itemId && item.quantity > 1
+                ? { ...item, quantity: item.quantity - 1 }
+                : item
+        ).filter(item => item.quantity > 0);
+        setCartItems(updatedCart);
+        localStorage.setItem('cart', JSON.stringify(updatedCart));
+        calculateTotal(updatedCart);
+    };
+
+    // Hapus item
+    const removeItem = (itemId: string) => {
+        const updatedCart = cartItems.filter(item => item.id !== itemId);
+        setCartItems(updatedCart);
+        localStorage.setItem('cart', JSON.stringify(updatedCart));
+        calculateTotal(updatedCart);
+        toast.success('Produk dihapus dari keranjang');
+    };
+
+    // Proses checkout
     const handleCheckout = async () => {
         if (!selectedAddress) {
             toast.error('Silakan pilih alamat pengiriman');
@@ -131,9 +167,10 @@ export default function CartPage() {
             localStorage.removeItem('cart');
             setCartItems([]);
             setTotal(0);
-            setSelectedAddress(null); // Reset alamat yang dipilih
+            setSelectedAddress(null);
 
-            toast.success(' Checkout berhasil! Terima kasih atas pesanan Anda.');
+            toast.success('Checkout berhasil! Terima kasih atas pesanan Anda.');
+            router.push('/');
 
         } catch (error) {
             console.error('Error during checkout:', error);
@@ -141,25 +178,52 @@ export default function CartPage() {
         }
     };
 
+    if (cartItems.length === 0) {
+        return (
+            <div className="container mx-auto p-4 text-center">
+                <h1 className="text-2xl font-bold mb-4">Keranjang Anda Kosong</h1>
+                <Button onClick={() => router.push('/shop')}>
+                    Mulai Belanja
+                </Button>
+            </div>
+        );
+    }
+
     return (
         <div className="container mx-auto p-4">
             <h1 className="text-2xl font-bold mb-4">Keranjang Belanja</h1>
-            {cartItems.length === 0 ? (
-                <p className="text-gray-500">Keranjang Anda kosong</p>
-            ) : (
-                <div>
-                    {cartItems.map(item => (
-                        <div key={item.id} className="flex justify-between items-center border-b py-2">
-                            <Image src={item.image || '/placeholder.png'} alt={item.name} width={50} height={50} />
-                            <span>{item.name}</span>
-                            <span>{item.price} x {item.quantity}</span>
+            <div className="space-y-4">
+                {cartItems.map((item) => (
+                    <div 
+                        key={item.id} 
+                        className="flex items-center justify-between border-b pb-4"
+                    >
+                        {item.image && (
+                            <Image 
+                                src={item.image} 
+                                alt={item.name} 
+                                width={80} 
+                                height={80} 
+                                className="object-cover rounded"
+                            />
+                        )}
+                        <div className="flex-grow ml-4">
+                            <h2 className="text-lg font-semibold">{item.name}</h2>
+                            <p>Rp {(item.price * item.quantity).toLocaleString()}</p>
                         </div>
-                    ))}
-                    <div className="mt-4">
-                        <strong>Total: {total}</strong>
+                        <div className="flex items-center space-x-2">
+                            <Button onClick={() => decrementQuantity(item.id)}>-</Button>
+                            <span>{item.quantity}</span>
+                            <Button onClick={() => incrementQuantity(item.id)}>+</Button>
+                            <Button onClick={() => removeItem(item.id)} className="text-red-500">Hapus</Button>
+                        </div>
                     </div>
-                </div>
-            )}
+                ))}
+            </div>
+
+            <div className="mt-4">
+                <strong>Total: Rp {total.toLocaleString()}</strong>
+            </div>
 
             <div className="mt-4">
                 <h2 className="text-xl font-bold mb-2">Pilih Alamat Pengiriman</h2>
