@@ -114,6 +114,11 @@ export default function CartPage() {
             return;
         }
 
+        if (pointsToUse > points) {
+            toast.error('Jumlah poin yang digunakan melebihi poin yang Anda miliki');
+            return;
+        }
+
         try {
             const { data: { session } } = await supabase.auth.getSession();
             
@@ -123,7 +128,7 @@ export default function CartPage() {
                 return;
             }
 
-            // // Hitung total setelah menggunakan poin
+            // Hitung total setelah menggunakan poin
             const totalAfterPoints = total - pointsToUse;
 
             // Pastikan total tidak negatif
