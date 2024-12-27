@@ -24,7 +24,7 @@ export default function CartPage() {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [total, setTotal] = useState(0);
     const [addresses, setAddresses] = useState<Address[]>([]);
-    const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+    const [selectedAddress, setSelectedAddress] = useState<string>('');
     const [points, setPoints] = useState(0);
     const [pointsToUse, setPointsToUse] = useState(0);
     const router = useRouter();
@@ -113,7 +113,7 @@ export default function CartPage() {
             toast.error('Silakan pilih alamat pengiriman');
             return;
         }
-    
+
         try {
             const { data: { session } } = await supabase.auth.getSession();
             
@@ -122,16 +122,16 @@ export default function CartPage() {
                 router.push('/login');
                 return;
             }
-    
+
             // Hitung total setelah menggunakan poin
             const totalAfterPoints = total - pointsToUse;
-    
+
             // Pastikan total tidak negatif
             if (totalAfterPoints < 0) {
                 toast.error('Jumlah poin yang digunakan melebihi total biaya');
                 return;
             }
-    
+
             // Proses checkout dengan update quantity produk
             const checkoutPromises = cartItems.map(async (item) => {
                 const { data: currentProduct, error: fetchError } = await supabase
@@ -139,55 +139,55 @@ export default function CartPage() {
                     .select('quantity')
                     .eq('id', item.id)
                     .single();
-    
+
                 if (fetchError) {
                     console.error(`Error fetching product ${item.id}:`, fetchError);
                     throw fetchError;
                 }
-    
+
                 const newQuantity = Math.max(0, currentProduct.quantity - item.quantity);
-    
+
                 const { error: updateError } = await supabase
                     .from('products')
                     .update({ quantity: newQuantity })
                     .eq('id', item.id);
-    
+
                 if (updateError) {
                     console.error(`Error updating quantity for product ${item.id}:`, updateError);
                     throw updateError;
                 }
-    
+
                 const { error: cartError } = await supabase
                     .from('cart')
                     .insert({
                         user_id: session.user.id,
                         product_id: item.id,
                         quantity: item.quantity,
-                        address_id: selectedAddress
+                        created_at: new Date().toISOString()
                     });
-    
+
                 if (cartError) {
                     console.error(`Error inserting cart item ${item.id}:`, cartError);
                     throw cartError;
                 }
             });
-    
+
             await Promise.all(checkoutPromises);
-    
+
             // Kurangi poin yang digunakan dari total poin pengguna
             if (pointsToUse > 0) {
                 const { error: updatePointsError } = await supabase
                     .from('points')
                     .update({ points: points - pointsToUse })
                     .eq('user_id', session.user.id);
-    
+
                 if (updatePointsError) {
                     console.error('Error updating points:', updatePointsError);
                     toast.error('Gagal memperbarui poin');
                     return;
                 }
             }
-    
+
             // Tambahkan poin baru berdasarkan total pembelian
             const newPoints = Math.floor(totalAfterPoints / 100);
             const { data: existingPointsData, error: fetchPointsError } = await supabase
@@ -195,13 +195,13 @@ export default function CartPage() {
                 .select('points')
                 .eq('user_id', session.user.id)
                 .single();
-    
+
             if (fetchPointsError) {
                 console.error('Error fetching points:', fetchPointsError);
                 toast.error('Gagal mengambil data poin');
                 return;
             }
-    
+
             if (existingPointsData) {
                 const updatedPoints = existingPointsData.points + newPoints;
                 await supabase
@@ -216,107 +216,50 @@ export default function CartPage() {
                         points: newPoints
                     });
             }
-    
+
             localStorage.removeItem('cart');
             setCartItems([]);
             setTotal(0);
-            setSelectedAddress(null);
+            setSelectedAddress('');
             setPointsToUse(0);
-    
+
             toast.success(`Checkout berhasil! Anda mendapatkan ${newPoints} poin baru. Terima kasih atas pesanan Anda.`);
             router.push('/');
-    
+
         } catch (error) {
             console.error('Error during checkout:', error);
             toast.error('Terjadi kesalahan saat melakukan checkout');
         }
     };
 
-    if (cartItems.length === 0) {
-        return (
-            <div className="container mx-auto p-4 text-center">
-                <h1 className="text-2xl font-bold mb-4">Keranjang Anda Kosong</h1>
-                <Button onClick={() => router.push('/shop')}>
-                    Mulai Belanja
-                </Button>
-            </div>
-        );
-    }
-
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Keranjang Belanja</h1>
-            <div className="space-y-4">
-                {cartItems.map((item) => (
-                    <div 
-                        key={item.id} 
-                        className="flex items-center justify-between border-b pb-4"
-                    >
-                        {item.image && (
-                            <Image 
-                                src={item.image} 
-                                alt={item.name} 
-                                width={80} 
-                                height={80} 
-                                className="object-cover rounded"
-                            />
-                        )}
-                        <div className="flex-grow ml-4">
-                            <h2 className="text-lg font-semibold">{item.name}</h2>
-                            <p>Rp {(item.price * item.quantity).toLocaleString()}</p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <Button onClick={() => decrementQuantity(item.id)}>-</Button>
-                            <span>{item.quantity}</span>
-                            <Button onClick={() => incrementQuantity(item.id)}>+</Button>
-                            <Button onClick={() => removeItem(item.id)} className="text-red-500">Hapus</Button>
-                        </div>
-                    </div>
+        <div>
+            <h1>Keranjang Belanja</h1>
+            {cartItems.map(item => (
+                <div key={item.id}>
+                    <Image src={item.image || '/placeholder.png'} alt={item.name} width={100} height={100} />
+                    <h2>{item.name}</h2>
+                    <p>Harga: {item.price}</p>
+                    <p>Kuantitas: {item.quantity}</p>
+                    <Button onClick={() => incrementQuantity(item.id)}>+</Button>
+                    <Button onClick={() => decrementQuantity(item.id)}>-</Button>
+                    <Button onClick={() => removeItem(item.id)}>Hapus</Button>
+                </div>
+            ))}
+            <h2>Total: {total}</h2>
+            <select onChange={(e) => setSelectedAddress(e.target.value)} value={selectedAddress}>
+                <option value="">Pilih Alamat</option>
+                {addresses.map(address => (
+                    <option key={address.id} value={address.id}>{address.address}</option>
                 ))}
-            </div>
-
-            <div className="mt-4">
-                <strong>Total: Rp {total.toLocaleString()}</strong>
-            </div>
-
-            <div className="mt-4">
-                <h2 className="text-xl font-bold mb-2">Pilih Alamat Pengiriman</h2>
-                {addresses.length > 0 ? (
-                    <div>
-                        {addresses.map(address => (
-                            <div key={address.id} className="flex items-center mb-2">
-                                <input
-                                    type="radio"
-                                    name="address"
-                                    value={address.id}
-                                    checked={selectedAddress === address.id}
-                                    onChange={() => setSelectedAddress(address.id)}
-                                    className="mr-2"
-                                />
-                                <span>{address.address}</span>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-gray-500">Belum ada alamat yang ditambahkan</p>
-                )}
-            </div>
-
-            <div className="mt-4">
-                <h2 className="text-xl font-bold mb-2">Gunakan Poin</h2>
-                <p>Poin Anda: {points}</p>
-                <input
-                    type="number"
-                    value={pointsToUse}
-                    onChange={(e) => setPointsToUse(Math.min(Number(e.target.value), points))}
-                    className="border rounded p-2"
-                    placeholder="Masukkan jumlah poin yang ingin digunakan"
-                />
-            </div>
-
-            <Button onClick={handleCheckout} className="mt-4" disabled={cartItems.length === 0}>
-                Checkout
-            </Button>
+            </select>
+            <input
+                type="number"
+                value={pointsToUse}
+                onChange={(e) => setPointsToUse(Number(e.target.value))}
+                placeholder="Gunakan Poin"
+            />
+            <Button onClick={handleCheckout}>Checkout</Button>
         </div>
     );
 }

@@ -15,13 +15,15 @@ export interface Database {
           email: string
           password: string
           name: string
+          point: number
           created_at: string
         }
         Insert: {
           id: string
           email: string
           password: string
-          name: string
+          name?: string
+          point?: number
           created_at?: string
         }
         Update: {
@@ -29,6 +31,7 @@ export interface Database {
           email?: string
           password?: string
           name?: string
+          point?: number
           created_at?: string
         }
       }
@@ -154,26 +157,6 @@ export interface Database {
           id?: string
           user_id?: string
           address?: string
-          created_at?: string
-        }
-      }
-      points: {
-        Row: {
-          id: string
-          user_id: string
-          points: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          points?: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          points?: number
           created_at?: string
         }
       }
