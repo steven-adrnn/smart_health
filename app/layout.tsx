@@ -10,7 +10,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [session, setSession] = useState<any>(null);
+  const [setSession] = useState<any>(null);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -21,7 +21,7 @@ export default function RootLayout({
     checkSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (session) => {
         setSession(session);
       }
     );

@@ -5,9 +5,12 @@ import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { Database } from '@/lib/database.types';
+
+type User = Database['public']['Tables']['users']['Row'];
 
 export default function ProfilePage() {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [points, setPoints] = useState(0);
     const router = useRouter();
 
@@ -17,11 +20,16 @@ export default function ProfilePage() {
             
             if (session?.user) {
                 // Fetch user details
-                const { data: userData, error: userError } = await supabase
+                const { data: userData, error } = await supabase
                     .from('users')
                     .select('*')
                     .eq('id', session.user.id)
                     .single();
+
+                if (error) {
+                    console.error('Error fetching user:', error);
+                    return;
+                }
 
                 // Fetch points
                 const { data: pointsData } = await supabase
@@ -60,7 +68,7 @@ export default function ProfilePage() {
                 <div className="mb-4">
                     <strong>Poin:</strong> {points}
                 </div>
-                <Button onClick={ handleLogout} className="mt-4">Logout</Button>
+                <Button onClick={handleLogout} className="mt-4">Logout</Button>
             </div>
         </div>
     );
