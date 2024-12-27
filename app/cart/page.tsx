@@ -187,6 +187,13 @@ export default function CartPage() {
                     .eq('user_id', session.user.id);
             }
 
+            // Tambahkan poin baru berdasarkan total pembelian
+            const newPoints = Math.floor(totalAfterPoints / 100); // Misalnya, 1 poin untuk setiap 100 yang dibelanjakan
+            await supabase
+                .from('points')
+                .update({ points: points + newPoints })
+                .eq('user_id', session.user.id);
+
             // Bersihkan cart
             localStorage.removeItem('cart');
             setCartItems([]);
@@ -194,7 +201,7 @@ export default function CartPage() {
             setSelectedAddress(null);
             setPointsToUse(0); // Reset poin yang digunakan
 
-            toast.success('Checkout berhasil! Terima kasih atas pesanan Anda.');
+            toast.success(`Checkout berhasil! Anda mendapatkan ${newPoints} poin baru. Terima kasih atas pesanan Anda.`);
             router.push('/');
 
         } catch (error) {
