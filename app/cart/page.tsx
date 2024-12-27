@@ -132,133 +132,86 @@ export default function CartPage() {
                 return;
             }
 
-            // Proses checkout dengan update quantity produk
-            const checkoutPromises = cartItems.map(async (item) => {
-                const { data: currentProduct, error: fetchError } = await supabase
-                    .from('products')
-                    .select('quantity')
-                    .eq('id', item.id)
-                    .single();
-
-                if (fetchError) {
-                    console.error(`Error fetching product ${item.id}:`, fetchError);
-                    throw fetchError;
-                }
-
-                const newQuantity = Math.max(0, currentProduct.quantity - item.quantity);
-
-                const { error: updateError } = await supabase
-                    .from('products')
-                    .update({ quantity: newQuantity })
-                    .eq('id', item.id);
-
-                if (updateError) {
-                    console.error(`Error updating quantity for product ${item.id}:`, updateError);
-                    throw updateError;
-                }
-
-                const { error: cartError } = await supabase
-                    .from('cart')
-                    .insert({
-                        user_id: session.user.id,
-                        product_id: item.id,
-                        quantity: item.quantity,
-                        address_id: selectedAddress // Sertakan alamat pengiriman
-                    });
-
-                if (cartError) {
-                    console.error(`Error inserting cart item ${item.id}:`, cartError);
-                    throw cartError;
-                }
-            });
-
-            await Promise.all(checkoutPromises);
-
-            // Kurangi poin yang digunakan dari total poin pengguna
-            if (pointsToUse > 0) {
-                const { error: updatePointsError } = await supabase
-                    .from('users')
-                    .update({ point: points - pointsToUse })
-                    .eq('id', session.user.id);
-
-                if (updatePointsError) {
-                    console.error('Error updating points:', updatePointsError);
-                    toast.error('Gagal memperbarui poin');
-                    return;
-                }
-            }
-
-            // Tambahkan poin baru berdasarkan total pembelian
-            const newPoints = Math.floor(totalAfterPoints / 100);
-            const { error: addPointsError } = await supabase
+            // Kurangi poin pengguna
+            const { error: updatePointsError } = await supabase
                 .from('users')
-                .update({ point: points + newPoints })
+                .update({ point: points - pointsToUse })
                 .eq('id', session.user.id);
 
-            if (addPointsError) {
-                console.error('Error adding points:', addPointsError);
-                toast.error('Gagal menambahkan poin');
+            if (updatePointsError) {
+                console.error('Error updating points:', updatePointsError);
+                toast.error('Gagal mengurangi poin');
                 return;
             }
 
-            toast.success('Checkout berhasil!');
-            localStorage.removeItem('cart');
+            // Simpan transaksi ke tabel Cart
+            const { error: createCartError } = await supabase
+                .from('cart')
+                .insert({
+                    user_id: session.user.id,
+                    address_id: selectedAddress,
+                    // total: totalAfterPoints,
+                    items: cartItems.map(item => ({
+                        product_id: item.id,
+                        quantity: item.quantity
+                    }))
+                });
+
+            if (createCartError) {
+                console.error('Error creating cart:', createCartError);
+                toast.error('Gagal melakukan checkout');
+                return;
+            }
+
+            // Kosongkan keranjang setelah checkout
             setCartItems([]);
-            setTotal(0);
-            setPoints(0);
-            setPointsToUse(0);
-            router.push('/');
+            localStorage.removeItem('cart');
+            toast.success('Checkout berhasil!');
+
+            // Redirect ke halaman konfirmasi atau beranda
+            router.push('/confirmation');
         } catch (error) {
-            console.error('Error during checkout:', error);
-            toast.error('Terjadi kesalahan saat melakukan checkout');
+            console.error('Unexpected error during checkout:', error);
+            toast.error('Terjadi kesalahan saat checkout');
         }
     };
 
     return (
-        <div className="cart-container">
-            <h1 className="cart-title">Keranjang Belanja</h1>
-            <div className="cart-items">
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl">Keranjang Belanja</h1>
+            <ul>
                 {cartItems.map(item => (
-                    <div key={item.id} className="cart-item">
-                        <Image src={item.image || '/placeholder.png'} alt={item.name} width={100} height={100} />
-                        <div className="item-details">
-                            <h2>{item.name}</h2>
-                            <p>Harga: Rp{item.price.toLocaleString()}</p>
-                            <p>Jumlah: {item.quantity}</p>
-                            <div className="item-actions">
-                                <Button onClick={() => incrementQuantity(item.id)}>+</Button>
-                                <Button onClick={() => decrementQuantity(item.id)}>-</Button>
-                                <Button onClick={() => removeItem(item.id)}>Hapus</Button>
-                            </div>
+                    <li key={item.id} className="flex justify-between items-center">
+                        <div>
+                            <Image src={item.image || '/placeholder.png'} alt={item.name} width={50} height={50} />
+                            <span>{item.name}</span>
+                            <span>Rp {item.price}</span>
+                            <span>Jumlah: {item.quantity}</span>
                         </div>
-                    </div>
+                        <div>
+                            <Button onClick={() => incrementQuantity(item.id)}>+</Button>
+                            <Button onClick={() => decrementQuantity(item.id)}>-</Button>
+                            <Button onClick={() => removeItem(item.id)}>Hapus</Button>
+                        </div>
+                    </li>
                 ))}
-            </div>
-            <div className="cart-summary">
-                <h2>Total: Rp{total.toLocaleString()}</h2>
-                <h3>Poin Anda: {points}</h3>
-                <input
-                    type="number"
-                    value={pointsToUse}
-                    onChange={(e) => setPointsToUse(Number(e.target.value))}
-                    placeholder="Gunakan Poin"
-                />
-                <Button onClick={handleCheckout}>Checkout</Button>
-            </div>
-            <div className="address-selection">
-                <h3>Pilih Alamat Pengiriman</h3>
+            </ul>
+            <h2>Total: Rp {total}</h2>
+            <h3>Poin Anda: {points}</h3>
+            <input
+                type="number"
+                value={pointsToUse}
+                onChange={(e) => setPointsToUse(Number(e.target.value))}
+                placeholder="Masukkan poin yang ingin digunakan"
+                max={points}
+            />
+            <select onChange={(e) => setSelectedAddress(e.target.value)} value={selectedAddress}>
+                <option value="">Pilih Alamat</option>
                 {addresses.map(address => (
-                    <div key={address.id} className="address-item">
-                        <input
-                            type="radio"
-                            name="address"
-                            value={address.id}
-                            onChange={() => setSelectedAddress(address.id)}
-                        />
-                        <label>{address.address}</label>
-                    </div>
+                    <option key={address.id} value={address.id}>{address.address}</option>
                 ))}
-            </div>
+            </select>
+            <Button onClick={handleCheckout}>Checkout</Button>
         </div>
     );
 }
