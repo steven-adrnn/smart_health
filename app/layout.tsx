@@ -1,18 +1,11 @@
 'use client'
 
-import type { Metadata } from "next";
+// import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Toaster } from "react-hot-toast";
-
-export const generateMetadata = async (): Promise<Metadata> => {
-  return {
-    title: "Smart Health",
-    description: "Aplikasi kesehatan pintar",
-  };
-};
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
