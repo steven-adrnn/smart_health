@@ -18,10 +18,10 @@ export interface Database {
           created_at: string
         }
         Insert: {
-          id?: string
+          id: string
           email: string
           password: string
-          name?: string
+          name: string
           created_at?: string
         }
         Update: {
@@ -91,6 +91,7 @@ export interface Database {
           product_id: string
           quantity: number
           created_at: string
+          product: Database['public']['Tables']['products']['Row'];
         }
         Insert: {
           id?: string

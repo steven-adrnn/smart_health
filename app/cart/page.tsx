@@ -1,174 +1,152 @@
-// 'use client'
-
-// import { useState } from 'react'
-// import { Button } from '@/components/ui/button'
-// // import { Input } from '@/components/ui/input'
-// import Link from 'next/link'
-// import { formatPrice } from '@/lib/products'
-// import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-// import { BackButton } from '@/components/BackButton'
-
-// interface CartItem {
-//   id: number
-//   name: string
-//   price: number
-//   quantity: number
-// }
-
-// interface Recipe {
-//   id: number
-//   name: string
-//   ingredients: string[]
-//   instructions: string[]
-// }
-
-// const recipes: Recipe[] = [
-//   {
-//     id: 1,
-//     name: "Salad Buah Segar",
-//     ingredients: ["2 buah apel", "2 buah pisang", "1 buah jeruk", "100g anggur", "50g kacang mete", "2 sdm madu"],
-//     instructions: [
-//       "Cuci semua buah dengan bersih",
-//       "Potong apel dan pisang menjadi kubus kecil",
-//       "Kupas dan potong jeruk menjadi segmen-segmen kecil",
-//       "Campurkan semua buah dalam mangkuk besar",
-//       "Tambahkan kacang mete",
-//       "Tuangkan madu di atasnya",
-//       "Aduk perlahan hingga semua bahan tercampur rata",
-//       "Dinginkan di kulkas selama 30 menit sebelum disajikan"
-//     ]
-//   },
-//   // Add more detailed recipes here...
-// ]
-
-// export default function CartPage() {
-//   const [cartItems, setCartItems] = useState<CartItem[]>([
-//     { id: 1, name: 'Apel Malang Segar', price: 25000, quantity: 2 },
-//     { id: 4, name: 'Wortel Organik', price: 15000, quantity: 1 },
-//   ])
-//   // const [points, setPoints] = useState(100) // Assume user has 100 points
-//   const [points] = useState(100) // Assume user has 100 points
-
-//   const updateQuantity = (id: number, newQuantity: number) => {
-//     setCartItems(cartItems.map(item => 
-//       item.id === id ? { ...item, quantity: Math.max(0, newQuantity) } : item
-//     ).filter(item => item.quantity > 0))
-//   }
-
-//   const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-//   const earnedPoints = Math.floor(total / 10000) // Earn 1 point for every 10,000 IDR spent
-
-//   return (
-//     <div className="container mx-auto px-4 py-8">
-//       <BackButton />
-//       <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
-//       {cartItems.length === 0 ? (
-//         <p>Your cart is empty.</p>
-//       ) : (
-//         <>
-//           <div className="space-y-4">
-//             {cartItems.map(item => (
-//               <div key={item.id} className="flex items-center justify-between border-b pb-4">
-//                 <div>
-//                   <h3 className="font-semibold">{item.name}</h3>
-//                   <p className="text-gray-600">{formatPrice(item.price)} each</p>
-//                 </div>
-//                 <div className="flex items-center">
-//                   <Button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="px-2 py-1">-</Button>
-//                   <span className="mx-2">{item.quantity}</span>
-//                   <Button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-2 py-1">+</Button>
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//           <div className="mt-6">
-//             <p className="text-xl font-bold">Total: {formatPrice(total)}</p>
-//             <p className="text-sm text-gray-600">You will earn {earnedPoints} points with this purchase</p>
-//             <p className="text-sm text-gray-600">Your current points: {points}</p>
-//           </div>
-//           <div className="mt-6 flex justify-between">
-//             <Dialog>
-//               <DialogTrigger asChild>
-//                 <Button>View Recipe Suggestions</Button>
-//               </DialogTrigger>
-//               <DialogContent>
-//                 <DialogHeader>
-//                   <DialogTitle>Recipe Suggestions</DialogTitle>
-//                 </DialogHeader>
-//                 <div className="mt-4">
-//                   {recipes.map(recipe => (
-//                     <div key={recipe.id} className="mb-6">
-//                       <h3 className="font-semibold text-lg mb-2">{recipe.name}</h3>
-//                       <h4 className="font-medium mb-1">Ingredients:</h4>
-//                       <ul className="list-disc pl-5 mb-2">
-//                         {recipe.ingredients.map((ingredient, index) => (
-//                           <li key={index}>{ingredient}</li>
-//                         ))}
-//                       </ul>
-//                       <h4 className="font-medium mb-1">Instructions:</h4>
-//                       <ol className="list-decimal pl-5">
-//                         {recipe.instructions.map((instruction, index) => (
-//                           <li key={index}>{instruction}</li>
-//                         ))}
-//                       </ol>
-//                     </div>
-//                   ))}
-//                 </div>
-//               </DialogContent>
-//             </Dialog>
-//             <Link href="/payment">
-//               <Button>Proceed to Checkout</Button>
-//             </Link>
-//           </div>
-//         </>
-//       )}
-//     </div>
-//   )
-// }
-
-
-
-// app/cart/page.tsx
-
 'use client'
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Database } from '@/lib/database.types';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { toast } from 'react-hot-toast';
+
+type CartItemWithProduct = Database['public']['Tables']['cart']['Row'] & {
+    products: Database['public']['Tables']['products']['Row']
+};
 
 const CartPage = () => {
-    const [cartItems, setCartItems] = useState<Database['public']['Tables']['cart']['Row'][]>([]);
+    const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
+    const [total, setTotal] = useState(0);
 
     useEffect(() => {
         const fetchCartItems = async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session?.user) return;
-
-            const { data, error: fetchError } = await supabase
-                .from('cart')
-                .select('*')
-                .eq('user_id', session.user.id);
-
-            if (fetchError) {
-                console.error('Error fetching cart items:', fetchError);
+            if (!session?.user) {
+                toast.error('Anda harus login');
                 return;
             }
 
-            if (data) setCartItems(data);
+            const { data, error } = await supabase
+                .from('cart')
+                .select('*, products(*)')
+                .eq('user_id', session.user.id);
+
+            if (error) {
+                console.error('Error fetching cart items:', error);
+                return;
+            }
+
+            setCartItems(data as CartItemWithProduct[]);
+            calculateTotal(data as CartItemWithProduct[]);
         };
 
         fetchCartItems();
     }, []);
 
+    const calculateTotal = (items: CartItemWithProduct[]) => {
+        const totalPrice = items.reduce((sum, item) => 
+            sum + (item.products.price * item.quantity), 0
+        );
+        setTotal(totalPrice);
+    };
+
+    const updateQuantity = async (itemId: string, newQuantity: number) => {
+        if (newQuantity < 1) {
+            await removeItem(itemId);
+            return;
+        }
+
+        const { error } = await supabase
+            .from('cart')
+            .update({ quantity: newQuantity })
+            .eq('id', itemId);
+
+        if (error) {
+            toast.error('Gagal memperbarui kuantitas');
+            return;
+        }
+
+        const updatedItems = cartItems.map(item => 
+            item.id === itemId 
+                ? { ...item, quantity: newQuantity } 
+                : item
+        );
+        
+        setCartItems(updatedItems);
+        calculateTotal(updatedItems);
+    };
+
+    const removeItem = async (itemId: string) => {
+        const { error } = await supabase
+            .from('cart')
+            .delete()
+            .eq('id', itemId);
+
+        if (error) {
+            toast.error('Gagal menghapus item');
+            return;
+        }
+
+        const updatedItems = cartItems.filter(item => item.id !== itemId);
+        setCartItems(updatedItems);
+        calculateTotal(updatedItems);
+    };
+
+    if (cartItems.length === 0) {
+        return (
+            <div className="container mx-auto p-4 text-center">
+                <h1 className="text-2xl font-bold mb-4">Keranjang Anda Kosong</h1>
+                <Link href="/shop">
+                    <Button>Mulai Belanja</Button>
+                </Link>
+            </div>
+        );
+    }
+
     return (
-        <div>
-            <h1>Your Cart</h1>
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">Keranjang Anda</h1>
             {cartItems.map(item => (
-                <div key={item.id}>
-                    <p>Product ID: {item.product_id}</p>
-                    <p>Quantity: {item.quantity}</p>
+                <div 
+                    key={item.id} 
+                    className="flex items-center justify-between border-b py-2"
+                >
+                    <div className="flex items-center">
+                        <img 
+                            src={item.products.image ?? undefined} 
+                            alt={item.products.name} 
+                            className="w-16 h-16 object-cover rounded-md mr-4" 
+                        />
+                        <div>
+                            <h2 className="font-semibold">{item.products.name}</h2>
+                            <p className="text-gray-600">Rp {item.products.price.toLocaleString()}</p>
+                            <div className="flex items-center mt-2">
+                                <Button 
+                                    onClick={() => updateQuantity(item.id, item.quantity - 1)} 
+                                    disabled={item.quantity <= 1}
+                                >
+                                    -
+                                </Button>
+                                <span className="mx-2">{item.quantity}</span>
+                                <Button 
+                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                >
+                                    +
+                                </Button>
+                                <Button 
+                                    onClick={() => removeItem(item.id)} 
+                                    className="ml-4 text-red-500"
+                                >
+                                    Hapus
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             ))}
+            <div className="flex justify-between mt-4">
+                <h2 className="text-xl font-bold">Total: Rp {total.toLocaleString()}</h2>
+                <Link href="/checkout">
+                    <Button>Checkout</Button>
+                </Link>
+            </div>
         </div>
     );
 };
