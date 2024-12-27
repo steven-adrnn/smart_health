@@ -38,16 +38,20 @@ const ShopPage = () => {
 
                 setProducts(data || []);
                 setLoading(false);
-            } catch (err: any) {
+            } catch (err: unknown) { // Ganti dari any ke unknown
+                const errorMessage = err instanceof Error 
+                    ? err.message 
+                    : 'Gagal memuat produk';
+                
                 console.error('Error fetching products:', err);
-                toast.error(err.message || 'Gagal memuat produk');
-                setError(err.message);
+                toast.error(errorMessage);
+                setError(errorMessage);
                 setLoading(false);
             }
         };
 
         fetchProducts();
-    }, []); // Dependency array kosong untuk fetch sekali saat komponen mount
+    }, []); 
 
     if (loading) {
         return (
