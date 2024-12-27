@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from './ui/dropdown-menu';
-import { User, LogOut, Award } from 'lucide-react';
+import { LogOut, Award } from 'lucide-react'; // Hapus User karena tidak digunakan
 import CartButton from './Cart';
 
 type UserData = {
@@ -22,7 +22,7 @@ type UserData = {
 };
 
 const Header = () => {
-    const [user, setUser] = useState<UserData | null>(null);
+    const [user, setUser ] = useState<UserData | null>(null);
     const [points, setPoints] = useState<number>(0);
     const router = useRouter();
 
@@ -32,9 +32,8 @@ const Header = () => {
             const userData = localStorage.getItem('user_data');
 
             if (sessionString && userData) {
-                const parsedSessionData = JSON.parse(sessionString);
                 const user = JSON.parse(userData);
-                setUser(user);
+                setUser (user);
 
                 // Fetch points
                 const { data: pointsData } = await supabase
@@ -65,7 +64,8 @@ const Header = () => {
             localStorage.removeItem('user_session');
             localStorage.removeItem('user_data');
             router.push('/login');
-        } catch (error) { console.error('Logout error:', error);
+        } catch (error) {
+            console.error('Logout error:', error);
         }
     };
 
