@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
-import { Database } from '@/lib/database.types';
+// import { Database } from '@/lib/database.types';
 
 // Definisikan tipe untuk cart item
 type CartItem = {
