@@ -144,22 +144,23 @@ export default function CartPage() {
                 return;
             }
 
-            // Simpan transaksi ke tabel Cart
-            const { error: createCartError } = await supabase
-                .from('cart')
-                .insert({
-                    user_id: session.user.id,
-                    address_id: selectedAddress,
-                    // total: totalAfterPoints,
-                    items: cartItems.map(item => ({
+            // Simpan setiap item ke tabel cart
+            const cartInsertPromises = cartItems.map(item => 
+                supabase
+                    .from('cart')
+                    .insert({
+                        user_id: session.user.id,
+                        address_id: selectedAddress,
                         product_id: item.id,
                         quantity: item.quantity
-                    }))
-                });
+                    })
+            );
 
-            if (createCartError) {
-                console.error('Error creating cart:', createCartError);
-                toast.error('Gagal melakukan checkout');
+            const results = await Promise.all(cartInsertPromises);
+            const hasError = results.some(result => result.error);
+
+            if (hasError) {
+                toast.error('Gagal menyimpan item ke keranjang');
                 return;
             }
 
