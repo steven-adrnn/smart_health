@@ -1,31 +1,27 @@
 'use client'
 
-import { useState } from 'react';
-import { Database } from '@/lib/database.types';
+// import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from './ui/button';
-import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
+import { Database } from '@/lib/database.types';
 
 interface ProductCardProps {
     product: Database['public']['Tables']['products']['Row'];
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-    const [isAdding, setIsAdding] = useState(false);
-
-    // components/ProductCard.tsx
-    const addToCart = async () => {
+    const addToCart = () => {
         try {
-            const session = localStorage.getItem('user_session');
-            if (!session) {
+            const sessionString = localStorage.getItem('user_session');
+            if (!sessionString) {
                 toast.error('Anda harus login');
                 return;
             }
 
             const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            const existingProductIndex = cart.findIndex((item: any) => item.id === product.id);
+            const existingProductIndex = cart.findIndex((item: { id: string }) => item.id === product.id);
 
             if (existingProductIndex > -1) {
                 cart[existingProductIndex].quantity += 1;
@@ -35,7 +31,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
             localStorage.setItem('cart', JSON.stringify(cart));
             toast.success('Produk ditambahkan ke keranjang');
-        } catch (error) {
+        } catch (err) {
+            console.error('Gagal menambahkan produk:', err);
             toast.error('Gagal menambahkan produk');
         }
     };
@@ -60,10 +57,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </Link>
             <Button 
                 onClick={addToCart} 
-                disabled={isAdding} 
                 className="w-full mt-2"
             >
-                {isAdding ? 'Menambahkan...' : 'Tambah ke Keranjang'}
+                Tambah ke Keranjang
             </Button>
         </div>
     );

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Database } from '@/lib/database.types';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
@@ -14,13 +13,22 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from './ui/dropdown-menu';
-import { User, LogOut, MapPin, Award } from 'lucide-react';
+import { User, LogOut, Award } from 'lucide-react';
 import CartButton from './Cart';
 
+type UserData = {
+    id: string;
+    email: string;
+};
+
+type AddressData = {
+    id: string;
+    address: string;
+};
+
 const Header = () => {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<UserData | null>(null);
     const [points, setPoints] = useState<number>(0);
-    const [addresses, setAddresses] = useState<any[]>([]);
     const router = useRouter();
 
     useEffect(() => {
@@ -40,14 +48,7 @@ const Header = () => {
                     .eq('user_id', user.id)
                     .single();
 
-                // Fetch addresses
-                const { data: addressData } = await supabase
-                    .from('addresses')
-                    .select('*')
-                    .eq('user_id', user.id);
-
                 setPoints(pointsData?.points || 0);
-                setAddresses(addressData || []);
             }
         };
 
@@ -64,10 +65,14 @@ const Header = () => {
     }, []);
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
-        localStorage.removeItem('user_session');
-        localStorage.removeItem('user_data');
-        router.push('/login');
+        try {
+            await supabase.auth.signOut();
+            localStorage.removeItem(' user_session');
+            localStorage.removeItem('user_data');
+            router.push('/login');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
     };
 
     return (

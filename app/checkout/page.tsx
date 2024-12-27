@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Database } from '@/lib/database.types';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import Addresses from '@/components/Addresses';
+import AddressesComponent from '@/components/Addresses';
 import { BackButton } from '@/components/BackButton';
 
 type CartItem = {
@@ -57,8 +57,8 @@ const CheckoutPage = () => {
                 return;
             }
 
-            const session = JSON.parse(sessionString);
-            const userId = session.user.id;
+            const sessionData = JSON.parse(sessionString);
+            const userId = sessionData.user.id;
 
             // Transaksi checkout
             const checkoutItems = cartItems.map(item => ({
@@ -90,7 +90,7 @@ const CheckoutPage = () => {
             router.push('/');
 
         } catch (error) {
-            console.error('Checkout error:', error);
+            console.error('Checkout error:', error instanceof Error ? error.message : 'Unknown error');
             toast.error('Terjadi kesalahan saat checkout');
         }
     };
@@ -132,15 +132,15 @@ const CheckoutPage = () => {
             </div>
 
             {/* Pilih Alamat */}
-            {/* <div className="mb-6">
+            <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">Pilih Alamat Pengiriman</h2>
-                <Addresses onSelectAddress={setSelectedAddress} />
+                <AddressesComponent onSelectAddress={(address: string) => setSelectedAddress(address)} />
                 {selectedAddress && (
                     <div className="mt-2 p-2 bg-green-50 rounded">
                         <strong>Alamat Terpilih:</strong> {selectedAddress}
                     </div>
                 )}
-            </div> */}
+            </div>
 
             {/* Total */}
             <div className="flex justify-between items-center mb-6">
