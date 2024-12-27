@@ -129,7 +129,7 @@ export default function CartPage() {
             }
 
             // Hitung total setelah menggunakan poin
-            const totalAfterPoints = total - pointsToUse; // Asumsi 1 poin = 1000 rupiah
+            const totalAfterPoints = total - pointsToUse;
             
             // Pastikan total tidak negatif
             if (totalAfterPoints < 0) {
@@ -137,6 +137,7 @@ export default function CartPage() {
                 setTotal(totalAfterPoints);
                 return;
             }
+            const pointsEarned = Math.floor(total / 1000); // Asumsi 1 poin = 1000 rupiah
 
             // Update produk di database (kurangi stok)
             const updateProductPromises = cartItems.map(async (item) => {
@@ -175,9 +176,10 @@ export default function CartPage() {
             await Promise.all(updateProductPromises);
 
             // Update poin pengguna
+            const newPointTotal = points - pointsToUse + pointsEarned;
             const { error: updatePointsError } = await supabase
                 .from('users')
-                .update({ point: points - pointsToUse })
+                .update({ point: newPointTotal })
                 .eq('id', session.user.id);
 
             if (updatePointsError) {
@@ -209,7 +211,7 @@ export default function CartPage() {
             // Kosongkan keranjang setelah checkout
             setCartItems([]);
             localStorage.removeItem('cart');
-            toast.success('Checkout berhasil!');
+            toast.success('Checkout berhasil! Anda mendapatkan ${pointsEarned} poin.');
 
             // Redirect ke halaman konfirmasi atau beranda
             router.push('/');
