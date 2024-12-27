@@ -7,6 +7,13 @@ import { useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Toaster } from "react-hot-toast";
 
+export const generateMetadata = async (): Promise<Metadata> => {
+  return {
+    title: "Smart Health",
+    description: "Aplikasi kesehatan pintar",
+  };
+};
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -18,10 +25,6 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-export const metadata: Metadata = {
-  title: "Smart Health",
-  description: "Aplikasi kesehatan pintar",
-};
 
 export default function RootLayout({
   children,
