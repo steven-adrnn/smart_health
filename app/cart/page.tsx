@@ -129,15 +129,52 @@ export default function CartPage() {
             }
 
             // Hitung total setelah menggunakan poin
-            const totalAfterPoints = total - pointsToUse;
-
+            const totalAfterPoints = total - pointsToUse; // Asumsi 1 poin = 1000 rupiah
+            
             // Pastikan total tidak negatif
             if (totalAfterPoints < 0) {
                 toast.error('Jumlah poin yang digunakan melebihi total biaya');
+                setTotal(totalAfterPoints);
                 return;
             }
 
-            // Kurangi poin pengguna
+            // Update produk di database (kurangi stok)
+            const updateProductPromises = cartItems.map(async (item) => {
+                const { data: productData, error: fetchError } = await supabase
+                    .from('products')
+                    .select('quantity')
+                    .eq('id', item.id)
+                    .single();
+
+                if (fetchError) {
+                    console.error(`Error fetching product ${item.id}:`, fetchError);
+                    return null;
+                }
+
+                const newQuantity = productData.quantity - item.quantity;
+                
+                if (newQuantity < 0) {
+                    toast.error(`Stok ${item.name} tidak mencukupi`);
+                    throw new Error(`Stok ${item.name} tidak mencukupi`);
+                }
+
+                const { error: updateError } = await supabase
+                    .from('products')
+                    .update({ quantity: newQuantity })
+                    .eq('id', item.id);
+
+                if (updateError) {
+                    console.error(`Error updating product ${item.id}:`, updateError);
+                    throw updateError;
+                }
+
+                return true;
+            });
+
+            // Tunggu semua update produk selesai
+            await Promise.all(updateProductPromises);
+
+            // Update poin pengguna
             const { error: updatePointsError } = await supabase
                 .from('users')
                 .update({ point: points - pointsToUse })
@@ -146,21 +183,6 @@ export default function CartPage() {
             if (updatePointsError) {
                 console.error('Error updating points:', updatePointsError);
                 toast.error('Gagal mengurangi poin');
-                return;
-            }
-
-            // Hitung poin baru berdasarkan total pembelian
-            const newPoints = Math.floor(totalAfterPoints / 100); // Misalnya, 1 poin untuk setiap 100 unit mata uang
-
-            // Tambahkan poin baru ke pengguna
-            const { error: addPointsError } = await supabase
-                .from('users')
-                .update({ point: points + newPoints })
-                .eq('id', session.user.id);
-
-            if (addPointsError) {
-                console.error('Error adding points:', addPointsError);
-                toast.error('Gagal menambahkan poin');
                 return;
             }
 
@@ -196,43 +218,50 @@ export default function CartPage() {
             toast.error('Terjadi kesalahan saat checkout');
         }
     };
-
+    
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-2xl">Keranjang Belanja</h1>
-            <ul>
+            <h1 className="text-2xl">Keranjang </h1>
+            <div>
                 {cartItems.map(item => (
-                    <li key={item.id} className="flex justify-between items-center">
-                        <div>
-                            <Image src={item.image || '/placeholder.png'} alt={item.name} width={50} height={50} />
-                            <span>{item.name}</span>
-                            <span>Rp {item.price}</span>
-                            <span>Jumlah: {item.quantity}</span>
+                    <div key={item.id} className="flex justify-between items-center border-b py-2">
+                        <Image src={item.image || '/placeholder.png'} alt={item.name} width={50} height={50} />
+                        <div className="flex-1 mx-2">
+                            <h2 className="font-bold">{item.name}</h2>
+                            <p>Harga: Rp {item.price}</p>
+                            <p>Jumlah: {item.quantity}</p>
                         </div>
                         <div>
                             <Button onClick={() => incrementQuantity(item.id)}>+</Button>
                             <Button onClick={() => decrementQuantity(item.id)}>-</Button>
                             <Button onClick={() => removeItem(item.id)}>Hapus</Button>
                         </div>
-                    </li>
+                    </div>
                 ))}
-            </ul>
-            <h2>Total: Rp {total}</h2>
-            <h3>Poin Anda: {points}</h3>
-            <input
-                type="number"
-                value={pointsToUse}
-                onChange={(e) => setPointsToUse(Number(e.target.value))}
-                placeholder="Masukkan poin yang ingin digunakan"
-                max={points}
-            />
-            <select onChange={(e) => setSelectedAddress(e.target.value)} value={selectedAddress}>
-                <option value="">Pilih Alamat</option>
-                {addresses.map(address => (
-                    <option key={address.id} value={address.id}>{address.address}</option>
-                ))}
-            </select>
-            <Button onClick={handleCheckout}>Checkout</Button>
+            </div>
+
+            <div className="mt-4">
+                <h2 className="text-lg">Total: Rp {total}</h2>
+                <h3 className="text-lg">Poin Anda: {points}</h3>
+                <input
+                    type="number"
+                    value={pointsToUse}
+                    onChange={(e) => setPointsToUse(Number(e.target.value))}
+                    placeholder="Masukkan poin yang ingin digunakan"
+                    className="border p-2"
+                />
+                <Button onClick={handleCheckout} className="mt-2">Checkout</Button>
+            </div>
+
+            <div className="mt-4">
+                <h2 className="text-lg">Alamat Pengiriman</h2>
+                <select onChange={(e) => setSelectedAddress(e.target.value)} className="border p-2">
+                    <option value="">Pilih alamat</option>
+                    {addresses.map(address => (
+                        <option key={address.id} value={address.id}>{address.address}</option>
+                    ))}
+                </select>
+            </div>
         </div>
     );
 }
