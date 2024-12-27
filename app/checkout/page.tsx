@@ -1,71 +1,163 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Database } from '@/lib/database.types';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+import Addresses from '@/components/Addresses';
+import { BackButton } from '@/components/BackButton';
+
+type CartItem = {
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    image: string | null;
+};
 
 const CheckoutPage = () => {
-    const [cartItems, setCartItems] = useState<Database['public']['Tables']['cart']['Row'][]>([]);
+    const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [total, setTotal] = useState(0);
+    const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
-        const fetchCartItems = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session?.user) {
-                toast.error('Anda harus login');
-                return;
-            }
-
-            const { data, error } = await supabase
-                .from('cart')
-                .select('*, products(*)') // Mengambil data produk terkait
-                .eq('user_id', session.user.id);
-
-            if (error) {
-                console.error('Error fetching cart items:', error);
-                return;
-            }
-
-            setCartItems(data as Database['public']['Tables']['cart']['Row'][]);
-            calculateTotal(data);
-        };
-
-        fetchCartItems();
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        setCartItems(cart);
+        calculateTotal(cart);
     }, []);
 
-    const calculateTotal = (items: Database['public']['Tables']['cart']['Row'][]) => {
+    const calculateTotal = (items: CartItem[]) => {
         const totalPrice = items.reduce((sum, item) => 
-            sum + (item.product.price * item.quantity), 0
+            sum + (item.price * item.quantity), 0
         );
         setTotal(totalPrice);
     };
 
-    const handlePayment = async (method: string) => {
-        // Logika untuk memproses pembayaran
-        toast.success(`Pembayaran berhasil menggunakan ${method}`);
+    const handleCheckout = async () => {
+        try {
+            // Validasi
+            if (cartItems.length === 0) {
+                toast.error('Keranjang kosong');
+                return;
+            }
+
+            if (!selectedAddress) {
+                toast.error('Pilih alamat pengiriman');
+                return;
+            }
+
+            // Ambil sesi pengguna dari localStorage
+            const sessionString = localStorage.getItem('user_session');
+            if (!sessionString) {
+                toast.error('Anda harus login');
+                router.push('/login');
+                return;
+            }
+
+            const session = JSON.parse(sessionString);
+            const userId = session.user.id;
+
+            // Transaksi checkout
+            const checkoutItems = cartItems.map(item => ({
+                user_id: userId,
+                product_id: item.id,
+                quantity: item.quantity,
+                address: selectedAddress
+            }));
+
+            // Simpan ke database cart
+            const { error } = await supabase.from('cart').insert(checkoutItems);
+
+            if (error) {
+                console.error('Checkout error:', error);
+                toast.error('Gagal melakukan checkout');
+                return;
+            }
+
+            // Tambah poin untuk pengguna (misalnya 10 poin per transaksi)
+            await supabase.rpc('add_points', { 
+                user_id: userId, 
+                points_to_add: 10 
+            });
+
+            // Bersihkan keranjang
+            localStorage.removeItem('cart');
+
+            toast.success('Checkout berhasil! Terima kasih.');
+            router.push('/');
+
+        } catch (error) {
+            console.error('Checkout error:', error);
+            toast.error('Terjadi kesalahan saat checkout');
+        }
     };
+
+    if (cartItems.length === 0) {
+        return (
+            <div className="container mx-auto p-4 text-center">
+                <BackButton />
+                <h1 className="text-2xl font-bold mb-4">Keranjang Anda Kosong</h1>
+                <Button onClick={() => router.push('/shop')}>
+                    Mulai Belanja
+                </Button>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto p-4">
-            <h1>Checkout</h1>
-            {cartItems.length > 0 ? (
-                cartItems.map(item => (
-                    <div key={item.id}>{item.product.name}</div>
-                ))
-            ) : (
-                <p>Keranjang Anda kosong.</p>
-            )}
-            
+            <BackButton />
             <h1 className="text-2xl font-bold mb-4">Checkout</h1>
-            <h2 className="text-xl">Total: Rp {total.toLocaleString()}</h2>
-            <div className="mt-4">
-                <h3 className="font-semibold">Pilih Metode Pembayaran:</h3>
-                <Button onClick={() => handlePayment('Kartu Kredit')} className="mt-2">Kartu Kredit</Button>
-                <Button onClick={() => handlePayment('Transfer Bank')} className="mt-2">Transfer Bank</Button>
-                <Button onClick={() => handlePayment('E-Wallet')} className="mt-2">E-Wallet</Button>
+
+            {/* Daftar Produk */}
+            <div className="mb-6">
+                <h2 className="text-xl font-semibold mb-2">Produk Anda</h2>
+                {cartItems.map(item => (
+                    <div 
+                        key={item.id} 
+                        className="flex justify-between items-center border-b py-2"
+                    >
+                        <div>
+                            <span>{item.name}</span>
+                            <span className="ml-4">x {item.quantity}</span>
+                        </div>
+                        <span>
+                            Rp {(item.price * item.quantity).toLocaleString()}
+                        </span>
+                    </div>
+                ))}
             </div>
+
+            {/* Pilih Alamat */}
+            {/* <div className="mb-6">
+                <h2 className="text-xl font-semibold mb-2">Pilih Alamat Pengiriman</h2>
+                <Addresses onSelectAddress={setSelectedAddress} />
+                {selectedAddress && (
+                    <div className="mt-2 p-2 bg-green-50 rounded">
+                        <strong>Alamat Terpilih:</strong> {selectedAddress}
+                    </div>
+                )}
+            </div> */}
+
+            {/* Total */}
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold">Total Pembayaran</h2>
+                <span className="text-2xl font-bold text-green-600">
+                    Rp {total.toLocaleString()}
+                </span>
+            </div>
+
+            {/* Tombol Checkout */}
+            <Button 
+                onClick={handleCheckout} 
+                disabled={!selectedAddress}
+                className="w-full"
+            >
+                Proses Checkout
+            </Button>
         </div>
     );
 };

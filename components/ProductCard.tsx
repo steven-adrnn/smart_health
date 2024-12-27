@@ -15,55 +15,28 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const [isAdding, setIsAdding] = useState(false);
 
+    // components/ProductCard.tsx
     const addToCart = async () => {
-        setIsAdding(true);
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (!session?.user) {
-                toast.error('Anda harus login terlebih dahulu');
+            const session = localStorage.getItem('user_session');
+            if (!session) {
+                toast.error('Anda harus login');
                 return;
             }
 
-            // Cek apakah produk sudah ada di keranjang
-            const { data: existingCartItem, error: checkError } = await supabase
-                .from('cart')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .eq('product_id', product.id)
-                .single();
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const existingProductIndex = cart.findIndex((item: any) => item.id === product.id);
 
-            if (checkError && checkError.code !== 'PGRST116') {
-                throw checkError;
-            }
-
-            if (existingCartItem) {
-                // Update quantity jika produk sudah ada
-                const { error: updateError } = await supabase
-                    .from('cart')
-                    .update({ quantity: existingCartItem.quantity + 1 })
-                    .eq('id', existingCartItem.id);
-
-                if (updateError) throw updateError;
-                toast.success('Kuantitas produk diperbarui di keranjang');
+            if (existingProductIndex > -1) {
+                cart[existingProductIndex].quantity += 1;
             } else {
-                // Tambahkan produk baru ke keranjang
-                const { error } = await supabase
-                    .from('cart')
-                    .insert({
-                        user_id: session.user.id,
-                        product_id: product.id,
-                        quantity: 1
-                    });
-
-                if (error) throw error;
-                toast.success('Produk ditambahkan ke keranjang');
+                cart.push({ ...product, quantity: 1 });
             }
+
+            localStorage.setItem('cart', JSON.stringify(cart));
+            toast.success('Produk ditambahkan ke keranjang');
         } catch (error) {
-            console.error('Gagal menambahkan ke keranjang:', error);
-            toast.error('Gagal menambahkan produk ke keranjang');
-        } finally {
-            setIsAdding(false);
+            toast.error('Gagal menambahkan produk');
         }
     };
 
