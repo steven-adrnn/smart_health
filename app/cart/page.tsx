@@ -25,16 +25,16 @@ export default function CartPage() {
     const [total, setTotal] = useState(0);
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+    const [points, setPoints] = useState(0);
+    const [pointsToUse, setPointsToUse] = useState(0);
     const router = useRouter();
 
-    // Load cart dari localStorage
     useEffect(() => {
         const storedCart = JSON.parse(localStorage.getItem('cart') || '[]') as CartItem[];
         setCartItems(storedCart);
         calculateTotal(storedCart);
     }, []);
 
-    // Ambil daftar alamat
     useEffect(() => {
         const fetchAddresses = async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -52,16 +52,32 @@ export default function CartPage() {
             }
         };
 
+        const fetchUserPoints = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                const { data, error } = await supabase
+                    .from('points')
+                    .select('points')
+                    .eq('user_id', session.user.id)
+                    .single();
+
+                if (error) {
+                    console.error('Error fetching points:', error);
+                } else {
+                    setPoints(data?.points || 0);
+                }
+            }
+        };
+
         fetchAddresses();
+        fetchUserPoints();
     }, []);
 
-    // Hitung total harga
     const calculateTotal = (items: CartItem[]) => {
         const totalAmount = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
         setTotal(totalAmount);
     };
 
-    // Tambah kuantitas
     const incrementQuantity = (itemId: string) => {
         const updatedCart = cartItems.map(item => 
             item.id === itemId 
@@ -73,7 +89,6 @@ export default function CartPage() {
         calculateTotal(updatedCart);
     };
 
-    // Kurangi kuantitas
     const decrementQuantity = (itemId: string) => {
         const updatedCart = cartItems.map(item => 
             item.id === itemId && item.quantity > 1
@@ -85,7 +100,6 @@ export default function CartPage() {
         calculateTotal(updatedCart);
     };
 
-    // Hapus item
     const removeItem = (itemId: string) => {
         const updatedCart = cartItems.filter(item => item.id !== itemId);
         setCartItems(updatedCart);
@@ -94,7 +108,6 @@ export default function CartPage() {
         toast.success('Produk dihapus dari keranjang');
     };
 
-    // Proses checkout
     const handleCheckout = async () => {
         if (!selectedAddress) {
             toast.error('Silakan pilih alamat pengiriman');
@@ -107,6 +120,15 @@ export default function CartPage() {
             if (!session) {
                 toast.error('Anda harus login terlebih dahulu');
                 router.push('/login');
+                return;
+            }
+
+            // Hitung total setelah menggunakan poin
+            const totalAfterPoints = total - pointsToUse;
+
+            // Pastikan total tidak negatif
+            if (totalAfterPoints < 0) {
+                toast.error('Jumlah poin yang digunakan melebihi total biaya');
                 return;
             }
 
@@ -157,17 +179,20 @@ export default function CartPage() {
             // Jalankan semua proses checkout
             await Promise.all(checkoutPromises);
 
-            // Tambah poin
-            await supabase.rpc('add_points', { 
-                user_id: session.user.id, 
-                points_to_add: Math.floor(total / 10000) // 1 poin per 10rb
-            });
+            // Kurangi poin yang digunakan dari total poin pengguna
+            if (pointsToUse > 0) {
+                await supabase
+                    .from('points')
+                    .update({ points: points - pointsToUse })
+                    .eq('user_id', session.user.id);
+            }
 
             // Bersihkan cart
             localStorage.removeItem('cart');
             setCartItems([]);
             setTotal(0);
             setSelectedAddress(null);
+            setPointsToUse(0); // Reset poin yang digunakan
 
             toast.success('Checkout berhasil! Terima kasih atas pesanan Anda.');
             router.push('/');
@@ -246,6 +271,18 @@ export default function CartPage() {
                 ) : (
                     <p className="text-gray-500">Belum ada alamat yang ditambahkan</p>
                 )}
+            </div>
+
+            <div className="mt-4">
+                <h2 className="text-xl font-bold mb-2">Gunakan Poin</h2>
+                <p>Poin Anda: {points}</p>
+                <input
+                    type="number"
+                    value={pointsToUse}
+                    onChange={(e) => setPointsToUse(Math.min(Number(e.target.value), points))}
+                    className="border rounded p-2"
+                    placeholder="Masukkan jumlah poin yang ingin digunakan"
+                />
             </div>
 
             <Button onClick={handleCheckout} className="mt-4" disabled={cartItems.length === 0}>
