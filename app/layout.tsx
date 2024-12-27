@@ -31,7 +31,7 @@ export default function RootLayout({
       setIsAuthenticated(!!session);
     };
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       setIsAuthenticated(event === 'SIGNED_IN');
     });
 
@@ -47,6 +47,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {isAuthenticated ? (
+          <div>Welcome, authenticated user!</div>
+        ) : (
+          <div>Please log in</div>
+        )}
         {children}
         <Toaster />
       </body>
