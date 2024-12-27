@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
-// import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -25,17 +24,25 @@ export default function ProfilePage() {
             
             if (session?.user) {
                 // Fetch user details
-                const { data: userData, error: userError } = await supabase
+                const { data: userData, error } = await supabase
                     .from('users')
                     .select('*')
                     .eq('id', session.user.id)
                     .single();
 
+                if (error) {
+                    console.error('Error fetching user:', error);
+                }
+
                 // Fetch user addresses
-                const { data: addressData, error: addressError } = await supabase
+                const { data: addressData, error: addressFetchError } = await supabase
                     .from('addresses')
                     .select('*')
                     .eq('user_id', session.user.id);
+
+                if (addressFetchError) {
+                    console.error('Error fetching addresses:', addressFetchError);
+                }
 
                 // Fetch points
                 const { data: pointsData } = await supabase
