@@ -113,7 +113,7 @@ export default function CartPage() {
             toast.error('Silakan pilih alamat pengiriman');
             return;
         }
-
+    
         try {
             const { data: { session } } = await supabase.auth.getSession();
             
@@ -122,88 +122,110 @@ export default function CartPage() {
                 router.push('/login');
                 return;
             }
-
+    
             // Hitung total setelah menggunakan poin
             const totalAfterPoints = total - pointsToUse;
-
+    
             // Pastikan total tidak negatif
             if (totalAfterPoints < 0) {
                 toast.error('Jumlah poin yang digunakan melebihi total biaya');
                 return;
             }
-
+    
             // Proses checkout dengan update quantity produk
             const checkoutPromises = cartItems.map(async (item) => {
-                // Ambil produk saat ini untuk mendapatkan quantity terkini
                 const { data: currentProduct, error: fetchError } = await supabase
                     .from('products')
                     .select('quantity')
                     .eq('id', item.id)
                     .single();
-
+    
                 if (fetchError) {
                     console.error(`Error fetching product ${item.id}:`, fetchError);
                     throw fetchError;
                 }
-
-                // Hitung quantity baru
+    
                 const newQuantity = Math.max(0, currentProduct.quantity - item.quantity);
-
-                // Update quantity produk di database
+    
                 const { error: updateError } = await supabase
                     .from('products')
                     .update({ quantity: newQuantity })
                     .eq('id', item.id);
-
+    
                 if (updateError) {
                     console.error(`Error updating quantity for product ${item.id}:`, updateError);
                     throw updateError;
                 }
-
-                // Tambahkan ke tabel cart/order
+    
                 const { error: cartError } = await supabase
                     .from('cart')
                     .insert({
                         user_id: session.user.id,
                         product_id: item.id,
                         quantity: item.quantity,
-                        address_id: selectedAddress // Sertakan alamat pengiriman
+                        address_id: selectedAddress
                     });
-
+    
                 if (cartError) {
                     console.error(`Error inserting cart item ${item.id}:`, cartError);
                     throw cartError;
                 }
             });
-
-            // Jalankan semua proses checkout
+    
             await Promise.all(checkoutPromises);
-
+    
             // Kurangi poin yang digunakan dari total poin pengguna
             if (pointsToUse > 0) {
-                await supabase
+                const { error: updatePointsError } = await supabase
                     .from('points')
                     .update({ points: points - pointsToUse })
                     .eq('user_id', session.user.id);
+    
+                if (updatePointsError) {
+                    console.error('Error updating points:', updatePointsError);
+                    toast.error('Gagal memperbarui poin');
+                    return;
+                }
             }
-
+    
             // Tambahkan poin baru berdasarkan total pembelian
-            const newPoints = Math.floor(totalAfterPoints / 100); // Misalnya, 1 poin untuk setiap 100 yang dibelanjakan
-            await supabase
+            const newPoints = Math.floor(totalAfterPoints / 100);
+            const { data: existingPointsData, error: fetchPointsError } = await supabase
                 .from('points')
-                .update({ points: points + newPoints })
-                .eq('user_id', session.user.id);
-
-            // Bersihkan cart
+                .select('points')
+                .eq('user_id', session.user.id)
+                .single();
+    
+            if (fetchPointsError) {
+                console.error('Error fetching points:', fetchPointsError);
+                toast.error('Gagal mengambil data poin');
+                return;
+            }
+    
+            if (existingPointsData) {
+                const updatedPoints = existingPointsData.points + newPoints;
+                await supabase
+                    .from('points')
+                    .update({ points: updatedPoints })
+                    .eq('user_id', session.user.id);
+            } else {
+                await supabase
+                    .from('points')
+                    .insert({
+                        user_id: session.user.id,
+                        points: newPoints
+                    });
+            }
+    
             localStorage.removeItem('cart');
             setCartItems([]);
             setTotal(0);
             setSelectedAddress(null);
-            setPointsToUse(0); // Reset poin yang digunakan
-
+            setPointsToUse(0);
+    
             toast.success(`Checkout berhasil! Anda mendapatkan ${newPoints} poin baru. Terima kasih atas pesanan Anda.`);
             router.push('/');
-
+    
         } catch (error) {
             console.error('Error during checkout:', error);
             toast.error('Terjadi kesalahan saat melakukan checkout');
