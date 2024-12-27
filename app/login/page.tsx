@@ -50,7 +50,7 @@ export default function LoginPage() {
 
             // Redirect setelah login berhasil
             toast.success('Login berhasil!');
-            router.push('/dashboard');
+            router.push('/');
 
         } catch (error) {
             console.error('Unexpected Login Error:', error);
