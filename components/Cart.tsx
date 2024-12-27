@@ -1,25 +1,43 @@
+'use client'
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { Database } from '@/lib/database.types';
+import { Button } from './ui/button';
+import { toast } from 'react-hot-toast';
+import Link from 'next/link';
 
-interface CartProps {
-    items: Database['public']['Tables']['cart']['Row'][];
-}
+const CartButton = () => {
+    const [cartCount, setCartCount] = useState(0);
 
-const Cart: React.FC<CartProps> = ({ items }) => {
+    useEffect(() => {
+        const fetchCartCount = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                const { count, error } = await supabase
+                    .from('cart')
+                    .select('*', { count: 'exact' })
+                    .eq('user_id', session.user.id);
+
+                if (error) {
+                    console.error('Error fetching cart count:', error);
+                    return;
+                }
+
+                setCartCount(count || 0);
+            }
+        };
+
+        fetchCartCount();
+    }, []);
+
     return (
-        <div>
-            <h2>Your Cart</h2>
-            {items.length === 0 ? (
-                <p>No items in cart.</p>
-            ) : (
-                items.map(item => (
-                    <div key={item.id}>
-                        <p>Product ID: {item.product_id}</p>
-                        <p>Quantity: {item.quantity}</p>
-                    </div>
-                ))
-            )}
-        </div>
+        <Link href="/cart">
+            <Button>
+                Cart ({cartCount})
+            </Button>
+        </Link>
     );
 };
 
-export default Cart;
+export default CartButton;

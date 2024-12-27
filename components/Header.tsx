@@ -14,6 +14,8 @@ import {
   DropdownMenuTrigger 
 } from './ui/dropdown-menu';
 import { User, LogOut, MapPin, Award } from 'lucide-react';
+import CartButton from './Cart'; // Import CartButton
+
 
 const Header = () => {
     const [user, setUser] = useState<Database['public']['Tables']['users']['Row'] | null>(null);
@@ -143,6 +145,7 @@ const Header = () => {
                 <Link href="/" className="text-2xl font-bold">Smart-Health</Link>
                 
                 <div className="flex items-center space-x-4">
+                    <CartButton />
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon">
