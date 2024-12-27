@@ -19,6 +19,32 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
                     window.localStorage.removeItem(key);
                 }
             }
-            : undefined
+            : undefined,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
     }
 });
+
+// Fungsi untuk mendapatkan sesi pengguna
+export const getUserSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session;
+};
+
+// Fungsi untuk menambah poin
+export const addUserPoints = async (userId: string, points: number) => {
+    const { data, error } = await supabase
+        .from('points')
+        .upsert({ 
+            user_id: userId, 
+            points 
+        })
+        .select();
+
+    if (error) {
+        console.error('Error adding points:', error);
+        return null;
+    }
+
+    return data;
+};

@@ -17,7 +17,7 @@ export default function LoginPage() {
         e.preventDefault();
 
         try {
-            const { error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password
             });
@@ -25,6 +25,11 @@ export default function LoginPage() {
             if (error) {
                 toast.error(error.message);
                 return;
+            }
+
+            // Simpan data sesi di localStorage
+            if (data.session) {
+                localStorage.setItem('user_session', JSON.stringify(data.session));
             }
 
             toast.success('Login berhasil!');
@@ -63,7 +68,7 @@ export default function LoginPage() {
                         </p>
                     </div>
                 </form>
-            </ div>
+            </div>
         </div>
     );
 }
