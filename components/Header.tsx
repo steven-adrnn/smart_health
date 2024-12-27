@@ -14,28 +14,31 @@ import {
   DropdownMenuTrigger 
 } from './ui/dropdown-menu';
 import { User, LogOut, MapPin, Award } from 'lucide-react';
-// import Image from 'next/image';
 
 const Header = () => {
     const [user, setUser] = useState<Database['public']['Tables']['users']['Row'] | null>(null);
     const [points, setPoints] = useState<number>(0);
     const [addresses, setAddresses] = useState<Database['public']['Tables']['addresses']['Row'][]>([]);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
-        // Cek sesi pengguna saat komponen dimuat
         const checkSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             
             if (session?.user) {
+                setIsAuthenticated(true);
                 await fetchUserData(session.user.id);
+            } else {
+                setIsAuthenticated(false);
             }
         };
 
-        // Listener untuk perubahan autentikasi
         const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session?.user) {
+                setIsAuthenticated(true);
                 await fetchUserData(session.user.id);
             } else if (event === 'SIGNED_OUT') {
+                setIsAuthenticated(false);
                 setUser(null);
                 setPoints(0);
                 setAddresses([]);
@@ -44,7 +47,6 @@ const Header = () => {
 
         checkSession();
 
-        // Pembersihan listener
         return () => {
             authListener.subscription.unsubscribe();
         };
@@ -85,7 +87,7 @@ const Header = () => {
     };
 
     const renderProfileContent = () => {
-        if (!user) {
+        if (!isAuthenticated) {
             return (
                 <DropdownMenuContent>
                     <DropdownMenuItem>
@@ -103,7 +105,7 @@ const Header = () => {
                 <DropdownMenuLabel>
                     <div className="flex items-center space-x-2">
                         <User className="h-6 w-6" />
-                        <span>{user.name || user.email}</span>
+                        <span>{user?.name || user?.email}</span>
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
