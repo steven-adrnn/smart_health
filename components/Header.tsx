@@ -1,3 +1,4 @@
+// components/Header.tsx
 'use client'
 
 import { useEffect, useState } from 'react';
@@ -5,15 +6,8 @@ import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from './ui/dropdown-menu';
-import { LogOut, Award } from 'lucide-react'; // Hapus User karena tidak digunakan
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { LogOut, Award } from 'lucide-react';
 import CartButton from './Cart';
 
 type UserData = {
@@ -31,7 +25,7 @@ const Header = () => {
             const sessionString = localStorage.getItem('user_session');
             const userData = localStorage.getItem('user_data');
 
-            if (sessionString && userData) {
+            if (sessionString && userData ) {
                 const user = JSON.parse(userData);
                 setUser (user);
 
