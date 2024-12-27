@@ -207,7 +207,7 @@ export default function CartPage() {
             setTotal(0);
             setPoints(0);
             setPointsToUse(0);
-            router.push('/thank-you');
+            router.push('/');
         } catch (error) {
             console.error('Error during checkout:', error);
             toast.error('Terjadi kesalahan saat melakukan checkout');

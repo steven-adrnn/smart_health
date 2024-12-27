@@ -12,7 +12,7 @@ type User = Database['public']['Tables']['users']['Row'];
 type Address = Database['public']['Tables']['addresses']['Row'];
 
 export default function ProfilePage() {
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser ] = useState<User | null>(null);
     const [points, setPoints] = useState(0);
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [newAddress, setNewAddress] = useState('');
@@ -23,15 +23,15 @@ export default function ProfilePage() {
             const { data: { session } } = await supabase.auth.getSession();
             
             if (session?.user) {
-                // Fetch user details
-                const { data: userData, error } = await supabase
+                // Fetch user details and points
+                const { data: userData, error: userError } = await supabase
                     .from('users')
-                    .select('*')
+                    .select('*, point') // Ambil kolom point
                     .eq('id', session.user.id)
                     .single();
 
-                if (error) {
-                    console.error('Error fetching user:', error);
+                if (userError) {
+                    console.error('Error fetching user:', userError);
                 }
 
                 // Fetch user addresses
@@ -44,16 +44,11 @@ export default function ProfilePage() {
                     console.error('Error fetching addresses:', addressFetchError);
                 }
 
-                // Fetch points
-                const { data: pointsData } = await supabase
-                    .from('points')
-                    .select('points')
-                    .eq('user_id', session.user.id)
-                    .single();
-
-                if (userData) setUser(userData);
+                if (userData) {
+                    setUser (userData);
+                    setPoints(userData.point); // Set poin dari userData
+                }
                 if (addressData) setAddresses(addressData);
-                if (pointsData) setPoints(pointsData.points);
             }
         };
 
@@ -133,63 +128,32 @@ export default function ProfilePage() {
 
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Profil Anda</h1>
-            <div className="bg-white shadow-md rounded-lg p-6 mb-4">
-                <div className="mb-4">
-                    <strong>Nama:</strong> {user.name}
-                </div>
-                <div className="mb-4">
-                    <strong>Email:</strong> {user.email}
-                </div>
-                <div className="mb-4">
-                    <strong>Poin:</strong> {points}
-                </div>
-                <Button onClick={handleLogout} className="mt-4">Logout</Button>
+            <h1 className="text-2 px-4">Profil Pengguna</h1>
+            <div className="profile-info">
+                <h2>Nama: {user.name}</h2>
+                <h3>Email: {user.email}</h3>
+                <h3>Poin Anda: {points}</h3>
             </div>
 
-            {/* Manajemen Alamat */}
-            <div className="bg-white shadow-md rounded-lg p-6">
-                <h2 className="text-xl font-bold mb-4">Alamat Anda</h2>
-                
-                {/* Tambah Alamat Baru */}
-                <div className="mb-4">
-                    <Textarea
-                        value={newAddress}
-                        onChange={(e) => setNewAddress(e.target.value)}
-                        placeholder="Masukkan alamat lengkap"
-                        className="mb-2"
-                    />
-                    <Button 
-                        onClick={handleAddAddress} 
-                        className="w-full"
-                    >
-                        Tambah Alamat
-                    </Button>
-                </div>
-
-                {/* Daftar Alamat */}
-                {addresses.length > 0 ? (
-                    <div>
-                        {addresses.map((address) => (
-                            <div 
-                                key={address.id} 
-                                className="flex justify-between items-center border-b py-2"
-                            >
-                                <span>{address.address}</span>
-                                <Button 
-                                    variant="destructive" 
-                                    size="sm"
-                                    onClick={() => handleDeleteAddress(address.id)}
-                                >
-                                    Hapus
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-gray-500">Belum ada alamat</p>
-                )}
+            <div className="address-section">
+                <h2>Alamat Anda</h2>
+                <ul>
+                    {addresses.map(address => (
+                        <li key={address.id} className="address-item">
+                            {address.address}
+                            <Button onClick={() => handleDeleteAddress(address.id)}>Hapus</Button>
+                        </li>
+                    ))}
+                </ul>
+                <Textarea
+                    value={newAddress}
+                    onChange={(e) => setNewAddress(e.target.value)}
+                    placeholder="Tambahkan alamat baru"
+                />
+                <Button onClick={handleAddAddress}>Tambah Alamat</Button>
             </div>
+
+            <Button onClick={handleLogout}>Logout</Button>
         </div>
     );
 }
