@@ -49,6 +49,15 @@ const CheckoutPage = () => {
 
     return (
         <div className="container mx-auto p-4">
+            <h1>Checkout</h1>
+            {cartItems.length > 0 ? (
+                cartItems.map(item => (
+                    <div key={item.id}>{item.product.name}</div>
+                ))
+            ) : (
+                <p>Keranjang Anda kosong.</p>
+            )}
+            
             <h1 className="text-2xl font-bold mb-4">Checkout</h1>
             <h2 className="text-xl">Total: Rp {total.toLocaleString()}</h2>
             <div className="mt-4">

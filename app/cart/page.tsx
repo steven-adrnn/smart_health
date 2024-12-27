@@ -6,6 +6,7 @@ import { Database } from '@/lib/database.types';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+import Image from 'next/image';
 
 type CartItemWithProduct = Database['public']['Tables']['cart']['Row'] & {
     products: Database['public']['Tables']['products']['Row']
@@ -109,10 +110,12 @@ const CartPage = () => {
                     className="flex items-center justify-between border-b py-2"
                 >
                     <div className="flex items-center">
-                        <img 
-                            src={item.products.image ?? undefined} 
+                        <Image 
+                            src={item.products.image ?? '/default-image.jpg'} // provide a default image URLs 
                             alt={item.products.name} 
-                            className="w-16 h-16 object-cover rounded-md mr-4" 
+                            width={64} // Atur lebar sesuai kebutuhan
+                            height={64} // Atur tinggi sesuai kebutuhan
+                            className="object-cover rounded-md mr-4" 
                         />
                         <div>
                             <h2 className="font-semibold">{item.products.name}</h2>
