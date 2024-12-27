@@ -123,7 +123,7 @@ export default function CartPage() {
                 return;
             }
 
-            // Hitung total setelah menggunakan poin
+            // // Hitung total setelah menggunakan poin
             const totalAfterPoints = total - pointsToUse;
 
             // Pastikan total tidak negatif
@@ -141,6 +141,21 @@ export default function CartPage() {
             if (updatePointsError) {
                 console.error('Error updating points:', updatePointsError);
                 toast.error('Gagal mengurangi poin');
+                return;
+            }
+
+            // Hitung poin baru berdasarkan total pembelian
+            const newPoints = Math.floor(totalAfterPoints / 100); // Misalnya, 1 poin untuk setiap 100 unit mata uang
+
+            // Tambahkan poin baru ke pengguna
+            const { error: addPointsError } = await supabase
+                .from('users')
+                .update({ point: points + newPoints })
+                .eq('id', session.user.id);
+
+            if (addPointsError) {
+                console.error('Error adding points:', addPointsError);
+                toast.error('Gagal menambahkan poin');
                 return;
             }
 
