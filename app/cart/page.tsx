@@ -185,7 +185,7 @@ export default function CartPage() {
             toast.success('Checkout berhasil!');
 
             // Redirect ke halaman konfirmasi atau beranda
-            router.push('/confirmation');
+            router.push('/');
         } catch (error) {
             console.error('Unexpected error during checkout:', error);
             toast.error('Terjadi kesalahan saat checkout');
