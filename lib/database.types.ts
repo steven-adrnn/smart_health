@@ -164,23 +164,41 @@ export interface Database {
         Row: {
           id: string
           name: string
+          description: string
           ingredients: string[]
           instructions: string[]
+          category: string  // Tambahkan kategori
+          difficulty_level : 'easy' | 'medium' | 'hard'
+          preparation_time: number
+          nutrition_info: string
+          tags: string[]
           created_at: string
         }
         Insert: {
-          id?: string
+          id: string
           name: string
+          description: string
           ingredients: string[]
           instructions: string[]
-          created_at?: string
+          category: string  // Tambahkan kategori
+          difficulty_level : 'easy' | 'medium' | 'hard'
+          preparation_time: number
+          nutrition_info: string
+          tags: string[]
+          created_at: string
         }
         Update: {
-          id?: string
-          name?: string
-          ingredients?: string[]
-          instructions?: string[]
-          created_at?: string
+          id: string
+          name: string
+          description: string
+          ingredients: string[]
+          instructions: string[]
+          category: string  // Tambahkan kategori
+          difficulty_level : 'easy' | 'medium' | 'hard'
+          preparation_time: number
+          nutrition_info: string
+          tags: string[]
+          created_at: string
         }
       }
     }
