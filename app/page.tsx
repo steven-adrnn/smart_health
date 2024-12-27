@@ -3,11 +3,14 @@ import Header from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import Categories from '@/components/Categories';
 import { Footer } from '@/components/Footer';
+import { supabase } from '@/lib/supabaseClient';
 
-const HomePage = () => {
+const HomePage = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+
     return (
         <div>
-            <Header />
+            <Header session={session} />
             <Hero />
             <Categories />
             <Footer />
