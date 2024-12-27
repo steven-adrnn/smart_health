@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Database } from '@/lib/database.types';
+// import { Database } from '@/lib/database.types';
 
 interface CartItem {
     id: string;
