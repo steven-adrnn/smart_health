@@ -42,6 +42,7 @@ export interface Database {
             description: string | null;
             farm: string;
             rating: number;
+            quantity: number;
             created_at: string
         }
         Insert: {
@@ -53,6 +54,7 @@ export interface Database {
             description: string | null;
             farm: string;
             rating: number;
+            quantity: number;
             created_at?: string
         }
         Update: {
@@ -64,6 +66,7 @@ export interface Database {
             description: string | null;
             farm: string;
             rating: number;
+            quantity: number;
             created_at?: string
         }
       }

@@ -26,6 +26,7 @@ const ShopPage = () => {
                 const { data, error } = await supabase
                     .from('products')
                     .select('*')
+                    .gt('quantity', 0) // Hanya produk dengan stok > 0
                     .order('created_at', { ascending: false });
 
                 if (error) {
@@ -38,7 +39,7 @@ const ShopPage = () => {
 
                 setProducts(data || []);
                 setLoading(false);
-            } catch (err: unknown) { // Ganti dari any ke unknown
+            } catch (err: unknown) {
                 const errorMessage = err instanceof Error 
                     ? err.message 
                     : 'Gagal memuat produk';
@@ -70,13 +71,12 @@ const ShopPage = () => {
     }
 
     return (
-        <div>
-            <h1 className="text-2xl font-bold mb-4">Produk Kami</h1>
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">Produk Tersedia</h1>
             {products.length > 0 ? (
                 <ProductList products={products} />
             ) : (
-                <p>Tidak ada produk yang tersedia.</p>
-            )}
+                <p>Tidak ada produk yang tersedia.</p> )}
         </div>
     );
 };

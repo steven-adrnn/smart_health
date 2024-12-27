@@ -7,7 +7,6 @@ import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-// Definisikan tipe untuk cart item yang lebih detail
 interface CartItem {
     id: string;
     name: string;
@@ -21,20 +20,17 @@ export default function CartPage() {
     const [total, setTotal] = useState(0);
     const router = useRouter();
 
-    // Load cart dari localStorage
     useEffect(() => {
         const storedCart = JSON.parse(localStorage.getItem('cart') || '[]') as CartItem[];
         setCartItems(storedCart);
         calculateTotal(storedCart);
     }, []);
 
-    // Hitung total harga
     const calculateTotal = (items: CartItem[]) => {
         const totalAmount = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
         setTotal(totalAmount);
     };
 
-    // Tambah kuantitas
     const incrementQuantity = (itemId: string) => {
         const updatedCart = cartItems.map(item => 
             item.id === itemId 
@@ -46,7 +42,6 @@ export default function CartPage() {
         calculateTotal(updatedCart);
     };
 
-    // Kurangi kuantitas
     const decrementQuantity = (itemId: string) => {
         const updatedCart = cartItems.map(item => 
             item.id === itemId && item.quantity > 1
@@ -58,7 +53,6 @@ export default function CartPage() {
         calculateTotal(updatedCart);
     };
 
-    // Hapus item
     const removeItem = (itemId: string) => {
         const updatedCart = cartItems.filter(item => item.id !== itemId);
         setCartItems(updatedCart);
@@ -67,7 +61,6 @@ export default function CartPage() {
         toast.success('Produk dihapus dari keranjang');
     };
 
-    // Checkout
     const handleCheckout = async () => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
@@ -77,42 +70,70 @@ export default function CartPage() {
                 router.push('/login');
                 return;
             }
-
-            // Siapkan data untuk diinsert
-            const cartData = cartItems.map(item => ({
-                user_id: session.user.id,
-                product_id: item.id,
-                quantity: item.quantity
-            }));
-
-            // Insert ke database
-            const { error } = await supabase
-                .from('cart')
-                .insert(cartData);
-
-            if (error) {
-                console.error('Checkout error:', error);
-                toast.error('Gagal melakukan checkout');
-                return;
-            }
-
+    
+            // Proses checkout dengan update quantity produk
+            const checkoutPromises = cartItems.map(async (item) => {
+                // Ambil produk saat ini untuk mendapatkan quantity terkini
+                const { data: currentProduct, error: fetchError } = await supabase
+                    .from('products')
+                    .select('quantity')
+                    .eq('id', item.id)
+                    .single();
+    
+                if (fetchError) {
+                    console.error(`Error fetching product ${item.id}:`, fetchError);
+                    throw fetchError;
+                }
+    
+                // Hitung quantity baru
+                const newQuantity = Math.max(0, currentProduct.quantity - item.quantity);
+    
+                // Update quantity produk di database
+                const { error: updateError } = await supabase
+                    .from('products')
+                    .update({ quantity: newQuantity })
+                    .eq('id', item.id);
+    
+                if (updateError) {
+                    console.error(`Error updating quantity for product ${item.id}:`, updateError);
+                    throw updateError;
+                }
+    
+                // Tambahkan ke tabel cart/order
+                const { error: cartError } = await supabase
+                    .from('cart')
+                    .insert({
+                        user_id: session.user.id,
+                        product_id: item.id,
+                        quantity: item.quantity
+                    });
+    
+                if (cartError) {
+                    console.error(`Error inserting cart item ${item.id}:`, cartError);
+                    throw cartError;
+                }
+            });
+    
+            // Jalankan semua proses checkout
+            await Promise.all(checkoutPromises);
+    
             // Tambah poin
             await supabase.rpc('add_points', { 
                 user_id: session.user.id, 
                 points_to_add: Math.floor(total / 10000) // 1 poin per 10rb
             });
-
+    
             // Bersihkan cart
             localStorage.removeItem('cart');
             setCartItems([]);
             setTotal(0);
-
-            toast.success('Checkout berhasil!');
+    
+            toast.success('Checkout berhasil! Stok produk telah diperbarui.');
             router.push('/');
-
+    
         } catch (error) {
             console.error('Checkout error:', error);
-            toast.error('Terjadi kesalahan saat checkout');
+            toast.error('Terjadi kesalahan saat checkout. Silakan coba lagi.');
         }
     };
 

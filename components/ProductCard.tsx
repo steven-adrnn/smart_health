@@ -1,11 +1,11 @@
 'use client'
 
-// import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from './ui/button';
 import { toast } from 'react-hot-toast';
 import { Database } from '@/lib/database.types';
+import { Star } from 'lucide-react';
 
 interface ProductCardProps {
     product: Database['public']['Tables']['products']['Row'];
@@ -20,10 +20,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 return;
             }
 
+            // Cek ketersediaan stok
+            if (product.quantity <= 0) {
+                toast.error('Produk habis');
+                return;
+            }
+
             const cart = JSON.parse(localStorage.getItem('cart') || '[]');
             const existingProductIndex = cart.findIndex((item: { id: string }) => item.id === product.id);
 
             if (existingProductIndex > -1) {
+                // Cek apakah jumlah di cart tidak melebihi stok
+                if (cart[existingProductIndex].quantity + 1 > product.quantity) {
+                    toast.error(`Stok produk hanya tersisa ${product.quantity}`);
+                    return;
+                }
                 cart[existingProductIndex].quantity += 1;
             } else {
                 cart.push({ ...product, quantity: 1 });
@@ -38,8 +49,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     };
 
     return (
-        <div className="border rounded-lg p-4 shadow-md">
-            <Link href={`/product/${product.id}`}>
+        <div className="border rounded-lg p-4 shadow-md flex flex-col">
+            <Link href={`/product/${product.id}`} className="flex-grow">
                 <h3 className="text-lg font-semibold">{product.name}</h3>
                 {product.image && (
                     <div className="relative w-full h-48 mb-2">
@@ -47,19 +58,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                             src={product.image} 
                             alt={product.name} 
                             fill
-                            className="object-cover rounded-md"
+                            className=" object-cover rounded-md"
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                     </div>
                 )}
-                <p className="text-gray-600">{product.description}</p>
-                <p className="font-bold text-green-600">Rp {product.price.toLocaleString()}</p>
+                <p className="text-gray-600 mb-2">{product.description}</p>
+                <p className="text-gray-700 mb-1"><strong>Farm:</strong> {product.farm}</p>
+                <div className="flex items-center">
+                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                    <span className="ml-1">{product.rating}</span>
+                </div>
+                <p className="font-bold text-green-600 mt-2">Rp {product.price.toLocaleString()}</p>
+                <p className="text-sm text-gray-500">Stok: {product.quantity}</p>
             </Link>
             <Button 
                 onClick={addToCart} 
-                className="w-full mt-2"
+                className="w-full mt-4"
+                disabled={product.quantity <= 0}
             >
-                Tambah ke Keranjang
+                {product.quantity > 0 ? 'Tambah ke Keranjang' : 'Stok Habis'}
             </Button>
         </div>
     );
