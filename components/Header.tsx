@@ -1,4 +1,3 @@
-// components/Header.tsx
 'use client'
 
 import { useEffect, useState } from 'react';
@@ -6,34 +5,45 @@ import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { LogOut, Award } from 'lucide-react';
-import CartButton from './Cart';
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuLabel, 
+    DropdownMenuSeparator, 
+    DropdownMenuTrigger 
+} from './ui/dropdown-menu';
+import { LogOut, User, Award, ShoppingCart } from 'lucide-react';
 
 type UserData = {
     id: string;
     email: string;
+    name: string;
 };
 
 const Header = () => {
-    const [user, setUser ] = useState<UserData | null>(null);
+    const [user, setUser] = useState<UserData | null>(null);
     const [points, setPoints] = useState<number>(0);
     const router = useRouter();
 
     useEffect(() => {
         const checkSession = async () => {
-            const sessionString = localStorage.getItem('user_session');
-            const userData = localStorage.getItem('user_data');
-
-            if (sessionString && userData ) {
-                const user = JSON.parse(userData);
-                setUser (user);
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session?.user) {
+                const userData = {
+                    id: session.user.id,
+                    email: session.user.email || '',
+                    name: session.user.user_metadata?.name || 'User'
+                };
+                
+                setUser(userData);
 
                 // Fetch points
                 const { data: pointsData } = await supabase
                     .from('points')
                     .select('points')
-                    .eq('user_id', user.id)
+                    .eq('user_id', userData.id)
                     .single();
 
                 setPoints(pointsData?.points || 0);
@@ -41,54 +51,73 @@ const Header = () => {
         };
 
         checkSession();
+        
+        const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+            if (event === 'SIGNED_IN') {
+                checkSession();
+            } else if (event === 'SIGNED_OUT') {
+                setUser(null);
+            }
+        });
 
-        const handleStorageChange = () => {
-            checkSession();
-        };
-
-        window.addEventListener('storage', handleStorageChange);
         return () => {
-            window.removeEventListener('storage', handleStorageChange);
+            authListener.subscription.unsubscribe();
         };
     }, []);
 
     const handleLogout = async () => {
-        try {
-            await supabase.auth.signOut();
-            localStorage.removeItem('user_session');
-            localStorage.removeItem('user_data');
-            router.push('/login');
-        } catch (error) {
-            console.error('Logout error:', error);
-        }
+        await supabase.auth.signOut();
+        router.push('/login');
     };
 
     return (
         <header className="flex justify-between items-center p-4 bg-gray-800 text-white">
             <Link href="/" className="text-xl font-bold">Smart Health</Link>
-            <div className="flex items-center">
-                <CartButton />
+            <div className="flex items-center space-x-4">
+                <Link href="/shop">
+                    <Button variant="ghost">
+                        <ShoppingCart className="mr-2" /> Shop
+                    </Button>
+                </Link>
+
                 {user ? (
                     <DropdownMenu>
-                        <DropdownMenuTrigger>
-                            <Button className="ml-4">{user.email}</Button>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                <User className="mr-2" /> {user.name}
+                            </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuLabel>Welcome, {user.email}</DropdownMenuLabel>
+                            <DropdownMenuLabel>My Account</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleLogout}>
-                                <LogOut className="mr-2" /> Logout
+                            <DropdownMenuItem onClick={() => router.push('/profile')}>
+                                <User className="mr-2" /> Profile
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                                 <Award className="mr-2" /> Points: {points}
                             </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleLogout}>
+                                <LogOut className="mr-2" /> Logout
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 ) : (
-                    <Link href="/login">
-                        <Button className="ml-4">Login</Button>
-                    </Link>
+                    <div className="space-x-2">
+                        <Link href="/login">
+                            <Button variant="outline">Login</Button>
+                        </Link>
+                        <Link href="/register">
+                            <Button>Register</Button>
+                        </Link>
+                    </div>
                 )}
+
+                <Link href="/cart">
+                    <Button variant="outline">
+                        <ShoppingCart className="mr-2" /> Cart
+                    </Button>
+                </Link>
             </div>
         </header>
     );

@@ -2,154 +2,106 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Database } from '@/lib/database.types';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { toast } from 'react-hot-toast';
-import Image from 'next/image';
+import { Database } from '@/lib/database.types';
 
-type CartItemWithProduct = Database['public']['Tables']['cart']['Row'] & {
-    products: Database['public']['Tables']['products']['Row']
+// Definisikan tipe untuk cart item
+type CartItem = {
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    image?: string | null;
 };
 
 const CartPage = () => {
-    const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
-    const [total, setTotal] = useState(0);
+    const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const router = useRouter();
 
     useEffect(() => {
-        const fetchCartItems = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session?.user) {
-                toast.error('Anda harus login');
-                return;
-            }
-
-            const { data, error } = await supabase
-                .from('cart')
-                .select('*, products(*)')
-                .eq('user_id', session.user.id);
-
-            if (error) {
-                console.error('Error fetching cart items:', error);
-                return;
-            }
-
-            setCartItems(data as CartItemWithProduct[]);
-            calculateTotal(data as CartItemWithProduct[]);
-        };
-
-        fetchCartItems();
+        const storedCart = localStorage.getItem('cart');
+        if (storedCart) {
+            setCartItems(JSON.parse(storedCart));
+        }
     }, []);
 
-    const calculateTotal = (items: CartItemWithProduct[]) => {
-        const totalPrice = items.reduce((sum, item) => 
-            sum + (item.products.price * item.quantity), 0
-        );
-        setTotal(totalPrice);
-    };
+    const handleCheckout = async () => {
+        // Dapatkan sesi pengguna dengan cara yang benar
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
 
-    const updateQuantity = async (itemId: string, newQuantity: number) => {
-        if (newQuantity < 1) {
-            await removeItem(itemId);
+        if (!userId) {
+            toast.error('Anda harus login untuk checkout');
+            router.push('/login');
             return;
         }
 
-        const { error } = await supabase
-            .from('cart')
-            .update({ quantity: newQuantity })
-            .eq('id', itemId);
+        // Simpan data cart ke database
+        const cartInsertData = cartItems.map(item => ({
+            user_id: userId,
+            product_id: item.id,
+            quantity: item.quantity
+        }));
+
+        const { error } = await supabase.from('cart').insert(cartInsertData);
 
         if (error) {
-            toast.error('Gagal memperbarui kuantitas');
+            console.error('Checkout error:', error);
+            toast.error('Terjadi kesalahan saat checkout');
             return;
         }
 
-        const updatedItems = cartItems.map(item => 
-            item.id === itemId 
-                ? { ...item, quantity: newQuantity } 
-                : item
-        );
-        
-        setCartItems(updatedItems);
-        calculateTotal(updatedItems);
+        // Hapus cart dari local storage
+        localStorage.removeItem('cart');
+        setCartItems([]);
+        toast.success('Checkout berhasil!');
+        router.push('/');
     };
 
-    const removeItem = async (itemId: string) => {
-        const { error } = await supabase
-            .from('cart')
-            .delete()
-            .eq('id', itemId);
-
-        if (error) {
-            toast.error('Gagal menghapus item');
-            return;
-        }
-
-        const updatedItems = cartItems.filter(item => item.id !== itemId);
-        setCartItems(updatedItems);
-        calculateTotal(updatedItems);
+    const calculateTotal = () => {
+        return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
     };
-
-    if (cartItems.length === 0) {
-        return (
-            <div className="container mx-auto p-4 text-center">
-                <h1 className="text-2xl font-bold mb-4">Keranjang Anda Kosong</h1>
-                <Link href="/shop">
-                    <Button>Mulai Belanja</Button>
-                </Link>
-            </div>
-        );
-    }
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Keranjang Anda</h1>
-            {cartItems.map(item => (
-                <div 
-                    key={item.id} 
-                    className="flex items-center justify-between border-b py-2"
-                >
-                    <div className="flex items-center">
-                        <Image 
-                            src={item.products.image ?? '/default-image.jpg'} // provide a default image URLs 
-                            alt={item.products.name} 
-                            width={64} // Atur lebar sesuai kebutuhan
-                            height={64} // Atur tinggi sesuai kebutuhan
-                            className="object-cover rounded-md mr-4" 
-                        />
-                        <div>
-                            <h2 className="font-semibold">{item.products.name}</h2>
-                            <p className="text-gray-600">Rp {item.products.price.toLocaleString()}</p>
-                            <div className="flex items-center mt-2">
-                                <Button 
-                                    onClick={() => updateQuantity(item.id, item.quantity - 1)} 
-                                    disabled={item.quantity <= 1}
-                                >
-                                    -
-                                </Button>
-                                <span className="mx-2">{item.quantity}</span>
-                                <Button 
-                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                >
-                                    +
-                                </Button>
-                                <Button 
-                                    onClick={() => removeItem(item.id)} 
-                                    className="ml-4 text-red-500"
-                                >
-                                    Hapus
-                                </Button>
+        <div className="p-4 container mx-auto">
+            <h1 className="text-2xl font-bold mb-4">Keranjang Belanja</h1>
+            {cartItems.length === 0 ? (
+                <p>Keranjang Anda kosong.</p>
+            ) : (
+                <>
+                    <div className="space-y-4">
+                        {cartItems.map((item) => (
+                            <div 
+                                key={item.id} 
+                                className="flex justify-between items-center border-b pb-2"
+                            >
+                                <div className="flex items-center space-x-4">
+                                    <span>{item.name}</span>
+                                    <span>x {item.quantity}</span>
+                                </div>
+                                <span>
+                                    Rp {(item.price * item.quantity).toLocaleString()}
+                                </span>
                             </div>
-                        </div>
+                        ))}
                     </div>
-                </div>
-            ))}
-            <div className="flex justify-between mt-4">
-                <h2 className="text-xl font-bold">Total: Rp {total.toLocaleString()}</h2>
-                <Link href="/checkout">
-                    <Button>Checkout</Button>
-                </Link>
-            </div>
+                    <div className="mt-4 flex justify-between items-center">
+                        <strong>Total:</strong>
+                        <span className="text-xl font-bold">
+                            Rp {calculateTotal().toLocaleString()}
+                        </span>
+                    </div>
+                </>
+            )}
+            <Button 
+                onClick={handleCheckout} 
+                className="mt-4 w-full" 
+                disabled={cartItems.length === 0}
+            >
+                Checkout
+            </Button>
         </div>
     );
 };

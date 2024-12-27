@@ -1,10 +1,12 @@
-// app/login/page.tsx
 'use client'
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import Link from 'next/link';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -25,12 +27,6 @@ export default function LoginPage() {
                 return;
             }
 
-            // Simpan data ke localStorage untuk persistent session
-            if (data.session) {
-                localStorage.setItem('user_session', JSON.stringify(data.session));
-                localStorage.setItem('user_data', JSON.stringify(data.user));
-            }
-
             toast.success('Login berhasil!');
             router.push('/');
         } catch (error) {
@@ -40,22 +36,34 @@ export default function LoginPage() {
     };
 
     return (
-        <form onSubmit={handleLogin}>
-            <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                required
-            />
-            <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                required
-            />
-            <button type="submit">Login</button>
-        </form>
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+            <div className="bg-white p-8 rounded-lg shadow-md w-96">
+                <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+                <form onSubmit={handleLogin} className="space-y-4">
+                    <Input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                    <Input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                    <Button type="submit" className="w-full">Login</Button>
+                    <div className="text-center">
+                        <p>Belum punya akun? 
+                            <Link href="/register" className="text-blue-500 ml-1">
+                                Daftar
+                            </Link>
+                        </p>
+                    </div>
+                </form>
+            </ div>
+        </div>
     );
 }
