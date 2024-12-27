@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Database } from '@/lib/database.types';
+// import { Database } from '@/lib/database.types';
 import { Button } from './ui/button';
-import { toast } from 'react-hot-toast';
+// import { toast } from 'react-hot-toast';
 import Link from 'next/link';
 
 const CartButton = () => {
