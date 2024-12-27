@@ -1,4 +1,3 @@
-// components/ProductList.tsx
 import ProductCard from './ProductCard';
 import { Database } from '@/lib/database.types';
 
@@ -10,7 +9,7 @@ interface ProductListProps {
 
 export function ProductList({ products }: ProductListProps) {
   if (!products || products.length === 0) {
-    return <p>No products available.</p>
+    return <p>Tidak ada produk yang tersedia.</p>
   }
 
   return (
