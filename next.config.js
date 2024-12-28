@@ -18,6 +18,7 @@ const nextConfig = {
 
     images: {
       domains: [
+        'https://smart-health-tst.up.railway.app/',
         'enyvqjbqavjdzxmktahy.supabase.co', // Sesuaikan dengan domain Supabase Anda
       ],
       remotePatterns: [
