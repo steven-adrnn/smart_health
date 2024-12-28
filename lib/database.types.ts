@@ -122,6 +122,9 @@ export interface Database {
           rating: string
           comment: string | null
           created_at: string
+          user?: {
+            name: string
+          }
         }
         Insert: {
           id?: string
