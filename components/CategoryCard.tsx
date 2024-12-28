@@ -12,7 +12,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ name, image }) => {
             <div className="flex flex-col items-center justify-center border rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow h-full">
                 <div className="w-full aspect-video mb-2 relative"> {/* Gunakan aspect-video untuk rasio 16:9 */}
                     <Image 
-                        src={'/${image}'} 
+                        src={`/${image}`} 
                         alt={name}
                         fill // Gunakan fill untuk memenuhi container
                         className="object-cover rounded-md"
