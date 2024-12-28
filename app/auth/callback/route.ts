@@ -7,8 +7,13 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code')
 
   if (code) {
-    const supabase = createRouteHandlerClient({ cookies })
-    await supabase.auth.exchangeCodeForSession(code)
+    const supabase = createRouteHandlerClient({ cookies });
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error) {
+      console.error('Error exchanging code:', error);
+      return NextResponse.redirect(new URL('/login?error=oauth_failed', request.url));
+    }
   }
 
   // Redirect to the homepage or dashboard after successful login

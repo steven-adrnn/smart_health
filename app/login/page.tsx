@@ -7,7 +7,7 @@ import { toast } from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
-import Google from 'lucide-react'; // Pastikan import icon Google
+import { Chrome as GoogleIcon } from 'lucide-react';
 
 
 export default function LoginPage() {
@@ -51,6 +51,10 @@ export default function LoginPage() {
                 }
             });
 
+            if (data?.url) {
+                window.location.href = data.url;
+            }
+
             if (error) {
                 toast.error('Google Sign In Error: ' + error.message);
                 return;
@@ -87,7 +91,7 @@ export default function LoginPage() {
                             variant="outline" 
                             className="w-full flex items-center justify-center"
                         >
-                            <Google className="mr-2 h-5 w-5" />
+                            <GoogleIcon className="mr-2 h-5 w-5" />
                             Login dengan Google
                         </Button>
                     </div>

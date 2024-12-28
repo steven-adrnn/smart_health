@@ -89,6 +89,10 @@ export default function RegisterPage() {
                 }
             });
 
+            if (data?.url) {
+                window.location.href = data.url;
+            }
+
             if (error) {
                 toast.error('Google Sign Up Error: ' + error.message);
                 return;
