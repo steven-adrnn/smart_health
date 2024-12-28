@@ -8,12 +8,13 @@ import { Database } from '@/lib/database.types';
 
 const CategoryPage = () => {
     const params = useParams();
-    const slug = params.slug as string; // Mengambil slug dari URL
+    const slug = params?.slug as string; // Mengambil slug dari URL
     const [products, setProducts] = useState<Database['public']['Tables']['products']['Row'][]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        if (!slug) return;
         const fetchProducts = async () => {
             try {
                 setLoading(true);
