@@ -1,14 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: 'standalone', // Penting untuk Docker build
+    output: 'standalone',
     reactStrictMode: true,
     swcMinify: true,
     
-    // Konfigurasi environment
+    // Disable static generation for problematic pages
+    experimental: {
+      staticPageGenerationTimeout: 60,
+    },
+    
+    // Configurasi environment
     env: {
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY
     }
   }
   
