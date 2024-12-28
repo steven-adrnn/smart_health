@@ -56,6 +56,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         return `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${cleanPath}`;
     };
 
+    
+
     return (
         <div className="border rounded-lg p-4 shadow-md flex flex-col">
             <Link href={`/product/${product.id}`} className="flex-grow">

@@ -81,16 +81,28 @@ const ProductPage = () => {
 
     if (!product) return <div>Loading...</div>;
 
+    const getPublicImageUrl = (path: string) => {
+        const cleanPath = path.replace(/\s+/g, '%20');
+        return `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${cleanPath}`;
+    };
+    
     return (
         <div className="p-4">
             <h1 className="text-3xl font-bold">{product.name}</h1>
             <div className="relative w-full h-64 mb-4">
                 <Image 
                     // Tambahkan fallback untuk image
-                    src={product.image || '/placeholder.png'} 
+                    src={product.image 
+                        ? getPublicImageUrl(product.image) 
+                        : '/placeholder.png'
+                    } 
                     alt={product.name} 
                     fill
                     className="object-cover rounded-md"
+                    onError={(e) => {
+                        console.error('Image load error', product.image);
+                        e.currentTarget.src = '/placeholder.png';
+                    }}
                 />
             </div>
             <p className="text-gray-600 mb-2">{product.description}</p>
