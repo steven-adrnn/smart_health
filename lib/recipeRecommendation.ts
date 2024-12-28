@@ -21,13 +21,10 @@ export async function getRecipeRecommendations(cartItems: Product[]): Promise<Re
 
   // Filter resep yang memiliki setidaknya 50% bahan yang ada di cart
   const recommendedRecipes = recipes.filter(recipe => {
-    const matchingIngredients = recipe.ingredients.filter((ingredientId: string) => 
-      cartProductIds.includes(ingredientId)
-    );
-    
-    // Minimal 50% bahan resep ada di cart
-    const matchPercentage = (matchingIngredients.length / recipe.ingredients.length) * 100;
-    return matchPercentage >= 50;
+    // Periksa apakah SEMUA bahan resep ada di cart
+    return recipe.ingredients.every((ingredientId: string) => 
+        cartProductIds.includes(ingredientId)
+      );
   });
 
   return recommendedRecipes;
