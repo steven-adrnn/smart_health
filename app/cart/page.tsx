@@ -250,7 +250,7 @@ export default function CartPage() {
             </div>
 
             <div className="mt-4">
-                <h2 className="text-lg">Total: Rp {total}</h2>
+                <h2 className="text-lg">Total: Rp {total - pointsToUse}</h2>
                 <h3 className="text-lg">Poin Anda: {points}</h3>
                 <input
                     type="number"
