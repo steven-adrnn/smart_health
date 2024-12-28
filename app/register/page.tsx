@@ -85,11 +85,16 @@ export default function RegisterPage() {
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `https://smart-health-tst-production.up.railway.app/auth/callback`
+                    redirectTo: `https://smart-health-tst.vercel.app/auth/callback`,
+                    scopes: 'openid email profile'
                 }
             });
 
+            console.log('OAuth Data:', data);
+            console.log('OAuth Error:', error);
+
             if (data?.url) {
+                console.log('Redirecting to:', data.url);
                 window.location.href = data.url;
             }
 
