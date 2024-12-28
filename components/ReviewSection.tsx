@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Database } from '@/lib/database.types';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
+// import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Star } from 'lucide-react';
 import { toast } from 'react-hot-toast';
