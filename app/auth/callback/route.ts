@@ -13,11 +13,11 @@ export async function GET(request: NextRequest) {
     
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
     console.log(data); // or do something else with the data value
-    
+
     if (error) {
       console.error('OAuth Exchange Error:', error);
       return NextResponse.redirect(
-        new URL(`/?error=${encodeURIComponent(error.message)}`, request.url)
+        new URL(`/login?error=${encodeURIComponent(error.message)}`, request.url)
       );
     }
 
@@ -51,11 +51,7 @@ export async function GET(request: NextRequest) {
           console.error('Error inserting user:', insertError);
         }
       }
-      // Simpan session di localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user_session', JSON.stringify(session));
-      }
-
+      
     }
   }
 

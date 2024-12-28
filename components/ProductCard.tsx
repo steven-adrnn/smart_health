@@ -6,16 +6,19 @@ import { Button } from './ui/button';
 import { toast } from 'react-hot-toast';
 import { Database } from '@/lib/database.types';
 import { Star } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient'; // Pastikan import ini
+
 
 interface ProductCardProps {
     product: Database['public']['Tables']['products']['Row'];
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-    const addToCart = () => {
+    const addToCart = async () => {
         try {
-            const sessionString = localStorage.getItem('user_session');
-            if (!sessionString) {
+            // Gunakan Supabase untuk mendapatkan session
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) {
                 toast.error('Anda harus login');
                 return;
             }
