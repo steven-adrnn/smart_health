@@ -160,47 +160,6 @@ export interface Database {
           created_at?: string
         }
       }
-      recipes: {
-        Row: {
-          id: string
-          name: string
-          description: string
-          ingredients: string[]
-          instructions: string[]
-          category: string  // Tambahkan kategori
-          difficulty_level : 'easy' | 'medium' | 'hard'
-          preparation_time: number
-          nutrition_info: string
-          tags: string[]
-          created_at: string
-        }
-        Insert: {
-          id: string
-          name: string
-          description: string
-          ingredients: string[]
-          instructions: string[]
-          category: string  // Tambahkan kategori
-          difficulty_level : 'easy' | 'medium' | 'hard'
-          preparation_time: number
-          nutrition_info: string
-          tags: string[]
-          created_at: string
-        }
-        Update: {
-          id: string
-          name: string
-          description: string
-          ingredients: string[]
-          instructions: string[]
-          category: string  // Tambahkan kategori
-          difficulty_level : 'easy' | 'medium' | 'hard'
-          preparation_time: number
-          nutrition_info: string
-          tags: string[]
-          created_at: string
-        }
-      }
     }
     Views: {
       [_ in never]: never
