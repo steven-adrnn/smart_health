@@ -1,5 +1,5 @@
 import { Hero } from '@/components/Hero';
-import Categories from '@/components/Categories';
+// import Categories from '@/components/Categories';
 import { Footer } from '@/components/Footer';
 import CategoryCard from '@/components/CategoryCard';
 
