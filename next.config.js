@@ -36,6 +36,20 @@ const nextConfig = {
         }
       ],
     },
+    // Tambahkan konfigurasi build
+    webpack: (config, { isServer }) => {
+        if (!isServer) {
+            config.resolve.fallback = {
+                fs: false,
+                net: false,
+                tls: false,
+            };
+        }
+        return config;
+    },
+
+    // Atur ulang timeout build
+    staticPageGenerationTimeout: 120,
   }
   
   module.exports = nextConfig
