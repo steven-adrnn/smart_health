@@ -7,9 +7,6 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
 
-  console.log('Full Callback URL:', requestUrl.toString());
-  console.log('Extracted Code:', code);
-
   if (code) {
     const supabase = createRouteHandlerClient({ cookies });
     
@@ -23,6 +20,6 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Redirect to home page after successful login
-  return NextResponse.redirect(new URL('/', request.url));
+  // Redirect ke URL environment
+  return NextResponse.redirect(new URL(process.env.NEXT_PUBLIC_SITE_URL || '/'));
 }

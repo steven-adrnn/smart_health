@@ -47,7 +47,7 @@ export default function LoginPage() {
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `https://smart-health-tst.vercel.app/auth/callback`,
+                    redirectTo: process.env.NEXT_PUBLIC_SITE_URL + '/auth/callback',
                     scopes: 'openid email profile'
                 }
             });
