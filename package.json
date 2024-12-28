@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint",
+  "docker:build": "docker build -t smart-health .",
+  "docker:run": "docker run -p 3000:3000 smart-health"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.4",
