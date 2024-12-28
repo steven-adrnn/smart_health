@@ -228,13 +228,18 @@ export default function CartPage() {
         }
     };
     
+    const getPublicImageUrl = (path: string) => {
+        const cleanPath = path.replace(/\s+/g, '%20');
+        return `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${cleanPath}`;
+    };
+    
     return (
         <div className="container mx-auto p-4">
             <h1 className="text-2xl">Keranjang </h1>
             <div>
                 {cartItems.map(item => (
                     <div key={item.id} className="flex justify-between items-center border-b py-2">
-                        <Image src={item.image || '/placeholder.png'} alt={item.name} width={50} height={50} />
+                        <Image src={item.image ? getPublicImageUrl(item.image) : '/placeholder.png'} alt={item.name} width={50} height={50} />
                         <div className="flex-1 mx-2">
                             <h2 className="font-bold">{item.name}</h2>
                             <p>Harga: Rp {item.price}</p>
