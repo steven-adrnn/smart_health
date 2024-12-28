@@ -47,16 +47,21 @@ export default function LoginPage() {
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`
+                    redirectTo: `https://smart-health-tst-production.up.railway.app/auth/callback`
                 }
             });
 
+            console.log('OAuth Data:', data);
+            console.log('OAuth Error:', error);
+
             if (data?.url) {
+                console.log('Redirecting to:', data.url);
                 window.location.href = data.url;
             }
 
             if (error) {
-                toast.error('Google Sign In Error: ' + error.message);
+                console.error('Google Sign In Error:', error);
+                toast.error('Gagal login dengan Google');
                 return;
             }
         } catch (error) {

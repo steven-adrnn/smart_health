@@ -85,7 +85,7 @@ export default function RegisterPage() {
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`
+                    redirectTo: `https://smart-health-tst-production.up.railway.app/auth/callback`
                 }
             });
 
