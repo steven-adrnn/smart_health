@@ -58,11 +58,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 {product.image && (
                     <div className="relative w-full h-48 mb-2">
                         <Image 
-                            src={product.image} 
+                            src={product.image || '/placeholder.jpg'} 
                             alt={product.name} 
-                            fill
+                            width={200}  // Tambahkan width
+                            height={200} // Tambahkan height
                             className=" object-cover rounded-md"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            onError={(e) => {
+                                console.error('Image load error', e);
+                                e.currentTarget.src = '/placeholder.png';
+                            }}
                         />
                     </div>
                 )}
