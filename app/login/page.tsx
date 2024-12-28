@@ -7,6 +7,8 @@ import { toast } from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import Google from 'lucide-react'; // Pastikan import icon Google
+
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -40,6 +42,25 @@ export default function LoginPage() {
         }
     };
 
+    const handleGoogleSignIn = async () => {
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback`
+                }
+            });
+
+            if (error) {
+                toast.error('Google Sign In Error: ' + error.message);
+                return;
+            }
+        } catch (error) {
+            console.error('Unexpected Google Sign In Error:', error);
+            toast.error('Terjadi kesalahan saat login dengan Google');
+        }
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="bg-white p-8 rounded-lg shadow-md w-96">
@@ -60,6 +81,16 @@ export default function LoginPage() {
                         required
                     />
                     <Button type="submit" className="w-full">Login</Button>
+                    <div className="mt-4">
+                        <Button 
+                            onClick={handleGoogleSignIn} 
+                            variant="outline" 
+                            className="w-full flex items-center justify-center"
+                        >
+                            <Google className="mr-2 h-5 w-5" />
+                            Login dengan Google
+                        </Button>
+                    </div>
                     <div className="text-center">
                         <p>Belum punya akun? 
                             <Link href="/register" className="text-blue-500 ml-1">

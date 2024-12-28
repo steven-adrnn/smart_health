@@ -5,6 +5,9 @@ import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import * as bcrypt from 'bcryptjs';  // Install bcryptjs
+import { Button } from '@/components/ui/button';
+import { Chrome as GoogleIcon } from 'lucide-react';
+
 
 export default function RegisterPage() {
     const [email, setEmail] = useState('');
@@ -77,6 +80,25 @@ export default function RegisterPage() {
         }
     };
 
+    const handleGoogleSignUp = async () => {
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback`
+                }
+            });
+
+            if (error) {
+                toast.error('Google Sign Up Error: ' + error.message);
+                return;
+            }
+        } catch (error) {
+            console.error('Unexpected Google Sign Up Error:', error);
+            toast.error('Terjadi kesalahan saat mendaftar dengan Google');
+        }
+    };
+
     return (
         <div>
             <form onSubmit={handleRegister}>
@@ -102,6 +124,16 @@ export default function RegisterPage() {
                     required
                 />
                 <button type="submit">Daftar</button>
+                <div className="mt-4">
+                    <Button 
+                        onClick={handleGoogleSignUp} 
+                        variant="outline" 
+                        className="w-full flex items-center justify-center"
+                    >
+                        <GoogleIcon className="mr-2 h-5 w-5" />
+                        Daftar dengan Google
+                    </Button>
+                </div>
             </form>
         </div>
     );

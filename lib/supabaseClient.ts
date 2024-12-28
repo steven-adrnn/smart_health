@@ -25,6 +25,16 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     }
 });
 
+// Fungsi untuk login dengan Google
+export const signInWithGoogle = async () => {
+    return await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: `${window.location.origin}/auth/callback`
+        }
+    });
+};
+
 // Fungsi untuk mendapatkan sesi pengguna
 export const getUserSession = async () => {
     const { data: { session } } = await supabase.auth.getSession();
