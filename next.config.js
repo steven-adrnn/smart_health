@@ -18,7 +18,7 @@ const nextConfig = {
 
     images: {
       domains: [
-        'https://smart-health-tst.up.railway.app/',
+        'https://smart-health-tst.up.railway.app',
         'enyvqjbqavjdzxmktahy.supabase.co', // Sesuaikan dengan domain Supabase Anda
       ],
       remotePatterns: [
@@ -28,6 +28,12 @@ const nextConfig = {
           port: '',
           pathname: '/storage/v1/object/public/**',
         },
+        {
+          protocol: 'https',
+          hostname: 'https://smart-health-tst.up.railway.app',
+          port: '',
+          pathname: '/**',
+        }
       ],
     },
   }

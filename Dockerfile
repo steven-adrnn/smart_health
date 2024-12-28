@@ -18,7 +18,7 @@ COPY . .
 
 # Pastikan folder public disalin
 RUN mkdir -p /app/public/image
-COPY public/image /app/public/image
+COPY public /app/public/image
 
 # Set environment variables during build
 ARG NEXT_PUBLIC_SUPABASE_URL
