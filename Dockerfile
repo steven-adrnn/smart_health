@@ -16,17 +16,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Pastikan folder public disalin
-RUN mkdir -p /app/public/image
-COPY public /app/public/image
-
 # Set environment variables during build
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-ENV NODE_OPTIONS="--max_old_space_size=4096"
 RUN npm run build
 
 # Production image

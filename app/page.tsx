@@ -3,10 +3,10 @@ import { Footer } from '@/components/Footer';
 import CategoryCard from '@/components/CategoryCard';
 
 const categories = [
-    { name: 'Fruits', image: '/fruits.jpg' }, // Ganti dengan path gambar yang sesuai
-    { name: 'Vegetables', image: '/vegetables.jpg' },
-    { name: 'Meat', image: '/meat.jpg' },
-    { name: 'Dairy', image: '/dairy.jpg' },
+    { name: 'Fruits', image: '/image/fruits.jpg' }, // Ganti dengan path gambar yang sesuai
+    { name: 'Vegetables', image: '/image/vegetables.jpg' },
+    { name: 'Meat', image: '/image/meat.jpg' },
+    { name: 'Dairy', image: '/image/dairy.jpg' },
 ];
 
 const HomePage = () => {
