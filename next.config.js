@@ -18,10 +18,16 @@ const nextConfig = {
 
     images: {
       domains: [
-        'https://enyvqjbqavjdzxmktahy.supabase.co', // Sesuaikan dengan domain Supabase Anda
-        'storage.googleapis.com',
-        'example.com'
-      ]
+        'enyvqjbqavjdzxmktahy.supabase.co', // Sesuaikan dengan domain Supabase Anda
+      ],
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: 'enyvqjbqavjdzxmktahy.supabase.co',
+          port: '',
+          pathname: '/storage/v1/object/public/**',
+        },
+      ],
     },
   }
   

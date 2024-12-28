@@ -51,6 +51,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         }
     };
 
+    const getPublicImageUrl = (path: string) => {
+        const cleanPath = path.replace(/\s+/g, '%20');
+        return `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${cleanPath}`;
+    };
+
     return (
         <div className="border rounded-lg p-4 shadow-md flex flex-col">
             <Link href={`/product/${product.id}`} className="flex-grow">
@@ -58,13 +63,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 {product.image && (
                     <div className="relative w-full h-48 mb-2">
                         <Image 
-                            src={product.image || '/placeholder.jpg'} 
+                            src={product.image 
+                                ? getPublicImageUrl(product.image) 
+                                : '/placeholder.png'
+                            } 
                             alt={product.name} 
                             width={200}  // Tambahkan width
                             height={200} // Tambahkan height
                             className=" object-cover rounded-md"
                             onError={(e) => {
-                                console.error('Image load error', e);
+                                console.error('Image load error', product.image);
                                 e.currentTarget.src = '/placeholder.png';
                             }}
                         />
