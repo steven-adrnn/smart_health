@@ -11,8 +11,9 @@ export async function GET(request: NextRequest) {
   if (code) {
     const supabase = createRouteHandlerClient({ cookies });
     
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-
+    const { error, data } = await supabase.auth.exchangeCodeForSession(code);
+    console.log(data); // or do something else with the data value
+    
     if (error) {
       console.error('OAuth Exchange Error:', error);
       return NextResponse.redirect(
@@ -50,8 +51,13 @@ export async function GET(request: NextRequest) {
           console.error('Error inserting user:', insertError);
         }
       }
+      // Simpan session di localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user_session', JSON.stringify(session));
+      }
+
     }
   }
 
-  return NextResponse.redirect(new URL(process.env.NEXT_PUBLIC_SITE_URL || '/'));
+  return NextResponse.redirect(new URL('/', request.url));
 }
