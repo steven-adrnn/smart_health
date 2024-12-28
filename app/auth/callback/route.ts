@@ -31,6 +31,9 @@ export async function GET(request: NextRequest) {
         .eq('id', session.user.id)
         .single();
 
+      // Gunakan existingUser jika diperlukan, misalnya logging
+      console.log('Existing User:', existingUser);
+
       if (userError && userError.code === 'PGRST116') {
         // User belum ada di tabel users, insert manual
         const { error: insertError } = await supabase
