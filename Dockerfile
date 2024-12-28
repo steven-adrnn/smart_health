@@ -1,5 +1,5 @@
 # Gunakan official Node.js image
-FROM node:18-alpine AS base
+FROM node:14 AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY package.json package-lock.json* ./
-RUN npm install --production
+RUN npm install
 
 # Build stage
 FROM base AS builder
@@ -22,8 +22,7 @@ ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-# Build the application
-RUN npm run build
+
 
 # Production image
 FROM base AS runner
@@ -42,12 +41,18 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Copy additional files if needed
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/components ./components
+COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/app ./app
+COPY --from=builder /app/pages ./pages
+
+
+
+# Build the application
+RUN npm run build
 
 USER nextjs
 
 EXPOSE 3000
-
-ENV PORT 3000
-ENV HOSTNAME localhost
 
 CMD ["npm", "start"]
