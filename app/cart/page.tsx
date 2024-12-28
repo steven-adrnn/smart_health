@@ -6,19 +6,26 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { Database } from '@/lib/database.types';
 
-interface CartItem {
-    id: string;
-    name: string;
-    price: number;
-    quantity: number;
-    image: string | null;
-}
+import { RecipeRecommendations } from '@/components/RecipeRecommendation';
+
+
+// interface CartItem {
+//     id: string;
+//     name: string;
+//     price: number;
+//     quantity: number;
+//     image: string | null;
+// }
 
 interface Address {
     id: string;
     address: string;
 }
+
+type CartItem = Database['public']['Tables']['products']['Row'] & { quantity: number };
+
 
 export default function CartPage() {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -264,6 +271,10 @@ export default function CartPage() {
                     ))}
                 </select>
             </div>
+
+            {cartItems.length > 0 && (
+                <RecipeRecommendations cartItems={cartItems} />
+            )}
         </div>
     );
 }

@@ -160,6 +160,38 @@ export interface Database {
           created_at?: string
         }
       }
+      recipes: {
+        Row: {
+          id: string;
+          name: string;
+          description: string;
+          ingredients: string[]; // Array of product IDs
+          instructions: string[];
+          difficulty: 'easy' | 'medium' | 'hard';
+          preparation_time: number; // in minutes
+          cooking_time: number; // in minutes
+        }
+        Insert: {
+          id?: string;
+          name: string;
+          description: string;
+          ingredients: string[];
+          instructions: string[];
+          difficulty?: 'easy' | 'medium' | 'hard';
+          preparation_time?: number;
+          cooking_time?: number;
+        }
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string;
+          ingredients?: string[];
+          instructions?: string[];
+          difficulty?: 'easy' | 'medium' | 'hard';
+          preparation_time?: number;
+          cooking_time?: number;
+        }
+      }
     }
     Views: {
       [_ in never]: never
