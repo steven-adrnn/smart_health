@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-// import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
-import AddressesComponent from '@/components/Addresses';
+import Addresses from '@/components/Addresses';
 import { BackButton } from '@/components/BackButton';
 
 type CartItem = {
@@ -134,7 +133,7 @@ const CheckoutPage = () => {
             {/* Pilih Alamat */}
             <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">Pilih Alamat Pengiriman</h2>
-                <AddressesComponent onSelectAddress={(address: string) => setSelectedAddress(address)} />
+                <Addresses onSelectAddress={(address: string) => setSelectedAddress(address)} />
                 {selectedAddress && (
                     <div className="mt-2 p-2 bg-green-50 rounded">
                         <strong>Alamat Terpilih:</strong> {selectedAddress}
