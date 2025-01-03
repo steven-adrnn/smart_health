@@ -7,7 +7,7 @@ import { Database } from '@/lib/database.types';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'react-hot-toast';
-import { MapPin, Plus, Trash2 } from 'lucide-react';
+import { MapPin, Trash2 } from 'lucide-react';
 
 interface AddressesProps {
     onSelectAddress?: (address: Database['public']['Tables']['addresses']['Row']) => void;
