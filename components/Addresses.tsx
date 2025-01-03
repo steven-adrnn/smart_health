@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Database } from '@/lib/database.types';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { toast } from 'react-hot-toast';
 import { MapPin, Locate } from 'lucide-react';
 
@@ -18,7 +17,6 @@ interface AddressesProps {
 
 const Addresses: React.FC<AddressesProps> = ({ 
     onSelectAddress, 
-    allowAddNew = true 
 }) => {
     const [addresses, setAddresses] = useState<Database['public']['Tables']['addresses']['Row'][]>([]);
     const [isGeolocationLoading, setIsGeolocationLoading] = useState(false);
