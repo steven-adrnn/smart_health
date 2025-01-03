@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import Addresses from '@/components/Addresses';
 import { BackButton } from '@/components/BackButton';
+import { Database } from '@/lib/database.types'; // Pastikan import ini
+
 
 type CartItem = {
     id: string;
@@ -16,10 +18,12 @@ type CartItem = {
     image: string | null;
 };
 
+type Address = Database['public']['Tables']['addresses']['Row'];
+
 const CheckoutPage = () => {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [total, setTotal] = useState(0);
-    const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+    const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -33,6 +37,11 @@ const CheckoutPage = () => {
             sum + (item.price * item.quantity), 0
         );
         setTotal(totalPrice);
+    };
+
+    const handleAddressSelection = (address: Address) => {
+        // Simpan seluruh objek alamat
+        setSelectedAddress(address);
     };
 
     const handleCheckout = async () => {
@@ -64,7 +73,8 @@ const CheckoutPage = () => {
                 user_id: userId,
                 product_id: item.id,
                 quantity: item.quantity,
-                address: selectedAddress
+                address: selectedAddress,
+                address_id: selectedAddress.id // Tambahkan ID alamat
             }));
 
             // Simpan ke database cart
@@ -133,10 +143,18 @@ const CheckoutPage = () => {
             {/* Pilih Alamat */}
             <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">Pilih Alamat Pengiriman</h2>
-                <Addresses onSelectAddress={(address: string) => setSelectedAddress(address)} />
+                <Addresses
+                    onSelectAddress={handleAddressSelection} 
+                    allowAddNew={true}  
+                />
                 {selectedAddress && (
                     <div className="mt-2 p-2 bg-green-50 rounded">
-                        <strong>Alamat Terpilih:</strong> {selectedAddress}
+                        <strong>Alamat Terpilih:</strong> {selectedAddress.address}
+                        {selectedAddress.latitude && selectedAddress.longitude && (
+                            <p className="text-xs text-gray-500">
+                                Koordinat: {selectedAddress.latitude}, {selectedAddress.longitude}
+                            </p>
+                        )}
                     </div>
                 )}
             </div>
@@ -155,7 +173,7 @@ const CheckoutPage = () => {
                 disabled={!selectedAddress}
                 className="w-full"
             >
-                Proses Checkout
+                Checkout
             </Button>
         </div>
     );
