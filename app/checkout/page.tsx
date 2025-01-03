@@ -73,8 +73,13 @@ const CheckoutPage = () => {
                 user_id: userId,
                 product_id: item.id,
                 quantity: item.quantity,
-                address: selectedAddress,
-                address_id: selectedAddress.id // Tambahkan ID alamat
+                address: selectedAddress.address,
+                latitude: selectedAddress.latitude,
+                longitude: selectedAddress.longitude,
+                street: selectedAddress.street,
+                city: selectedAddress.city,
+                province: selectedAddress.province,
+                postal_code: selectedAddress.postal_code
             }));
 
             // Simpan ke database cart

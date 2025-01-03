@@ -145,28 +145,40 @@ export interface Database {
       }
       addresses: {
         Row: {
-          id: string
-          user_id: string
-          address: string
-          latitude: string | null
-          longitude: string | null
-          created_at: string
+            id: string
+            user_id: string
+            address: string
+            latitude: number | null  // Gunakan number untuk koordinat
+            longitude: number | null
+            street: string | null     // Tambahkan field baru
+            city: string | null
+            province: string | null
+            postal_code: string | null
+            created_at: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          address: string
-          latitude: string | null
-          longitude: string | null
-          created_at?: string
+            id?: string
+            user_id: string
+            address: string
+            latitude?: number | null
+            longitude?: number | null
+            street?: string | null
+            city?: string | null
+            province?: string | null
+            postal_code?: string | null
+            created_at?: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          address?: string
-          latitude: string | null
-          longitude: string | null
-          created_at?: string
+            id?: string
+            user_id?: string
+            address?: string
+            latitude?: number | null
+            longitude?: number | null
+            street?: string | null
+            city?: string | null
+            province?: string | null
+            postal_code?: string | null
+            created_at?: string
         }
       }
       recipes: {

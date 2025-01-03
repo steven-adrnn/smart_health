@@ -7,178 +7,116 @@ import { Database } from '@/lib/database.types';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'react-hot-toast';
-import { MapPin, Trash2 } from 'lucide-react';
+import { MapPin, Locate } from 'lucide-react';
+
+
 
 interface AddressesProps {
     onSelectAddress?: (address: Database['public']['Tables']['addresses']['Row']) => void;
     allowAddNew?: boolean;
-    showActions?: boolean;
 }
 
 const Addresses: React.FC<AddressesProps> = ({ 
     onSelectAddress, 
-    allowAddNew = true,
-    showActions = false
+    allowAddNew = true 
 }) => {
     const [addresses, setAddresses] = useState<Database['public']['Tables']['addresses']['Row'][]>([]);
-    const [newAddress, setNewAddress] = useState({
-        street: '',
-        city: '',
-        province: '',
-        postalCode: ''
-    });
-    const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
     const [isGeolocationLoading, setIsGeolocationLoading] = useState(false);
+    const [selectedAddress, setSelectedAddress] = useState<Database['public']['Tables']['addresses']['Row'] | null>(null);
 
     useEffect(() => {
-        fetchAddresses();
+        fetchSavedAddresses();
     }, []);
 
-    const fetchAddresses = async () => {
+    const fetchSavedAddresses = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) return;
 
-        const { data, error } = await supabase
-            .from('addresses')
-            .select('*')
-            .eq('user_id', session.user.id);
-
-        if (error) {
-            console.error('Error fetching addresses:', error);
-            return;
-        }
-
-        setAddresses(data || []);
-    };
-
-    const validateAddress = () => {
-        const { street, city, province, postalCode } = newAddress;
-        
-        if (!street.trim()) {
-            toast.error('Alamat jalan harus diisi');
-            return false;
-        }
-        
-        if (!city.trim()) {
-            toast.error('Kota harus diisi');
-            return false;
-        }
-        
-        if (!province.trim()) {
-            toast.error('Provinsi harus diisi');
-            return false;
-        }
-        
-        if (!postalCode.trim() || !/^\d{5}$/.test(postalCode)) {
-            toast.error('Kode pos harus 5 digit');
-            return false;
-        }
-
-        return true;
-    };
-
-    const handleAddAddress = async () => {
-        if (!validateAddress()) return;
-
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-            toast.error('Anda harus login');
-            return;
-        }
-
-        const formattedAddress = `${newAddress.street}, ${newAddress.city}, ${newAddress.province} ${newAddress.postalCode}`;
-
         try {
-            // Geocoding untuk mendapatkan koordinat
-            const geocodingResponse = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(formattedAddress)}`
-            );
-            const geocodingData = await geocodingResponse.json();
-
-            let latitude = null;
-            let longitude = null;
-
-            if (geocodingData && geocodingData.length > 0) {
-                latitude = geocodingData[0].lat;
-                longitude = geocodingData[0].lon;
-            }
-
             const { data, error } = await supabase
                 .from('addresses')
-                .insert({
-                    user_id: session.user.id,
-                    address: formattedAddress,
-                    latitude: latitude,
-                    longitude: longitude,
-                    street: newAddress.street,
-                    city: newAddress.city,
-                    province: newAddress.province,
-                    postal_code: newAddress.postalCode
-                })
-                .select();
+                .select('*')
+                .eq('user_id', session.user.id);
 
-            if (error) {
-                throw error;
-            }
+            if (error) throw error;
 
-            setAddresses([...addresses, data[0]]);
-            setNewAddress({
-                street: '',
-                city: '',
-                province: '',
-                postalCode: ''
-            });
-            toast.success('Alamat berhasil ditambahkan');
+            // Transform database addresses to AddressDetail
+            const formattedAddresses = (data || []).map(addr => ({
+                id: addr.id,
+                user_id: addr.user_id,
+                address: addr.address,
+                latitude: parseFloat(addr.latitude || '0'),
+                longitude: parseFloat(addr.longitude || '0'),
+                street: addr.street,
+                city: addr.city,
+                province: addr.province,
+                postal_code: addr.postal_code,
+                created_at: addr.created_at
+            }));
+
+            setAddresses(formattedAddresses);
         } catch (error) {
-            console.error('Error adding address:', error);
-            toast.error('Gagal menambahkan alamat');
+            console.error('Error fetching addresses:', error);
+            toast.error('Gagal mengambil alamat tersimpan');
         }
     };
 
-    const handleGetCurrentLocation = () => {
+    const getCurrentLocation = () => {
         setIsGeolocationLoading(true);
-        
+
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
 
                     try {
-                        // Reverse geocoding
+                        // Reverse Geocoding
                         const response = await fetch(
-                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
                         );
                         const data = await response.json();
-                        
-                        const address = data.address;
-                        const formattedAddress = `${address.road || ''}, ${address.city || address.town || ''}, ${address.state || ''} ${address.postcode || ''}`;
 
+                        const addressComponents = data.address;
+                        const addressDetail: Database['public']['Tables']['addresses']['Row'] = {
+                            id: addressComponents.id, // Dummy value
+                            user_id: addressComponents.user_id, // Dummy value
+                            address: addressComponents.address,
+                            latitude,
+                            longitude,
+                            street: addressComponents.streat || '',
+                            city: addressComponents.city || addressComponents.town || '',
+                            province: addressComponents.state || addressComponents.province || '',
+                            postal_code: addressComponents.postcode || '',
+                            created_at: addressComponents.created_at
+                        };
+
+                        // Simpan ke database
                         const { data: { session } } = await supabase.auth.getSession();
                         if (!session?.user) {
                             toast.error('Anda harus login');
                             return;
                         }
 
-                        const { data: newAddressData, error } = await supabase
-                            .from('addresses')
-                            .insert({
-                                user_id: session.user.id,
-                                address: formattedAddress,
-                                latitude: latitude.toString(),
-                                longitude: longitude.toString(),
-                                street: address.road || '',
-                                city: address.city || address.town || '',
-                                province: address.state || '',
-                                postal_code: address.postcode || ''
-                            })
-                            .select();
+                        const { error } = await supabase.from('addresses').insert({
+                            user_id: session.user.id,
+                            address: addressDetail.address,
+                            latitude: latitude.toString(),
+                            longitude: longitude.toString(),
+                            street: addressDetail.street,
+                            city: addressDetail.city,
+                            province: addressDetail.province,
+                            postal_code: addressDetail.postal_code
+                        });
 
-                        if (error) {
-                            throw error;
-                        }
+                        if (error) throw error;
 
-                        setAddresses([...addresses, newAddressData[0]]);
-                        toast.success('Lokasi saat ini berhasil ditambahkan');
+                        // Update state
+                        setAddresses(prev => [...prev, addressDetail]);
+                        
+                        // Pilih alamat yang baru ditambahkan
+                        handleSelectAddress(addressDetail);
+
+                        toast.success('Lokasi berhasil ditambahkan');
                     } catch (error) {
                         console.error('Geocoding error:', error);
                         toast.error('Gagal mendapatkan alamat');
@@ -190,6 +128,11 @@ const Addresses: React.FC<AddressesProps> = ({
                     console.error('Geolocation error:', error);
                     toast.error('Gagal mendapatkan lokasi');
                     setIsGeolocationLoading(false);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
                 }
             );
         } else {
@@ -198,82 +141,54 @@ const Addresses: React.FC<AddressesProps> = ({
         }
     };
 
-    const handleDeleteAddress = async (addressId: string) => {
-        try {
-            const { error } = await supabase
-                .from('addresses')
-                .delete()
-                .eq('id', addressId);
-
-            if (error) {
-                throw error;
-            }
-
-            setAddresses(addresses.filter(addr => addr.id !== addressId));
-            toast.success('Alamat berhasil dihapus');
-        } catch (error) {
-            console.error('Error deleting address:', error);
-            toast.error('Gagal menghapus alamat');
-        }
-    };
-
     const handleSelectAddress = (address: Database['public']['Tables']['addresses']['Row']) => {
-        setSelectedAddressId(address.id);
+        setSelectedAddress(address);
         if (onSelectAddress) {
             onSelectAddress(address);
         }
     };
 
     return (
-        <div>
-            <h2 className="text-xl font-semibold mb-4">Alamat Anda</h2>
-            
-            {allowAddNew && (
-                <div className="mb-4">
-                    <h3 className="text-lg font-semibold">Tambah Alamat Baru</h3>
-                    <Input 
-                        placeholder="Jalan" 
-                        value={newAddress.street} 
-                        onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })} 
-                    />
-                    <Input 
-                        placeholder="Kota" 
-                        value={newAddress.city} 
-                        onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })} 
-                    />
-                    <Input 
-                        placeholder="Provinsi" 
-                        value={newAddress.province} 
-                        onChange={(e) => setNewAddress({ ...newAddress, province: e.target.value })} 
-                    />
-                    <Input 
-                        placeholder="Kode Pos" 
-                        value={newAddress.postalCode} 
-                        onChange={(e) => setNewAddress({ ...newAddress, postalCode: e.target.value })} 
-                    />
-                    <Button onClick={handleAddAddress}>Tambah Alamat</Button>
-                    <Button onClick={handleGetCurrentLocation} disabled={isGeolocationLoading}>
-                        {isGeolocationLoading ? 'Mendapatkan lokasi...' : 'Gunakan Lokasi Saat Ini'}
-                    </Button>
-                </div>
-            )}
+        <div className="space-y-4">
+            <div className="flex space-x-2">
+                <Button 
+                    onClick={getCurrentLocation} 
+                    disabled={isGeolocationLoading}
+                    className="flex items-center"
+                >
+                    <Locate className="mr-2 h-4 w-4" />
+                    {isGeolocationLoading 
+                        ? 'Mendapatkan Lokasi...' 
+                        : 'Gunakan Lokasi Saat Ini'}
+                </Button>
+            </div>
 
-            {addresses.length === 0 ? (
-                <p>Tidak ada alamat yang tersedia.</p>
-            ) : (
-                addresses.map(address => (
-                    <div key={address.id} className="flex justify-between items-center border-b py-2">
-                        <div onClick={() => handleSelectAddress(address)} className={`cursor-pointer ${selectedAddressId === address.id ? 'font-bold' : ''}`}>
-                            <MapPin className="inline mr-2" />
-                            {address.address}
+            {addresses.length > 0 && (
+                <div className="border rounded-md">
+                    <h3 className="text-lg font-semibold p-2 border-b">Alamat Tersimpan</h3>
+                    {addresses.map((address, index) => (
+                        <div 
+                            key={index}
+                            onClick={() => handleSelectAddress(address)}
+                            className={`
+                                p-3 cursor-pointer hover:bg-gray-100 
+                                ${selectedAddress === address 
+                                    ? 'bg-primary text-primary-foreground' 
+                                    : ''}
+                            `}
+                        >
+                            <div className="flex items-center">
+                                <MapPin className="mr-2 h-5 w-5" />
+                                <div>
+                                    <p className="font-medium">{address.address}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Koordinat: {address.latitude}, {address.longitude}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                        {showActions && (
-                            <Button onClick={() => handleDeleteAddress(address.id)} variant="destructive">
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        )}
-                    </div>
-                ))
+                    ))}
+                </div>
             )}
         </div>
     );
