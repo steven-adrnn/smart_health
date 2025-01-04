@@ -28,6 +28,12 @@ const nextConfig = {
           port: '',
           pathname: '/storage/v1/object/public/**',
         },
+        {
+          protocol: 'https',
+          hostname: 'smart-health-tst.up.railway.app',
+          port: '',
+          pathname: '/**',
+        },
         
       ],
       // Tambahkan konfigurasi ini untuk menghindari warning
