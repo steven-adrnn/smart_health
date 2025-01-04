@@ -19,7 +19,7 @@ export async function generateRecipesWithAI(
   const MODEL_NAME = process.env.NEXT_PUBLIC_HUGGING_FACE_MODEL_NAME;
   const API_URL = `https://api-inference.huggingface.co/models/${MODEL_NAME}`;
   console.log('API Key Status:', HUGGING_FACE_API_KEY ? 'Tersedia' : 'Tidak Tersedia');
-
+  //tes
   // Validasi API Key
   if (!HUGGING_FACE_API_KEY) {
     console.error('Hugging Face API Key tidak tersedia');
