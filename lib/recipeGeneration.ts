@@ -73,8 +73,10 @@ STRICT RULES:
 - ONLY RETURN VALID JSON
 - USE INGREDIENTS: ${ingredientNames}
 - NO EXTRA TEXT
-- COMPLETE JSON STRUCTURE
-- FOCUS ON INDONESIAN CUISINE`;
+- INSTRUCTIONS MUST BE ARRAY OF STRINGS
+- INGREDIENTS MUST BE ARRAY OF STRINGS
+- ALL FIELDS ARE REQUIRED
+- NO NESTED OBJECTS IN ARRAYS`;
 }
 
 function extractAndParseRecipes(
@@ -85,6 +87,8 @@ function extractAndParseRecipes(
     // Preprocessing teks
     const cleanedText = text
       .replace(/```/g, '')
+      .replace(/\n/g, ' ')
+      .replace(/\s+/g, ' ')
       .trim();
 
     console.log('Cleaned Text:', cleanedText);
