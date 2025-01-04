@@ -25,50 +25,48 @@ export async function generateRecipesWithAI(
     return [];
   }
 
-  // Buat prompt yang komprehensif dalam bahasa Indonesia
-  const ingredientNames = cartItems.map(item => item.name).join(', ');
-  const prompt = `Buatlah minimal 3 resep masakan Indonesia yang menggunakan bahan-bahan berikut: ${ingredientNames}. 
-  Untuk setiap resep, sertakan:
-  - Nama Resep
-  - Deskripsi Singkat
-  - Daftar Bahan (dengan jumlah/takaran)
-  - Langkah-Langkah Memasak
-  - Tingkat Kesulitan (mudah/sedang/sulit)
-
-  Format dalam JSON:
-  [
-    {
-      "name": "Nama Resep",
-      "description": "Deskripsi Resep",
-      "ingredients": ["Bahan 1", "Bahan 2"],
-      "instructions": ["Langkah 1", "Langkah 2"],
-      "difficulty": "easy/medium/hard"
-    },
-    ...
-  ]`;
+  function createPrompt(cartItems: Product[]): string {
+    const ingredientNames = cartItems.map(item => item.name).join(', ');
+    return `Hasilkan resep masakan Indonesia dalam format JSON VALID menggunakan bahan: ${ingredientNames}. 
+    Format HARUS seperti ini:
+    [
+      {
+        "name": "Nama Resep",
+        "description": "Deskripsi singkat resep",
+        "ingredients": ["Bahan 1", "Bahan 2"],
+        "instructions": ["Langkah 1", "Langkah 2"],
+        "difficulty": "easy/medium/hard"
+      }
+    ]
+  
+    Contoh Bahan: ${ingredientNames}
+    Hasilkan resep yang VALID dan HANYA dalam format JSON!`;
+  }
 
   try {
     const response = await axios.post(
       API_URL,
       { 
-        inputs: prompt,
+        inputs: createPrompt(cartItems),
         parameters: {
-          max_new_tokens: 100,
+          max_new_tokens: 500,
           temperature: 0.7,
           return_full_text: false,
-          retries: 2
         }
       },
       {
         headers: {
           'Authorization': `Bearer ${HUGGING_FACE_API_KEY}`,
           'Content-Type': 'application/json'
-        }
+        },
+        timeout: 15000
       }
     );
+    console.log('Full API Response:', response.data);
 
     // Ekstrak dan parsing resep
     const generatedText = response.data[0].generated_text;
+    console.log('Raw Generated Text:', generatedText);
     
     // Parsing JSON dari teks yang di-generate
     const recipes = parseRecipes(generatedText);
@@ -83,28 +81,77 @@ export async function generateRecipesWithAI(
 
 function parseRecipes(text: string): GeneratedRecipe[] {
   try {
-    console.log('Raw generated text:', text);
+    // Gunakan regex tanpa flag 's' untuk kompatibilitas
+    const cleanText = text
+      .replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim()
+      .replace(/\n/g, ' ')
+      .replace(/\r/g, ' ');
 
-    // Coba parsing JSON
-    const recipes = JSON.parse(text);
+    console.log('Cleaned Text:', cleanText);
+
+    // Ubah pencarian regex
+    const jsonMatches = cleanText.match(/\[.*?\]/);
     
-    // Validasi struktur
-    if (Array.isArray(recipes)) {
-      return recipes.map(recipe => ({
-        name: recipe.name || 'Resep Tanpa Judul',
-        description: recipe.description || 'Deskripsi tidak tersedia',
+    if (!jsonMatches) {
+      console.error('No JSON-like structure found');
+      return [];
+    }
+
+    const potentialJson = jsonMatches[0];
+    console.log('Potential JSON:', potentialJson);
+
+    // Tipe yang lebih spesifik untuk error
+    let recipes: any;
+    try {
+      recipes = JSON.parse(potentialJson);
+    } catch (error: unknown) {
+      // Tangani error parsing dengan tipe yang jelas
+      if (error instanceof Error) {
+        console.error('JSON Parsing Error:', {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        });
+      } else {
+        console.error('Unknown parsing error:', error);
+      }
+      return [];
+    }
+    
+    return (Array.isArray(recipes) ? recipes : [recipes])
+      .map((recipe: any) => ({
+        name: recipe.name || `Resep Rahasia`,
+        description: recipe.description || 'Resep tanpa deskripsi',
         ingredients: recipe.ingredients || [],
         instructions: recipe.instructions || [],
         difficulty: ['easy', 'medium', 'hard'].includes(recipe.difficulty) 
           ? recipe.difficulty 
           : 'medium'
-      }));
-    }
+      }))
+      .filter((recipe: GeneratedRecipe) => recipe.name && recipe.ingredients.length > 0);
 
-    return [];
-  } catch (parseError) {
-    // Fallback parsing manual jika JSON parsing gagal
-    console.error('Kesalahan parsing resep:', parseError);
+  } catch (error: unknown) {
+    // Tangani error dengan tipe yang jelas
+    if (error instanceof Error) {
+      console.error('Parsing Error Details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+    } else {
+      console.error('Unknown error during parsing:', error);
+    }
     return [];
   }
+}
+
+// Definisikan interface untuk tipe yang jelas
+interface GeneratedRecipe {
+  name: string;
+  description: string;
+  ingredients: string[];
+  instructions: string[];
+  difficulty: 'easy' | 'medium' | 'hard';
 }
