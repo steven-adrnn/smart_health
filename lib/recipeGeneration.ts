@@ -82,6 +82,8 @@ export async function generateRecipesWithAI(
 
 function parseRecipes(text: string): GeneratedRecipe[] {
   try {
+    console.log('Raw generated text:', text);
+
     // Coba parsing JSON
     const recipes = JSON.parse(text);
     
@@ -99,9 +101,9 @@ function parseRecipes(text: string): GeneratedRecipe[] {
     }
 
     return [];
-  } catch (error) {
+  } catch (parseError) {
     // Fallback parsing manual jika JSON parsing gagal
-    console.warn('Parsing JSON gagal, menggunakan parsing manual');
+    console.error('Kesalahan parsing resep:', parseError);
     return [];
   }
 }

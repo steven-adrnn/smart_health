@@ -15,12 +15,21 @@ import {
 
 type Product = Database['public']['Tables']['products']['Row'];
 
+// Define interface for Recipe
+interface Recipe {
+  name: string;
+  description: string;
+  ingredients: string[];
+  instructions: string[];
+  difficulty: 'easy' | 'medium' | 'hard';
+}
+
 interface RecipeRecommendationsProps {
   cartItems: Product[];
 }
 
 export function RecipeRecommendations({ cartItems }: RecipeRecommendationsProps) {
-  const [recommendedRecipes, setRecommendedRecipes] = useState<any[]>([]);
+  const [recommendedRecipes, setRecommendedRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -56,7 +65,7 @@ export function RecipeRecommendations({ cartItems }: RecipeRecommendationsProps)
   );
 }
 
-function RecipeCard({ recipe }: { recipe: any }) {
+function RecipeCard({ recipe }: { recipe: Recipe }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
