@@ -16,8 +16,8 @@ export async function generateRecipesWithAI(
   cartItems: Product[]
 ): Promise<GeneratedRecipe[]> {
   const HUGGING_FACE_API_KEY = process.env.NEXT_PUBLIC_HUGGING_FACE_API_KEY;
-  // const MODEL_NAME = process.env.NEXT_PUBLIC_HUGGING_FACE_MODEL_NAME;
-  const API_URL = `https://api-inference.huggingface.co/models/gpt2`;
+  const MODEL_NAME = process.env.NEXT_PUBLIC_HUGGING_FACE_MODEL_NAME;
+  const API_URL = `https://api-inference.huggingface.co/models/${MODEL_NAME}`;
 
   // Validasi API Key
   if (!HUGGING_FACE_API_KEY) {
