@@ -16,7 +16,7 @@ export async function generateRecipesWithAI(
   cartItems: Product[]
 ): Promise<GeneratedRecipe[]> {
   const HUGGING_FACE_API_KEY = process.env.NEXT_PUBLIC_HUGGING_FACE_API_KEY;
-  const MODEL_NAME = process.env.NEXT_PUBLIC_HUGGING_FACE_MODEL_NAME;
+  const MODEL_NAME = 'gpt2';
   const API_URL = `https://api-inference.huggingface.co/models/${MODEL_NAME}`;
 
   try {
@@ -82,15 +82,14 @@ function extractAndParseRecipes(
   cartItems: Product[]
 ): GeneratedRecipe[] {
   try {
-    // Aggressive cleaning and extraction
+    // Preprocessing teks
     const cleanedText = text
       .replace(/```/g, '')
-      .replace(/json/g, '')
       .trim();
 
-    console.log('Hyper Cleaned Text:', cleanedText);
+    console.log('Cleaned Text:', cleanedText);
 
-    // Multiple extraction strategies
+    // Ekstrasi JSON menggunakan regex yang lebih robust
     const jsonExtractionPatterns = [
       // Regex patterns to capture JSON-like structures
       /{[^}]*"name"[^}]*"ingredients"[^}]*"instructions"[^}]*}/,
@@ -107,7 +106,7 @@ function extractAndParseRecipes(
         try {
           const recipeData = JSON.parse(matches[0]);
           
-          // Validate and transform recipe
+          // Validasi dan transformasi resep
           const recipe: GeneratedRecipe = {
             name: recipeData.name || `Resep ${cartItems[0]?.name || 'Spesial'}`,
             description: recipeData.description || 'Resep masakan Indonesia',
