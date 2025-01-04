@@ -144,28 +144,3 @@ function extractAndParseRecipes(
     return [];
   }
 }
-
-function generateFallbackRecipes(cartItems: Product[]): GeneratedRecipe[] {
-  return cartItems.map(item => ({
-    name: `Resep ${item.name} Serbaguna`,
-    description: `Olahan sederhana berbahan dasar ${item.name}`,
-    ingredients: [
-      item.name, 
-      'Garam', 
-      'Minyak goreng', 
-      'Bawang putih', 
-      'Merica'
-    ],
-    instructions: [
-      `Siapkan ${item.name} dan bersihkan`,
-      'Potong bahan sesuai selera',
-      'Panaskan minyak di wajan',
-      'Tumis bawang putih hingga harum',
-      'Masukkan bahan utama',
-      'Bumbui dengan garam dan merica',
-      'Masak hingga matang sempurna',
-      'Sajikan hangat'
-    ],
-    difficulty: 'easy'
-  }));
-}
