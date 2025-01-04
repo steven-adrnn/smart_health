@@ -103,7 +103,7 @@ function parseRecipes(text: string): GeneratedRecipe[] {
     console.log('Potential JSON:', potentialJson);
 
     // Tipe yang lebih spesifik untuk error
-    let recipes: any;
+    let recipes: GeneratedRecipe[];
     try {
       recipes = JSON.parse(potentialJson);
     } catch (error: unknown) {
@@ -121,7 +121,7 @@ function parseRecipes(text: string): GeneratedRecipe[] {
     }
     
     return (Array.isArray(recipes) ? recipes : [recipes])
-      .map((recipe: any) => ({
+      .map((recipe: GeneratedRecipe) => ({
         name: recipe.name || `Resep Rahasia`,
         description: recipe.description || 'Resep tanpa deskripsi',
         ingredients: recipe.ingredients || [],
@@ -147,11 +147,3 @@ function parseRecipes(text: string): GeneratedRecipe[] {
   }
 }
 
-// Definisikan interface untuk tipe yang jelas
-interface GeneratedRecipe {
-  name: string;
-  description: string;
-  ingredients: string[];
-  instructions: string[];
-  difficulty: 'easy' | 'medium' | 'hard';
-}
