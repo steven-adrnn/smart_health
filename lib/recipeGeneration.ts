@@ -84,7 +84,6 @@ function extractAndParseRecipes(
   cartItems: Product[]
 ): GeneratedRecipe[] {
   try {
-    // Preprocessing teks
     const cleanedText = text
       .replace(/```/g, '')
       .replace(/\n/g, ' ')
