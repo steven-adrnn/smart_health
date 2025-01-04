@@ -31,14 +31,27 @@ interface RecipeRecommendationsProps {
 export function RecipeRecommendations({ cartItems }: RecipeRecommendationsProps) {
   const [recommendedRecipes, setRecommendedRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
 
   useEffect(() => {
     const fetchRecipes = async () => {
       if (cartItems.length > 0) {
-        setIsLoading(true);
-        const recipes = await generateRecipesWithAI(cartItems);
-        setRecommendedRecipes(recipes);
-        setIsLoading(false);
+        try {
+          setIsLoading(true);
+          const recipes = await generateRecipesWithAI(cartItems);
+          
+          if (recipes.length === 0) {
+            setError('Tidak dapat menghasilkan resep');
+          }
+          
+          setRecommendedRecipes(recipes);
+        } catch (err) {
+          console.error('Kesalahan generasi resep:', err);
+          setError(err instanceof Error ? err.message : 'Kesalahan tidak dikenal');
+        } finally {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -49,8 +62,12 @@ export function RecipeRecommendations({ cartItems }: RecipeRecommendationsProps)
     return <div>Menghasilkan resep...</div>;
   }
 
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
   if (recommendedRecipes.length === 0) {
-    return null;
+    return <div>Tidak ada resep yang dapat dihasilkan</div>;
   }
 
   return (
