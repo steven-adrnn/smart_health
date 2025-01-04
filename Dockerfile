@@ -13,7 +13,7 @@ RUN npm ci
 # Build stage
 FROM base AS builder
 WORKDIR /smart-health-tst
-# COPY --from=deps /smart-health-tst/node_modules ./node_modules
+COPY --from=deps /smart-health-tst/node_modules ./node_modules
 COPY . .
 
 # Set environment variables during build
