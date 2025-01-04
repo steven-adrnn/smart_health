@@ -53,9 +53,10 @@ export async function generateRecipesWithAI(
       { 
         inputs: prompt,
         parameters: {
-          max_new_tokens: 1000,
+          max_new_tokens: 100,
           temperature: 0.7,
-          return_full_text: false
+          return_full_text: false,
+          retries: 2
         }
       },
       {
