@@ -18,7 +18,6 @@ export async function generateRecipesWithAI(
   const HUGGING_FACE_API_KEY = process.env.NEXT_PUBLIC_HUGGING_FACE_API_KEY;
   const MODEL_NAME = process.env.NEXT_PUBLIC_HUGGING_FACE_MODEL_NAME; // Atau ganti dengan model yang lebih canggih
   const API_URL = `https://api-inference.huggingface.co/models/${MODEL_NAME}`;
-
   try {
     const response = await axios.post(
       API_URL,
@@ -29,7 +28,7 @@ export async function generateRecipesWithAI(
           temperature: 0.7,
           return_full_text: false
         }
-        
+
       },
       {
         headers: {
