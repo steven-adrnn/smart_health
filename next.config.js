@@ -3,8 +3,12 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     webpack: (config) => {
-        config.resolve.alias['@'] = path.resolve(__dirname);
-        return config;
+      config.resolve.fallback = { 
+        fs: false,
+        net: false,
+        tls: false 
+      };
+      return config;
     },
     output: 'standalone',
     reactStrictMode: true,
@@ -49,6 +53,17 @@ const nextConfig = {
             { key: 'Access-Control-Allow-Methods', value: 'POST, OPTIONS' },
             { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-API-Key' },
           ],
+          source: '/api/(.*)',
+          headers: [
+              { 
+                  key: 'Connection', 
+                  value: 'upgrade' 
+              },
+              { 
+                  key: 'Upgrade', 
+                  value: 'websocket' 
+              }
+          ]
         },
       ]
     }

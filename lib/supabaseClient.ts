@@ -25,11 +25,83 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     },
     realtime: {
         params: {
-            eventsPerSecond: 200,
+            eventsPerSecond: 10,
         },
+        
+       
     },
+    db: {
+        schema: 'public', // Pastikan schema benar
+    }
     
 });
+
+
+// Fungsi Utility Realtime dengan Error Handling
+export const createRealtimeChannel = (
+    tableName: string, 
+    callback: (payload: any) => void
+) => {
+    const channel = supabase
+        .channel(tableName)
+        .on(
+            'postgres_changes', 
+            { 
+                event: '*', 
+                schema: 'public', 
+                table: tableName 
+            }, 
+            callback
+        )
+        .subscribe((status) => {
+            console.log(`Realtime Channel (${tableName}) Status:`, status);
+            
+            if (status === 'CHANNEL_ERROR') {
+                console.error(`Realtime channel error for ${tableName}`);
+                // Implementasi retry logic
+                setTimeout(() => {
+                    channel.unsubscribe();
+                    createRealtimeChannel(tableName, callback);
+                }, 5000);
+            }
+        });
+
+    return channel;
+};
+
+// Fungsi Reconnect Global
+export const setupRealtimeReconnect = () => {
+    if (typeof window !== 'undefined') {
+        window.addEventListener('online', () => {
+            console.log('Network back online, reconnecting Supabase channels');
+            supabase.removeAllChannels();
+        });
+
+        window.addEventListener('offline', () => {
+            console.log('Network offline, cleaning Supabase channels');
+            supabase.removeAllChannels();
+        });
+    }
+};
+
+// Fungsi Monitoring Koneksi
+export const monitorRealtimeConnection = () => {
+    const wsUrl = `wss://${new URL(supabaseUrl).hostname}/realtime/v1/websocket`;
+    
+    const socket = new WebSocket(wsUrl);
+    
+    socket.onopen = () => {
+        console.log('WebSocket connection established');
+    };
+    
+    socket.onerror = (error) => {
+        console.error('WebSocket Connection Error:', error);
+    };
+    
+    socket.onclose = (event) => {
+        console.warn('WebSocket Connection Closed:', event);
+    };
+};
 
 // Fungsi untuk login dengan Google
 export const signInWithGoogle = async () => {

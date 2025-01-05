@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase, setupRealtimeReconnect, monitorRealtimeConnection } from "@/lib/supabaseClient";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { Session } from "@supabase/supabase-js";
@@ -21,6 +21,10 @@ export default function RootLayout({
     };
 
     checkSession();
+    // Setup Realtime Reconnect
+    setupRealtimeReconnect();
+    monitorRealtimeConnection();
+
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_, session) => {
@@ -28,11 +32,16 @@ export default function RootLayout({
       }
     );
 
+
+    // Error Handling Global
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('Unhandled Promise Rejection:', event.reason);
+    });
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []); // Hapus setSession dari dependency array
-
+  }, []); 
+  
   return (
     <html lang="en">
       <body>
