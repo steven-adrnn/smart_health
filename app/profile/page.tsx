@@ -7,15 +7,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Database } from '@/lib/database.types';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 type User = Database['public']['Tables']['users']['Row'];
 type Address = Database['public']['Tables']['addresses']['Row'];
+type Recipe = Database['public']['Tables']['recipes']['Row'];
 
 export default function ProfilePage() {
     const [user, setUser ] = useState<User | null>(null);
     const [points, setPoints] = useState(0);
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [newAddress, setNewAddress] = useState('');
+    const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
     const router = useRouter();
 
     useEffect(() => {
@@ -51,6 +54,27 @@ export default function ProfilePage() {
                 if (addressData) setAddresses(addressData);
             }
         };
+
+        const fetchSavedRecipes = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session?.user) return;
+      
+            const { data: recipes, error } = await supabase
+              .from('recipes')
+              .select('*')
+              .eq('user_id', session.user.id)
+              .order('created_at', { ascending: false });
+      
+            if (error) {
+              console.error('Error fetching saved recipes:', error);
+              return;
+            }
+      
+            setSavedRecipes(recipes);
+          };
+      
+        fetchSavedRecipes();
 
         fetchUserData();
     }, []);
@@ -152,6 +176,27 @@ export default function ProfilePage() {
                 />
                 <Button onClick={handleAddAddress}>Tambah Alamat</Button>
             </div>
+
+            <section className="saved-recipes">
+                <h2>Resep Tersimpan</h2>
+                {savedRecipes.length === 0 ? (
+                <p>Anda belum menyimpan resep apapun</p>
+                ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedRecipes.map(recipe => (
+                    <Card key={recipe.id}>
+                        <CardHeader>
+                            <CardTitle>{recipe.name}</CardTitle>
+                            <CardDescription>{recipe.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p>Kesulitan: {recipe.difficulty}</p>
+                        </CardContent>
+                    </Card>
+                    ))}
+                </div>
+                )}
+            </section>
 
             <Button onClick={handleLogout}>Logout</Button>
         </div>

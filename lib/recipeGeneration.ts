@@ -53,6 +53,7 @@ export async function generateRecipesWithAI(
   }
 }
 
+
 function createDetailedPrompt(cartItems: Product[]): string {
   const ingredientNames = cartItems.map(item => item.name).join(', ');
   return `Harap buat minimal 3 resep makanan Indonesia menggunakan kombinasi bahan: ${ingredientNames}. 

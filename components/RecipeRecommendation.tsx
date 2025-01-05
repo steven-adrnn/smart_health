@@ -8,10 +8,13 @@ import {
   Dialog, 
   DialogContent, 
   DialogHeader, 
+  DialogFooter,
   DialogTitle, 
   DialogDescription, 
   DialogTrigger 
 } from './ui/dialog';
+import { Button } from './ui/button';
+import { supabase } from '@/lib/supabaseClient';
 
 type Product = Database['public']['Tables']['products']['Row'];
 
@@ -75,14 +78,49 @@ export function RecipeRecommendations({ cartItems }: RecipeRecommendationsProps)
       <h2 className="text-2xl font-bold mb-4">Resep AI Rekomendasi</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {recommendedRecipes.map((recipe, index) => (
-          <RecipeCard key={index} recipe={recipe} />
+          <RecipeCard key={index} recipe={recipe} cartItems={cartItems}/>
         ))}
       </div>
     </div>
   );
 }
 
-function RecipeCard({ recipe }: { recipe: Recipe }) {
+function RecipeCard({ recipe, cartItems }: { recipe: Recipe, cartItems: Product[] }) {
+  const [showSaveOption, setShowSaveOption] = useState(false);
+
+  const handleSaveRecipe = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        console.error('Anda harus login untuk menyimpan resep');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('recipes')
+        .insert({
+          user_id: session.user.id,
+          name: recipe.name,
+          description: recipe.description,
+          ingredients: recipe.ingredients,
+          instructions: recipe.instructions,
+          difficulty: recipe.difficulty,
+          original_products: cartItems.map(item => item.id)
+        });
+
+      if (error) {
+        console.error('Gagal menyimpan resep');
+        return;
+      }
+
+      console.log('Resep berhasil disimpan!');
+      setShowSaveOption(false);
+    } catch (error) {
+      console.error('Error saving recipe:', error);
+      console.error('Terjadi kesalahan');
+    }
+  };
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -124,6 +162,32 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
             </ol>
           </div>
         </div>
+
+        <DialogFooter>
+          <Button 
+            onClick={() => setShowSaveOption(true)}
+            variant="outline"
+          >
+            Simpan Resep
+          </Button>
+        </DialogFooter>
+
+        {showSaveOption && (
+          <div className="mt-4 p-4 bg-yellow-50 rounded">
+            <p>Apakah Anda ingin menyimpan resep ini?</p>
+            <div className="flex space-x-2 mt-2">
+              <Button onClick={handleSaveRecipe}>
+                Ya, Simpan
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => setShowSaveOption(false)}
+              >
+                Batalkan
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

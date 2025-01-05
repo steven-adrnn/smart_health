@@ -184,33 +184,36 @@ export interface Database {
       recipes: {
         Row: {
           id: string;
+          user_id: string;  // Siapa yang menyimpan resep
           name: string;
           description: string;
-          ingredients: string[]; // Array of product IDs
+          ingredients: string[];  // Array bahan
           instructions: string[];
           difficulty: 'easy' | 'medium' | 'hard';
-          preparation_time: number; // in minutes
-          cooking_time: number; // in minutes
+          original_products: string[];  // ID produk yang membuat resep
+          created_at: string;
         }
         Insert: {
           id?: string;
+          user_id: string;
           name: string;
           description: string;
           ingredients: string[];
           instructions: string[];
           difficulty?: 'easy' | 'medium' | 'hard';
-          preparation_time?: number;
-          cooking_time?: number;
+          original_products?: string[];
+          created_at?: string;
         }
         Update: {
           id?: string;
-          name?: string;
-          description?: string;
-          ingredients?: string[];
-          instructions?: string[];
+          user_id: string;
+          name: string;
+          description: string;
+          ingredients: string[];
+          instructions: string[];
           difficulty?: 'easy' | 'medium' | 'hard';
-          preparation_time?: number;
-          cooking_time?: number;
+          original_products?: string[];
+          created_at?: string;
         }
       }
     }

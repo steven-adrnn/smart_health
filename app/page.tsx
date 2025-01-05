@@ -5,10 +5,10 @@ import Script from 'next/script'
 
 
 const categories = [
-    { name: 'Fruits', image: '/image/fruits.jpg' }, // Ganti dengan path gambar yang sesuai
-    { name: 'Vegetables', image: '/image/vegetables.jpg' },
-    { name: 'Meat', image: '/image/meat.jpg' },
-    { name: 'Dairy', image: '/image/dairy.jpg' },
+    { name: 'Fruits', image: 'public/image/fruits.jpg' },
+    { name: 'Vegetables', image: 'public/image/vegetables.jpg' },
+    { name: 'Meat', image: 'public/image/meat.jpg' },
+    { name: 'Dairy', image: 'public/image/dairy.jpg' },
 ];
 
 const HomePage = () => {
