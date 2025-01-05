@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
 import { Database } from '@/lib/database.types';
-
 // Definisi tipe yang lebih spesifik untuk session
 import { Session } from '@supabase/supabase-js';
 

@@ -151,7 +151,7 @@ export default function ForumPage() {
             .single();
   
         // Hitung jumlah likes
-        const { count: likesCount, error: countError } = await supabase
+        const { count: likesCount} = await supabase
             .from('forum_likes')
             .select('*', { count: 'exact' })
             .eq('post_id', postId);
