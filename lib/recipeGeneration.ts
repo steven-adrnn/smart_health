@@ -27,8 +27,6 @@ export async function generateRecipesWithAI(
         parameters: {
           max_new_tokens: 500,
           temperature: 0.7,
-          top_p: 0.9,
-          top_k: 50,
           return_full_text: false
         }
       },
@@ -80,11 +78,23 @@ function createDetailedPrompt(cartItems: Product[]): string {
     ],
     "difficulty": "medium"
   }
+
+  PENTING: 
+    - Gunakan format JSON murni
+    - Hindari teks tambahan
+    - Pastikan JSON valid
+    - Gunakan bahan yang tersedia
   `;
 }
 
 function parseRecipesFromText(text: string): GeneratedRecipe[] {
-  const jsonMatches = text.match(/\{[^}]+\}/g);
+  // Bersihkan teks dari noise
+  const cleanedText = text
+    .replace(/Cook time.+/g, '')  // Hapus baris "Cook time"
+    .replace(/Note:.+/g, '')      // Hapus catatan
+    .trim();
+
+  const jsonMatches = cleanedText.match(/\{[^}]+\}/g);
   
   if (!jsonMatches) {
     return [];
@@ -94,25 +104,25 @@ function parseRecipesFromText(text: string): GeneratedRecipe[] {
 
   for (const jsonStr of jsonMatches) {
     try {
+      const fixedJsonStr = jsonStr.replace(/"Ingredient Pack"/, '"ingredients": ["Ingredient Pack"]');
       const recipe = JSON.parse(jsonStr);
       
-      // Validasi struktur
-      if (
-        recipe.name && 
-        recipe.description && 
-        Array.isArray(recipe.ingredients) && 
-        Array.isArray(recipe.instructions)
-      ) {
-        recipes.push({
-          name: recipe.name,
-          description: recipe.description,
-          ingredients: recipe.ingredients,
-          instructions: recipe.instructions,
-          difficulty: ['easy', 'medium', 'hard'].includes(recipe.difficulty) 
+      // Validasi dan normalisasi
+      const normalizedRecipe: GeneratedRecipe = {
+        name: recipe.name || 'Unnamed Recipe',
+        description: recipe.description || '',
+        ingredients: Array.isArray(recipe.ingredients) 
+            ? recipe.ingredients 
+            : [recipe.ingredients || 'No ingredients'],
+        instructions: Array.isArray(recipe.instructions) 
+            ? recipe.instructions 
+            : ['No instructions provided'],
+        difficulty: ['easy', 'medium', 'hard'].includes(recipe.difficulty) 
             ? recipe.difficulty 
             : 'medium'
-        });
-      }
+      };
+
+      recipes.push(normalizedRecipe);
     } catch (error) {
       console.error('JSON Parsing Error:', error);
     }
