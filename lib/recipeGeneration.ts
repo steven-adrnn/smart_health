@@ -104,7 +104,6 @@ function parseRecipesFromText(text: string): GeneratedRecipe[] {
 
   for (const jsonStr of jsonMatches) {
     try {
-      const fixedJsonStr = jsonStr.replace(/"Ingredient Pack"/, '"ingredients": ["Ingredient Pack"]');
       const recipe = JSON.parse(jsonStr);
       
       // Validasi dan normalisasi
