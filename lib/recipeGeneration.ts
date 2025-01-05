@@ -45,7 +45,7 @@ export async function generateRecipesWithAI(
     console.log('Generated Text:', generatedText);
 
     // Parse resep dengan metode yang lebih robust
-    const recipes = parseRecipesFromText(generatedText, cartItems);
+    const recipes = parseRecipesFromText(generatedText);
 
     return recipes;
 
@@ -83,7 +83,7 @@ function createDetailedPrompt(cartItems: Product[]): string {
   `;
 }
 
-function parseRecipesFromText(text: string, cartItems: Product[]): GeneratedRecipe[] {
+function parseRecipesFromText(text: string): GeneratedRecipe[] {
   const jsonMatches = text.match(/\{[^}]+\}/g);
   
   if (!jsonMatches) {
