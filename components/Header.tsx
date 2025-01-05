@@ -28,6 +28,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
                     <>
                         <Link href="/profile">Profile</Link>
                         <Link href="/cart">Cart</Link>
+                        <Link href="/forum">Forum</Link>
                         <Button onClick={handleLogout} variant="destructive">Logout</Button>
                     </>
                 ) : (
