@@ -21,6 +21,11 @@ const HomePage = () => {
                     ))}
                 </div>
             </div>
+
+            <script>
+                window.MUSICMATE_API_KEY = 'mk_tjZrWLCT04UdNkJYhtcoe7stV0kClKqNB6dLSnzQcRg';
+            </script>
+            <script src="https://spotify-bot.azurewebsites.net/static/js/widget-loader.js"></script>
             <Footer />
         </div>
     );
