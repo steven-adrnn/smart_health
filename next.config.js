@@ -17,14 +17,11 @@ const nextConfig = {
       NEXT_PUBLIC_HUGGING_FACE_API_KEY: process.env.NEXT_PUBLIC_HUGGING_FACE_API_KEY,
       NEXT_PUBLIC_HUGGING_FACE_MODEL_NAME: process.env.NEXT_PUBLIC_HUGGING_FACE_MODEL_NAME,
       MUSICMATE_API_KEY: process.env.MUSICMATE_API_KEY,
+      RECIPE_API_KEY: process.env.RECIPE_API_KEY,
 
     },
 
     images: {
-      // domains: [
-      //   'https://smart-health-tst.up.railway.app',
-      //   'enyvqjbqavjdzxmktahy.supabase.co', // Sesuaikan dengan domain Supabase Anda
-      // ],
       remotePatterns: [
         {
           protocol: 'https',
@@ -42,6 +39,19 @@ const nextConfig = {
       ],
       // Tambahkan konfigurasi ini untuk menghindari warning
     },
+
+    async headers() {
+      return [
+        {
+          source: '/api/recipes',
+          headers: [
+            { key: 'Access-Control-Allow-Origin', value: '*' },
+            { key: 'Access-Control-Allow-Methods', value: 'POST, OPTIONS' },
+            { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-API-Key' },
+          ],
+        },
+      ]
+    }
   }
   
   module.exports = nextConfig
