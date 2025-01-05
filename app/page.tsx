@@ -1,6 +1,8 @@
 import { Hero } from '@/components/Hero';
 import { Footer } from '@/components/Footer';
 import CategoryCard from '@/components/CategoryCard';
+import Script from 'next/script'
+
 
 const categories = [
     { name: 'Fruits', image: '/image/fruits.jpg' }, // Ganti dengan path gambar yang sesuai
@@ -23,9 +25,12 @@ const HomePage = () => {
             </div>
 
             <script>
-                window.MUSICMATE_API_KEY = 'mk_tjZrWLCT04UdNkJYhtcoe7stV0kClKqNB6dLSnzQcRg';
+                window.MUSICMATE_API_KEY = &apos;mk_tjZrWLCT04UdNkJYhtcoe7stV0kClKqNB6dLSnzQcRg&apos;;
             </script>
-            <script src="https://spotify-bot.azurewebsites.net/static/js/widget-loader.js"></script>
+            <Script
+                src="https://spotify-bot.azurewebsites.net/static/js/widget-loader.js"
+                strategy="lazyOnload"
+            ></Script>
             <Footer />
         </div>
     );
