@@ -37,6 +37,7 @@ export default function ForumPage() {
   const [comments, setComments] = useState<ForumComment[]>([]);
   const [newComment, setNewComment] = useState('');
 
+
   useEffect(() => {
     fetchPosts();
     
@@ -55,6 +56,8 @@ export default function ForumPage() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  
 
   const fetchPosts = async () => {
     const { data, error } = await supabase
@@ -137,16 +140,48 @@ export default function ForumPage() {
       toast.error('Anda harus login');
       return;
     }
-
-    const { error } = await supabase
-      .from('forum_likes')
-      .insert({
-        user_id: session.user.id,
-        post_id: postId
-      });
-
-    if (error) {
-      toast.error('Gagal like post');
+  
+    try {
+      // Cek apakah user sudah pernah like post ini
+      const { data: existingLike, error: checkError } = await supabase
+        .from('forum_likes')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('post_id', postId)
+        .single();
+  
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+  
+      // Jika sudah pernah like, maka unlike
+      if (existingLike) {
+        const { error: unlikeError } = await supabase
+          .from('forum_likes')
+          .delete()
+          .eq('user_id', session.user.id)
+          .eq('post_id', postId);
+  
+        if (unlikeError) throw unlikeError;
+        
+        toast.success('Post unliked');
+        return;
+      }
+  
+      // Jika belum pernah like, maka like
+      const { error: likeError } = await supabase
+        .from('forum_likes')
+        .insert({
+          user_id: session.user.id,
+          post_id: postId
+        });
+  
+      if (likeError) throw likeError;
+      
+      toast.success('Post liked');
+    } catch (error) {
+      console.error('Error liking/unliking post:', error);
+      toast.error('Gagal memproses like');
     }
   };
 

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
+import { NotificationSystem } from '@/components/NotificationSystem';
+
 
 interface HeaderProps {
     session: Session | null;
@@ -29,6 +31,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
                         <Link href="/profile">Profile</Link>
                         <Link href="/cart">Cart</Link>
                         <Link href="/forum">Forum</Link>
+                        <NotificationSystem />
                         <Button onClick={handleLogout} variant="destructive">Logout</Button>
                     </>
                 ) : (
