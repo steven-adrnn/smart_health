@@ -80,10 +80,12 @@ function createDetailedPrompt(cartItems: Product[]): string {
   }
 
   PENTING: 
-    - Gunakan format JSON murni
-    - Hindari teks tambahan
-    - Pastikan JSON valid
-    - Gunakan bahan yang tersedia
+    - Gunakan bahan: ${cartItems.map(item => item.name).join(', ')}
+    - JSON HARUS 100% VALID
+    - Tidak boleh ada teks tambahan
+    - Gunakan huruf kecil untuk keys
+    - Pastikan array ingredients dan instructions
+    - difficulty HANYA "easy", "medium", ATAU "hard"
   `;
 }
 
@@ -128,4 +130,5 @@ function parseRecipesFromText(text: string): GeneratedRecipe[] {
   }
 
   return recipes;
+
 }
