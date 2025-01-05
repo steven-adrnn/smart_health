@@ -24,13 +24,19 @@ const HomePage = () => {
                 </div>
             </div>
 
-            <script>
-                window.MUSICMATE_API_KEY = &apos;mk_tjZrWLCT04UdNkJYhtcoe7stV0kClKqNB6dLSnzQcRg&apos;;
-            </script>
+            <Script 
+                id="musicmate-config"
+                strategy="beforeInteractive"
+                dangerouslySetInnerHTML={{
+                    __html: `
+                        window.MUSICMATE_API_KEY = '${process.env.MUSICMATE_API_KEY}';
+                    `
+                }}
+            />
             <Script
                 src="https://spotify-bot.azurewebsites.net/static/js/widget-loader.js"
-                strategy="lazyOnload"
-            ></Script>
+                strategy="afterInteractive"
+            />
             <Footer />
         </div>
     );
