@@ -4,6 +4,15 @@ import type { Database } from './database.types';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+// Definisikan tipe untuk payload
+type RealtimePayload = {
+    eventType: string;
+    schema: string;
+    table: string;
+    new: Record<string, unknown>;
+    old: Record<string, unknown>;
+  };
+
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
         persistSession: true,
@@ -40,7 +49,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 // Fungsi Utility Realtime dengan Error Handling
 export const createRealtimeChannel = (
     tableName: string, 
-    callback: (payload: any) => void
+    callback: (payload: RealtimePayload) => void
 ) => {
     const channel = supabase
         .channel(tableName)
@@ -58,11 +67,11 @@ export const createRealtimeChannel = (
             
             if (status === 'CHANNEL_ERROR') {
                 console.error(`Realtime channel error for ${tableName}`);
-                // Implementasi retry logic
-                setTimeout(() => {
-                    channel.unsubscribe();
-                    createRealtimeChannel(tableName, callback);
-                }, 5000);
+                // // Implementasi retry logic
+                // setTimeout(() => {
+                //     channel.unsubscribe();
+                //     createRealtimeChannel(tableName, callback);
+                // }, 5000);
             }
         });
 
