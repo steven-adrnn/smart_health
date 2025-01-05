@@ -11,7 +11,7 @@ export default async function handler(
         return res.status(400).json({ error: 'Table name is required' });
     }
 
-    const _channel = supabase
+    void supabase
         .channel(table)
         .on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
             console.log('Change received!', payload);
