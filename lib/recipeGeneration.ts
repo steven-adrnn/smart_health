@@ -55,8 +55,8 @@ export async function generateRecipesWithAI(
 
 function createDetailedPrompt(cartItems: Product[]): string {
   const ingredientNames = cartItems.map(item => item.name).join(', ');
-  return `Harap buat resep makanan Indonesia menggunakan bahan: ${ingredientNames}. 
-  Format resep dalam JSON dengan struktur:
+  return `Harap buat minimal 3 resep makanan Indonesia menggunakan kombinasi bahan: ${ingredientNames}. 
+  Format setiap resep dalam JSON dengan struktur:
   {
     "name": "Nama Resep",
     "description": "Deskripsi singkat resep",
