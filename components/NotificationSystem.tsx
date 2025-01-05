@@ -104,21 +104,23 @@ export function NotificationSystem() {
 
   // Tandai notifikasi sebagai terbaca
   const markAsRead = async (notificationId: string) => {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('id', notificationId);
+        try {
+            // Update status notifikasi di database
+            const { error } = await supabase
+                .from('notifications')
+                .update({ is_read: true })
+                .eq('id', notificationId);
 
-    if (error) {
-      console.error('Error marking notification as read:', error);
-      return;
-    }
+            if (error) throw error;
 
-    // Hapus notifikasi dari state
-    setNotifications(prev => 
-      prev.filter(notification => notification.id !== notificationId)
-    );
-  };
+            // Hapus notifikasi dari state lokal
+            setNotifications(prev => 
+                prev.filter(notification => notification.id !== notificationId)
+            );
+        } catch (error) {
+            console.error('Error marking notification:', error);
+        }
+    };
 
   // Jika tidak ada session, kembalikan null
   if (!session) return null;

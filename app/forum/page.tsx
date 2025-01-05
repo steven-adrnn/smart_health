@@ -142,46 +142,63 @@ export default function ForumPage() {
     }
   
     try {
-      // Cek apakah user sudah pernah like post ini
-      const { data: existingLike, error: checkError } = await supabase
-        .from('forum_likes')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .eq('post_id', postId)
-        .single();
+        // Cek apakah user sudah pernah like post ini
+        const { data: existingLike, error: checkError } = await supabase
+            .from('forum_likes')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .eq('post_id', postId)
+            .single();
   
-      if (checkError && checkError.code !== 'PGRST116') {
-        throw checkError;
-      }
-  
-      // Jika sudah pernah like, maka unlike
-      if (existingLike) {
-        const { error: unlikeError } = await supabase
-          .from('forum_likes')
-          .delete()
-          .eq('user_id', session.user.id)
-          .eq('post_id', postId);
-  
-        if (unlikeError) throw unlikeError;
-        
-        toast.success('Post unliked');
-        return;
-      }
-  
-      // Jika belum pernah like, maka like
-      const { error: likeError } = await supabase
-        .from('forum_likes')
-        .insert({
-          user_id: session.user.id,
-          post_id: postId
-        });
-  
-      if (likeError) throw likeError;
-      
-      toast.success('Post liked');
+        // Hitung jumlah likes
+        const { count: likesCount, error: countError } = await supabase
+            .from('forum_likes')
+            .select('*', { count: 'exact' })
+            .eq('post_id', postId);
+
+        if (checkError && checkError.code !== 'PGRST116') {
+            throw checkError;
+        }
+    
+        // Jika sudah pernah like, maka unlike
+        if (existingLike) {
+            const { error: unlikeError } = await supabase
+                .from('forum_likes')
+                .delete()
+                .eq('user_id', session.user.id)
+                .eq('post_id', postId);
+            
+            const { error: updatePostError } = await supabase
+                .from('forum_posts')
+                .update({ likes_count: Math.max(0, (likesCount || 1) - 1) })
+                .eq('id', postId);
+    
+            if (unlikeError) throw unlikeError || updatePostError;
+            
+            toast.success('Post unliked');
+        } else {
+            // Like: Tambah like dan naikkan likes_count
+            const { error: likeError } = await supabase
+                .from('forum_likes')
+                .insert({
+                    user_id: session.user.id,
+                    post_id: postId
+                });
+
+            const { error: updatePostError } = await supabase
+                .from('forum_posts')
+                .update({ likes_count: (likesCount || 0) + 1 })
+                .eq('id', postId);
+
+            if (likeError || updatePostError) throw likeError || updatePostError;
+            
+            toast.success('Post liked');
+        }
+
+        fetchPosts();
     } catch (error) {
-      console.error('Error liking/unliking post:', error);
-      toast.error('Gagal memproses like');
+        console.error('Error liking/unliking post:', error);
+        toast.error('Gagal memproses like');
     }
   };
 
