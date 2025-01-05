@@ -65,7 +65,6 @@ function createDetailedPrompt(cartItems: Product[]): string {
     "difficulty": "easy/medium/hard"
   }
 
-  
   Contoh:
   {
     "name": "Nasi Goreng Spesial",
