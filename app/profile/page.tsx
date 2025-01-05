@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Database } from '@/lib/database.types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 type User = Database['public']['Tables']['users']['Row'];
 type Address = Database['public']['Tables']['addresses']['Row'];
@@ -184,15 +185,16 @@ export default function ProfilePage() {
                 ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {savedRecipes.map(recipe => (
-                    <Card key={recipe.id}>
-                        <CardHeader>
-                            <CardTitle>{recipe.name}</CardTitle>
-                            <CardDescription>{recipe.description}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p>Kesulitan: {recipe.difficulty}</p>
-                        </CardContent>
-                    </Card>
+                        <SavedRecipeCard 
+                            key={recipe.id} 
+                            recipe={recipe} 
+                            onDelete={() => {
+                                // Implementasi fungsi hapus resep
+                                setSavedRecipes(prev => 
+                                    prev.filter(r => r.id !== recipe.id)
+                            );
+                            }} 
+                        />
                     ))}
                 </div>
                 )}
@@ -202,3 +204,92 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+// Komponen baru untuk menampilkan resep tersimpan dengan dialog
+function SavedRecipeCard({ 
+    recipe, 
+    onDelete 
+  }: { 
+    recipe: Recipe, 
+    onDelete?: () => void 
+  }) {
+    const handleDeleteRecipe = async () => {
+      try {
+        const { error } = await supabase
+          .from('recipes')
+          .delete()
+          .eq('id', recipe.id);
+  
+        if (error) {
+          toast.error('Gagal menghapus resep');
+          return;
+        }
+  
+        toast.success('Resep berhasil dihapus');
+        onDelete?.();
+      } catch (error) {
+        console.error('Error deleting recipe:', error);
+        toast.error('Terjadi kesalahan');
+      }
+    };
+  
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle>{recipe.name}</CardTitle>
+              <CardDescription>{recipe.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between">
+                <span>Tingkat Kesulitan: {recipe.difficulty}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </DialogTrigger>
+        
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{recipe.name}</DialogTitle>
+            <DialogDescription>{recipe.description}</DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Bahan:</h3>
+              <ul className="list-disc pl-4">
+                {recipe.ingredients.map((ingredient, idx) => (
+                  <li key={idx}>{ingredient}</li>
+                ))}
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Instruksi Memasak:</h3>
+              <ol className="list-decimal pl-4">
+                {recipe.instructions.map((instruction, index) => (
+                  <li key={index}>{instruction}</li>
+                ))}
+              </ol>
+            </div>
+  
+            <div className="flex justify-between">
+              <div>
+                <strong>Tingkat Kesulitan:</strong> {recipe.difficulty}
+              </div>
+            </div>
+          </div>
+  
+          <DialogFooter>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteRecipe}
+            >
+              Hapus Resep
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
