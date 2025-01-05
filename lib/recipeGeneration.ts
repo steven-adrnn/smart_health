@@ -16,17 +16,19 @@ export async function generateRecipesWithAI(
   cartItems: Product[]
 ): Promise<GeneratedRecipe[]> {
   const HUGGING_FACE_API_KEY = process.env.NEXT_PUBLIC_HUGGING_FACE_API_KEY;
-  const MODEL_NAME = 'gpt2';
+  const MODEL_NAME = process.env.NEXT_PUBLIC_HUGGING_FACE_MODEL_NAME; // Atau ganti dengan model yang lebih canggih
   const API_URL = `https://api-inference.huggingface.co/models/${MODEL_NAME}`;
 
   try {
     const response = await axios.post(
       API_URL,
       { 
-        inputs: createUltraSpecificPrompt(cartItems),
+        inputs: createDetailedPrompt(cartItems),
         parameters: {
-          max_new_tokens: 300,
+          max_new_tokens: 500,
           temperature: 0.7,
+          top_p: 0.9,
+          top_k: 50,
           return_full_text: false
         }
       },
@@ -35,114 +37,86 @@ export async function generateRecipesWithAI(
           'Authorization': `Bearer ${HUGGING_FACE_API_KEY}`,
           'Content-Type': 'application/json'
         },
-        timeout: 15000
+        timeout: 30000 // Perpanjang timeout
       }
     );
 
-    console.log('Full API Response:', response.data);
-
     const generatedText = response.data[0]?.generated_text || '';
-    console.log('Raw Generated Text:', generatedText);
+    console.log('Generated Text:', generatedText);
 
-    const recipes = extractAndParseRecipes(generatedText, cartItems);
+    // Parse resep dengan metode yang lebih robust
+    const recipes = parseRecipesFromText(generatedText, cartItems);
 
     return recipes;
 
   } catch (error) {
-    console.error('Comprehensive Error Logging:', error);
+    console.error('Comprehensive Error in Recipe Generation:', error);
     return [];
   }
 }
 
-function createUltraSpecificPrompt(cartItems: Product[]): string {
+function createDetailedPrompt(cartItems: Product[]): string {
   const ingredientNames = cartItems.map(item => item.name).join(', ');
-  return `GENERATE EXACT JSON RECIPE:
-{
-  "name": "Indonesian Recipe with ${ingredientNames}",
-  "description": "Authentic Indonesian dish",
-  "ingredients": ["${ingredientNames}", "Salt", "Oil"],
-  "instructions": [
-    "Prepare ingredients",
-    "Cook carefully",
-    "Season to taste"
-  ],
-  "difficulty": "medium"
+  return `Harap buat resep makanan Indonesia menggunakan bahan: ${ingredientNames}. 
+  Format resep dalam JSON dengan struktur:
+  {
+    "name": "Nama Resep",
+    "description": "Deskripsi singkat resep",
+    "ingredients": ["Bahan 1", "Bahan 2"],
+    "instructions": ["Langkah 1", "Langkah 2"],
+    "difficulty": "easy/medium/hard"
+  }
+
+  Contoh:
+  {
+    "name": "Nasi Goreng Spesial",
+    "description": "Nasi goreng dengan bahan segar",
+    "ingredients": ["Nasi", "Ayam", "Wortel", "Bawang"],
+    "instructions": [
+      "Panaskan minyak",
+      "Tumis bawang",
+      "Masukkan ayam",
+      "Tambahkan nasi"
+    ],
+    "difficulty": "medium"
+  }
+  `;
 }
 
-STRICT RULES:
-- ONLY RETURN VALID JSON
-- USE INGREDIENTS: ${ingredientNames}
-- NO EXTRA TEXT
-- INSTRUCTIONS MUST BE ARRAY OF STRINGS
-- INGREDIENTS MUST BE ARRAY OF STRINGS
-- ALL FIELDS ARE REQUIRED
-- NO NESTED OBJECTS IN ARRAYS`;
-}
-
-function extractAndParseRecipes(
-  text: string, 
-  cartItems: Product[]
-): GeneratedRecipe[] {
-  try {
-    const cleanedText = text
-      .replace(/```/g, '')
-      .replace(/\n/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    console.log('Cleaned Text:', cleanedText);
-
-    // Ekstrasi JSON menggunakan regex yang lebih robust
-    const jsonExtractionPatterns = [
-      // Regex patterns to capture JSON-like structures
-      /{[^}]*"name"[^}]*"ingredients"[^}]*"instructions"[^}]*}/,
-      /\{.*?"name".*?"ingredients".*?"instructions".*?\}/,
-      /{[^}]+}/
-    ];
-
-    for (const pattern of jsonExtractionPatterns) {
-      const matches = cleanedText.match(pattern);
-      
-      if (matches) {
-        console.log('Potential JSON Match:', matches[0]);
-        
-        try {
-          const recipeData = JSON.parse(matches[0]);
-          
-          // Validasi dan transformasi resep
-          const recipe: GeneratedRecipe = {
-            name: recipeData.name || `Resep ${cartItems[0]?.name || 'Spesial'}`,
-            description: recipeData.description || 'Resep masakan Indonesia',
-            ingredients: Array.isArray(recipeData.ingredients) && recipeData.ingredients.length > 0
-              ? recipeData.ingredients
-              : cartItems.map(item => item.name).concat(['Garam', 'Minyak']),
-            instructions: Array.isArray(recipeData.instructions) && recipeData.instructions.length > 0
-              ? recipeData.instructions
-              : [
-                  'Cuci bahan dengan bersih',
-                  'Potong bahan sesuai kebutuhan',
-                  'Panaskan minyak di wajan',
-                  'Masak dengan api sedang',
-                  'Tambahkan bumbu secukupnya'
-                ],
-            difficulty: ['easy', 'medium', 'hard'].includes(recipeData.difficulty)
-              ? recipeData.difficulty
-              : 'medium'
-          };
-
-          return [recipe];
-        } catch (parseError) {
-          console.error('JSON Parsing Error:', parseError);
-          continue;
-        }
-      }
-    }
-
-    console.error('No valid JSON structure found');
-    return [];
-
-  } catch (error) {
-    console.error('Comprehensive Extraction Error:', error);
+function parseRecipesFromText(text: string, cartItems: Product[]): GeneratedRecipe[] {
+  const jsonMatches = text.match(/\{[^}]+\}/g);
+  
+  if (!jsonMatches) {
     return [];
   }
+
+  const recipes: GeneratedRecipe[] = [];
+
+  for (const jsonStr of jsonMatches) {
+    try {
+      const recipe = JSON.parse(jsonStr);
+      
+      // Validasi struktur
+      if (
+        recipe.name && 
+        recipe.description && 
+        Array.isArray(recipe.ingredients) && 
+        Array.isArray(recipe.instructions)
+      ) {
+        recipes.push({
+          name: recipe.name,
+          description: recipe.description,
+          ingredients: recipe.ingredients,
+          instructions: recipe.instructions,
+          difficulty: ['easy', 'medium', 'hard'].includes(recipe.difficulty) 
+            ? recipe.difficulty 
+            : 'medium'
+        });
+      }
+    } catch (error) {
+      console.error('JSON Parsing Error:', error);
+    }
+  }
+
+  return recipes;
 }
