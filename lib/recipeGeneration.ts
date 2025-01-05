@@ -35,7 +35,7 @@ export async function generateRecipesWithAI(
           'Authorization': `Bearer ${HUGGING_FACE_API_KEY}`,
           'Content-Type': 'application/json'
         },
-        timeout: 30000 // Perpanjang timeout
+        timeout: 300000 // Perpanjang timeout
       }
     );
 
