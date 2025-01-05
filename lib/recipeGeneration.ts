@@ -29,6 +29,7 @@ export async function generateRecipesWithAI(
           temperature: 0.7,
           return_full_text: false
         }
+        
       },
       {
         headers: {
