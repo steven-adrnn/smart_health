@@ -4,30 +4,32 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
 import { Database } from '@/lib/database.types';
-import { Button } from './ui/button';
+
+// Definisi tipe yang lebih spesifik untuk session
+import { Session } from '@supabase/supabase-js';
 
 // Definisi tipe yang lebih spesifik untuk konten notifikasi
 interface CommentNotificationContent {
-    post_id: string;
-    comment_id: string;
-    commenter_name: string;
-    comment_content: string;
+  post_id: string;
+  comment_id: string;
+  commenter_name: string;
+  comment_content: string;
 }
-  
+
 interface NewPostNotificationContent {
-    post_id: string;
-    post_title: string;
-    author_name: string;
+  post_id: string;
+  post_title: string;
+  author_name: string;
 }
 
 // Extend tipe notification untuk mendukung konten yang lebih spesifik
 type Notification = Database['public']['Tables']['notifications']['Row'] & {
-    content: CommentNotificationContent | NewPostNotificationContent | any;
+  content: CommentNotificationContent | NewPostNotificationContent | Record<string, unknown>;
 };
 
 export function NotificationSystem() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
     // Fungsi untuk mendapatkan session
@@ -40,7 +42,7 @@ export function NotificationSystem() {
 
     // Listener untuk perubahan session
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (currentSession) => {
+      (_event, currentSession) => {
         setSession(currentSession);
       }
     );
@@ -63,7 +65,7 @@ export function NotificationSystem() {
         .eq('is_read', false)
         .order('created_at', { ascending: false });
 
-      if (data) setNotifications(data);
+      if (data) setNotifications(data as Notification[]);
       if (error) console.error('Error fetching notifications:', error);
     };
 
@@ -135,12 +137,15 @@ export function NotificationSystem() {
           {/* Render konten notifikasi sesuai tipe */}
           {notification.type === 'comment' && (
             <p>
-              Komentar baru di postingan Anda dari {notification.content?.commenter_name}
+              {/* Type assertion untuk mengakses properti */}
+              Komentar baru di postingan Anda dari {(notification.content as CommentNotificationContent).commenter_name}
             </p>
           )}
           {notification.type === 'new_post' && (
             <p>
-              Post baru dari {notification.content?.author_name}: {notification.content?.post_title}
+              {/* Type assertion untuk mengakses properti */}
+              Post baru dari {(notification.content as NewPostNotificationContent).author_name}: 
+              {(notification.content as NewPostNotificationContent).post_title}
             </p>
           )}
           <small className="text-gray-500">
