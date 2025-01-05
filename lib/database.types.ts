@@ -216,6 +216,108 @@ export interface Database {
           created_at?: string;
         }
       }
+
+      forum_posts: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          content: string
+          category: string
+          likes_count: number
+          created_at: string
+          user: {
+            name: string
+            avatar?: string
+          }
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          content: string
+          category: string
+          likes_count?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          content?: string
+          category?: string
+          likes_count?: number
+        }
+      }
+      
+      forum_comments: {
+        Row: {
+          id: string
+          post_id: string
+          user_id: string
+          content: string
+          created_at: string
+          user: {
+            name: string
+            avatar?: string
+          }
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          user_id: string
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          user_id?: string
+          content?: string
+        }
+      }
+      
+      forum_likes: {
+        Row: {
+          id: string
+          post_id: string
+          user_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          user_id: string
+          created_at?: string
+        }
+      }
+
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          content: Json
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          content?: Json
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          content?: Json
+          is_read?: boolean
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { Session } from "@supabase/supabase-js";
+import { NotificationSystem } from '@/components/NotificationSystem';
 import Header from "@/components/Header"; // Pastikan Anda sudah membuat komponen Header
 
 export default function RootLayout({
@@ -37,6 +38,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Header session={session} />
+        <NotificationSystem />
         {children}
         <Toaster />
       </body>
