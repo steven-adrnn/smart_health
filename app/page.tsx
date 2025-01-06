@@ -2,24 +2,24 @@ import { Hero } from '@/components/Hero';
 import { Footer } from '@/components/Footer';
 import CategoryCard from '@/components/CategoryCard';
 import Script from 'next/script'
+import { Database } from '@/lib/database.types';
+import { supabase } from '@/lib/supabaseClient';
 
 
-const categories = [
-    { name: 'Fruits', image: 'public/image/fruits.jpg' },
-    { name: 'Vegetables', image: 'public/image/vegetables.jpg' },
-    { name: 'Meat', image: 'public/image/meat.jpg' },
-    { name: 'Dairy', image: 'public/image/dairy.jpg' },
-];
+export default async function HomePage () {
+    // Fetch categories from Supabase
+    const { data: categories, error } = await supabase
+        .from('categories')
+        .select('*');
 
-const HomePage = () => {
     return (
         <div>
             <Hero />
             <div className="container mx-auto p-4">
                 <h2 className="text-2xl font-bold mb-4">Kategori Produk</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    {categories.map((category) => (
-                        <CategoryCard key={category.name} name={category.name} image={category.image} />
+                    {categories?.map((category) => (
+                        <CategoryCard key={category.id} category={category} />
                     ))}
                 </div>
             </div>
@@ -42,4 +42,3 @@ const HomePage = () => {
     );
 };
 
-export default HomePage;

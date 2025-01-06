@@ -14,7 +14,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category }) => {
     };
 
     return (
-        <Link href={`/category/${category.name.toLowerCase()}`} className="block">
+        <Link href={`/category/${category.id}`} className="block">
             <div className="flex flex-col items-center justify-center border rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow h-full">
                 <div className="w-full aspect-video mb-2 relative"> {/* Gunakan aspect-video untuk rasio 16:9 */}
                     <Image 
