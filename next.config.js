@@ -51,7 +51,7 @@ const nextConfig = {
             { key: 'Access-Control-Allow-Methods', value: 'POST, OPTIONS' },
             { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-API-Key' },
           ],
-          source: '/api/realtime',
+          source: '/api/(.*)',
           headers: [
               { 
                   key: 'Connection', 
