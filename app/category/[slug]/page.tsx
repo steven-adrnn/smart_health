@@ -25,7 +25,6 @@ const CategoryPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-    const [searchCategory, setSearchCategory] = useState<string>('all');
     const [error, setError] = useState<string | null>(null);
 
     // Konfigurasi Fuse.js untuk pencarian fuzzy
@@ -161,12 +160,6 @@ const CategoryPage = () => {
                     )}
                 </div>
             </div>
-
-            <h1 className="text-2xl font-bold mb-4">
-                {searchTerm || searchCategory !== 'all'
-                    ? `Hasil Pencarian: ${searchTerm ? `"${searchTerm}"` : ''} ${searchCategory !== 'all' ? `Kategori: ${searchCategory}` : ''}`
-                    : 'Produk Tersedia'}
-            </h1>
 
             {filteredProducts.length > 0 ? (
                 <ProductList products={filteredProducts} />
