@@ -36,8 +36,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
         params: {
             eventsPerSecond: 10,
         },
-        
-       
     },
     db: {
         schema: 'public', // Pastikan schema benar
@@ -105,10 +103,12 @@ export const monitorRealtimeConnection = () => {
     
     socket.onerror = (error) => {
         console.error('WebSocket Connection Error:', error);
+        setTimeout(monitorRealtimeConnection, 5000);
     };
     
     socket.onclose = (event) => {
         console.warn('WebSocket Connection Closed:', event);
+        setTimeout(monitorRealtimeConnection, 5000);
     };
 };
 
