@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
 import { Database } from '@/lib/database.types';
 
 interface CategoryCardProps {
