@@ -77,17 +77,17 @@ export interface Database {
         Row: {
             id: string;
             name: string;
-            image: string;
+            images: string;
         }
         Insert: {
             id?: string;
             name?: string;
-            image?: string;
+            images?: string;
         }
         Update: {
             id?: string;
             name?: string;
-            image?: string;
+            images?: string;
         }
       }
       cart: {
