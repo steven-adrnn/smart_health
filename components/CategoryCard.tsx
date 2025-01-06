@@ -11,10 +11,11 @@ interface CategoryCardProps {
 
 const CategoryCard: React.FC<CategoryCardProps> = ({ category }) => {
     const [imageSrc, setImageSrc] = useState(() => {
-        if (category.image) {
-            // Pastikan URL lengkap dan ter-encode
-            return `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${encodeURIComponent(category.image)}`;
-        }
+        if (category.image && category.image.trim() !== '') {
+        const fullUrl = `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${encodeURIComponent(category.image.trim())}`;
+        console.log('Full Image URL:', fullUrl);
+        return fullUrl;
+    }
         return '/placeholder.png';
     });
 
