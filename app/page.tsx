@@ -2,13 +2,12 @@ import { Hero } from '@/components/Hero';
 import { Footer } from '@/components/Footer';
 import CategoryCard from '@/components/CategoryCard';
 import Script from 'next/script'
-import { Database } from '@/lib/database.types';
 import { supabase } from '@/lib/supabaseClient';
 
 
 export default async function HomePage () {
     // Fetch categories from Supabase
-    const { data: categories, error } = await supabase
+    const { data: categories } = await supabase
         .from('categories')
         .select('*');
 
