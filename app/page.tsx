@@ -27,18 +27,6 @@ export default function HomePage () {
                 return;
             }
 
-            // SUPER DETAILED LOGGING
-            data.forEach(cat => {
-                console.log('Category Details:', {
-                id: cat.id,
-                name: cat.name,
-                rawImagePath: cat.image,
-                constructedUrl: cat.image 
-                    ? `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${encodeURIComponent(cat.image.trim())}`
-                    : 'No Image URL'
-                });
-            });
-
             setCategories(data);
         };
 

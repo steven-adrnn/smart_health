@@ -23,13 +23,6 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category }) => {
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover rounded-md"
-              onError={(e) => {
-                console.error('Image Load Error', {
-                  category: category.name,
-                  imageUrl: imageUrl
-                });
-                e.currentTarget.src = 'https://via.placeholder.com/300x200.png?text=Error+Loading';
-              }}
             />
           </div>
           <h3 className="text-lg font-semibold text-center mt-2">{category.name}</h3>
