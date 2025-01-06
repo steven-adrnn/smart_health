@@ -1,16 +1,39 @@
+'use client'
+
 import { Hero } from '@/components/Hero';
 import { Footer } from '@/components/Footer';
 import CategoryCard from '@/components/CategoryCard';
 import Script from 'next/script'
 import { supabase } from '@/lib/supabaseClient';
+import { useState, useEffect } from 'react';
+import { Database } from '@/lib/database.types';
 
+// Definisikan tipe kategori dari database
+type Category = Database['public']['Tables']['categories']['Row'];
 
-export default async function HomePage () {
-    // Fetch categories from Supabase
-    const { data: categories } = await supabase
-        .from('categories')
-        .select('*');
+export default function HomePage () {
+    // Gunakan tipe Category[] untuk state
+    const [categories, setCategories] = useState<Category[]>([]);
 
+    useEffect(() => {
+        const fetchCategories = async () => {
+            const { data, error } = await supabase
+                .from('categories')
+                .select('*');
+
+            // Tambahkan pengecekan error
+            if (error) {
+                console.error('Error fetching categories:', error);
+                return;
+            }
+
+            // Pastikan data tidak null dan gunakan tipe casting
+            if (data) setCategories(data as Category[]);
+        };
+
+        fetchCategories();
+    }, []);
+    
     return (
         <div>
             <Hero />
