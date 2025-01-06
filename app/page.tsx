@@ -27,18 +27,19 @@ export default function HomePage () {
                 return;
             }
 
-            // Pastikan data tidak null dan gunakan tipe casting
-            if (data) {
-                // Log detail kategori untuk debugging
-                console.log('Categories Fetched:', data.map(cat => ({
-                    id: cat.id,
-                    name: cat.name,
-                    imagePath: cat.image,
-                    imageUrl: `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${encodeURIComponent(cat.image)}`
-                })));
+            // SUPER DETAILED LOGGING
+            data.forEach(cat => {
+                console.log('Category Details:', {
+                id: cat.id,
+                name: cat.name,
+                rawImagePath: cat.image,
+                constructedUrl: cat.image 
+                    ? `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${encodeURIComponent(cat.image.trim())}`
+                    : 'No Image URL'
+                });
+            });
 
-                setCategories(data);
-            }
+            setCategories(data);
         };
 
         fetchCategories();
