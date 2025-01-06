@@ -26,6 +26,10 @@ const nextConfig = {
     },
 
     images: {
+      domains: [
+        'enyvqjbqavjdzxmktahy.supabase.co',
+        'smart-health-tst.up.railway.app'
+      ],
       remotePatterns: [
         {
           protocol: 'https',

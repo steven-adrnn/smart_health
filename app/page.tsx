@@ -28,12 +28,22 @@ export default function HomePage () {
             }
 
             // Pastikan data tidak null dan gunakan tipe casting
-            if (data) setCategories(data as Category[]);
+            if (data) {
+                // Log detail kategori untuk debugging
+                console.log('Categories Fetched:', data.map(cat => ({
+                    id: cat.id,
+                    name: cat.name,
+                    imagePath: cat.image,
+                    imageUrl: `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${encodeURIComponent(cat.image)}`
+                })));
+
+                setCategories(data);
+            }
         };
 
         fetchCategories();
     }, []);
-    
+
     return (
         <div>
             <Hero />
