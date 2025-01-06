@@ -25,7 +25,10 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category }) => {
                         alt={category.name}
                         fill // Gunakan fill untuk memenuhi container
                         className="object-cover rounded-md"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        onError={(e) => {
+                            console.error('Image load error', category.image);
+                            e.currentTarget.src = '/placeholder.png';
+                        }}
                     />
                 </div>
                 <h3 className="text-lg font-semibold text-center mt-2">{category.name}</h3>
