@@ -49,7 +49,7 @@ const ShopPage = () => {
                 'farm'
             ],
             includeScore: true,
-            threshold: 0.4, // Semakin rendah, semakin ketat pencocokan
+            threshold: 0.2, // Semakin rendah, semakin ketat pencocokan
             minMatchCharLength: 2
         });
     }, [products]);
@@ -97,6 +97,12 @@ const ShopPage = () => {
 
         fetchProducts();
     }, []); 
+
+    const handleSearchCategoryChange = (category: string) => {
+        setSearchCategory(category);
+        const filteredProducts = products.filter(p => p.category === category || category === 'all');
+        setFilteredProducts(filteredProducts);
+    };
 
     const handleSearch = (term: string) => {
         setSearchTerm(term);
@@ -213,7 +219,7 @@ const ShopPage = () => {
                 </div>
                 <Select 
                     value={searchCategory} 
-                    onValueChange={setSearchCategory}
+                    onValueChange={handleSearchCategoryChange}
                 >
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Pilih Kategori" />
