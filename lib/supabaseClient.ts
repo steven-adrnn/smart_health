@@ -62,15 +62,6 @@ export const createRealtimeChannel = (
         )
         .subscribe((status) => {
             console.log(`Realtime Channel (${tableName}) Status:`, status);
-            
-            if (status === 'CHANNEL_ERROR') {
-                console.error(`Realtime channel error for ${tableName}`);
-                // // Implementasi retry logic
-                // setTimeout(() => {
-                //     channel.unsubscribe();
-                //     createRealtimeChannel(tableName, callback);
-                // }, 5000);
-            }
         });
 
     return channel;
@@ -103,12 +94,10 @@ export const monitorRealtimeConnection = () => {
     
     socket.onerror = (error) => {
         console.error('WebSocket Connection Error:', error);
-        setTimeout(monitorRealtimeConnection, 5000);
     };
     
     socket.onclose = (event) => {
         console.warn('WebSocket Connection Closed:', event);
-        setTimeout(monitorRealtimeConnection, 5000);
     };
 };
 
