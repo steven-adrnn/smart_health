@@ -14,7 +14,13 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category }) => {
       ? `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${category.images}`
       : undefined;  
     return (
-      <Link href={`/category/${category.id}`} className="block">
+      <Link 
+        href={{
+          pathname: '/shop', 
+          query: { category: category.name.toLowerCase() }  // Tambahkan query parameter
+        }} 
+        className="block"
+      >
         <div className="flex flex-col items-center justify-center border rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow h-full">
           <div className="w-full aspect-video mb-2 relative">
             <Image 
