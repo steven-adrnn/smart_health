@@ -9,11 +9,14 @@
 @layer base {
   * {
     @apply border border-border;
+    border-width: 0;
   }
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
     padding-top: 64px;
+    overflow-x: hidden;
+
   }
 }
 
@@ -53,7 +56,7 @@
   z-index: 9999 !important;
 }
 
-/* Mencegah pergeseran halaman */
-body {
+html {
   overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
