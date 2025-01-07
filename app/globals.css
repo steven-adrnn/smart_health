@@ -37,6 +37,9 @@
 .active-pulse {
   animation: pulse 2s infinite;
 }
+.page-container {
+  padding-top: 64px; /* Sesuaikan dengan tinggi header */
+}
 
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
