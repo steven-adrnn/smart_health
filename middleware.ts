@@ -17,10 +17,10 @@ export async function middleware(req: NextRequest) {
       .select('id')
       .limit(1);
 
-    if (error) {
-      console.error('Realtime Connection Test Failed:', error);
-      // Opsional: Kirim notifikasi atau log tambahan
-    }
+    // if (error) {
+    //   console.error('Realtime Connection Test Failed:', error);
+    //   // Opsional: Kirim notifikasi atau log tambahan
+    // }
 
     if (session?.user) {
       // Existing user validation logic
