@@ -28,12 +28,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-          // Pastikan event handler asli tetap dipanggil
-          if (onChange) {
-            onChange(e);
-          }
-        }}
+        // onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+        //   // Pastikan event handler asli tetap dipanggil
+        //   if (onChange) {
+        //     onChange(e);
+        //   }
+        // }}
         {...props}
       />
     )
