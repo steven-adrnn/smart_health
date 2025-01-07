@@ -240,7 +240,7 @@ function ShopPageContent() {
                     <SelectContent>
                         {CATEGORIES.map(category => (
                             <SelectItem key={category} value={category}>
-                                {category === 'all' ? 'Semua Kategori' : category}
+                                {category.charAt(0).toUpperCase() + category.slice(1)}
                             </SelectItem>
                         ))}
                     </SelectContent>
