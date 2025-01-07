@@ -35,7 +35,7 @@ const ShopPage = () => {
     const [searchCategory, setSearchCategory] = useState<string>('all');
     const [error, setError] = useState<string | null>(null);
     const searchParams = useSearchParams();
-    const categoryFromQuery = searchParams.get('category');
+    const categoryFromQuery = searchParams?.get('category');
     
 
     // Kategori yang tersedia
