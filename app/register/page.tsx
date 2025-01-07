@@ -123,31 +123,38 @@ export default function RegisterPage() {
           <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
             <h2 className="text-lg font-bold text-primary mb-4">Register</h2>
             <form onSubmit={handleRegister}>
-              <Input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="Email"
-                className="mb-4"
-              />
-              <Input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Password"
-                className="mb-4"
-              />
-              <Input
-                type="password"
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                placeholder="Konfirmasi Password"
-                className="mb-4"
-              />
-              <Button type="submit" className="w-full">
-                Register
-              </Button>
-              <div className="mt-4">
+                <Input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Nama"
+                    required
+                />
+                <Input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="Email"
+                    className="mb-4"
+                />
+                <Input
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Password"
+                    className="mb-4"
+                />
+                <Input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    placeholder="Konfirmasi Password"
+                    className="mb-4"
+                />
+                <Button type="submit" className="w-full">
+                    Register
+                </Button>
+                <div className="mt-4">
                     <Button 
                         onClick={handleGoogleSignUp} 
                         variant="outline" 
@@ -161,4 +168,43 @@ export default function RegisterPage() {
           </div>
         </motion.div>
       );
+
+    return (
+        <div>
+            <form onSubmit={handleRegister}>
+                <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Nama"
+                    required
+                />
+                <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email"
+                    required
+                />
+                <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                    required
+                />
+                <button type="submit">Daftar</button>
+                <div className="mt-4">
+                    <Button 
+                        onClick={handleGoogleSignUp} 
+                        variant="outline" 
+                        className="w-full flex items-center justify-center"
+                    >
+                        <GoogleIcon className="mr-2 h-5 w-5" />
+                        Daftar dengan Google
+                    </Button>
+                </div>
+            </form>
+        </div>
+    );
 }
