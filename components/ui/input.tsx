@@ -3,10 +3,20 @@ import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { HTMLMotionProps } from "framer-motion"
 
-type InputProps = React.InputHTMLAttributes<HTMLInputElement> & HTMLMotionProps<"input">;
+// Gunakan tipe ChangeEvent dari React untuk input
+type InputProps = React.InputHTMLAttributes<HTMLInputElement> & 
+  HTMLMotionProps<"input"> & {
+    // Tambahkan eksplisit onChange handler
+    onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  };
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
+  ({ 
+    className, 
+    type, 
+    onChange, 
+    ...props 
+  }, ref) => {
     return (
       <motion.input
         type={type}
@@ -18,7 +28,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        {...(props as HTMLMotionProps<"input">)} // Cast props ke tipe yang benar
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+          // Pastikan event handler asli tetap dipanggil
+          if (onChange) {
+            onChange(e);
+          }
+        }}
+        {...props}
       />
     )
   }
