@@ -83,6 +83,7 @@ const SelectContent = React.forwardRef<
         className
       )}
       position={position}
+      sideOffset={5} // Tambahkan jarak antara trigger dan dropdown
       {...props}
     >
       <SelectScrollUpButton />

@@ -46,3 +46,14 @@
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
 }
+
+/* Tambahkan di akhir file global.css */
+[data-radix-popper-content-wrapper] {
+  position: fixed !important;
+  z-index: 9999 !important;
+}
+
+/* Mencegah pergeseran halaman */
+body {
+  overflow-x: hidden;
+}
