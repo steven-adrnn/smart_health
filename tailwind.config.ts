@@ -1,3 +1,4 @@
+// TailwindMerge.config.ts
 import type { Config } from "tailwindcss"
 
 

@@ -1,3 +1,4 @@
+/* global.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -50,11 +51,6 @@
   50% { transform: scale(1.05); }
 }
 
-/* Tambahkan di akhir file global.css */
-[data-radix-popper-content-wrapper] {
-  position: fixed !important;
-  z-index: 9999 !important;
-}
 
 html {
   overflow-x: hidden;
