@@ -13,8 +13,7 @@ type InputProps = React.InputHTMLAttributes<HTMLInputElement> &
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ 
     className, 
-    type, 
-    onChange, 
+    type,
     ...props 
   }, ref) => {
     return (
