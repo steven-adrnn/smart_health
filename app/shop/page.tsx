@@ -34,7 +34,6 @@ const ShopPage = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [searchCategory, setSearchCategory] = useState<string>('all');
     const [error, setError] = useState<string | null>(null);
-    const router = useRouter();
     const searchParams = useSearchParams();
     const categoryFromQuery = searchParams.get('category');
     
