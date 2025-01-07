@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo, Suspense } from 'react';
+import { useEffect, useState, useMemo, useCallback, Suspense } from 'react';
 import Fuse from 'fuse.js';
 import { supabase } from '@/lib/supabaseClient';
 import { Database } from '@/lib/database.types';
@@ -230,28 +230,36 @@ function ShopPageContent() {
                         </div>
                     )}
                 </div>
-                <Select onValueChange={handleSearchCategoryChange} defaultValue="all">
-                    <SelectTrigger>
-                        <SelectValue placeholder="Pilih kategori" />
+                <Select 
+                    defaultValue="all"
+                    onValueChange={handleSearchCategoryChange}
+                >
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Pilih Kategori" />
                     </SelectTrigger>
                     <SelectContent>
-                        {CATEGORIES.map((category) => (
+                        {CATEGORIES.map(category => (
                             <SelectItem key={category} value={category}>
-                                {category.charAt(0).toUpperCase() + category.slice(1)}
+                                {category === 'all' ? 'Semua Kategori' : category}
                             </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
             </div>
-            <ProductList products={filteredProducts} />
+
+            <h1 className="text-2xl font-bold mb-4">
+                {searchTerm || searchCategory !== 'all'
+                    ? `Hasil Pencarian: ${searchTerm ? `"${searchTerm}"` : ''} ${searchCategory !== 'all' ? `Kategori: ${searchCategory}` : ''}`
+                    : 'Produk Tersedia'}
+            </h1>
+
+            {filteredProducts.length > 0 ? (
+                <ProductList products={filteredProducts} />
+            ) : (
+                <p>Tidak ada produk yang cocok dengan pencarian Anda.</p>
+            )}
         </div>
     );
-}
+};
 
-export default function ShopPage() {
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <ShopPageContent />
-        </Suspense>
-    );
-}
+export default ShopPageContent;
