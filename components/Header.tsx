@@ -20,6 +20,7 @@ import {
   LogOut, 
   Menu 
 } from 'lucide-react';
+import Image from 'next/image';
 
 interface HeaderProps {
     session: Session | null;
@@ -56,7 +57,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
             <div className="container mx-auto flex justify-between items-center py-4 px-4">
                 {/* Logo */}
                 <Link href="/" className="text-2xl font-bold text-primary flex items-center">
-                    <img 
+                    <Image
                         src="/logo.png" 
                         alt="Smart Health Logo" 
                         className="h-10 mr-2"
