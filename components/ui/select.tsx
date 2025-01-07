@@ -11,20 +11,41 @@ interface ExtendedSelectTriggerProps extends React.ComponentPropsWithoutRef<type
   isOpen?: boolean; // Tambahkan properti isOpen
 }
 
+// Di dalam komponen Select, tambahkan prop untuk value dan defaultValue
 const Select = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>
->(({ children, ...props }) => {
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root> & {
+    value?: string;
+    defaultValue?: string;
+    onValueChange?: (value: string) => void;
+  }
+>(({ 
+  children, 
+  value, 
+  defaultValue, 
+  onValueChange, 
+  ...props 
+}) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [selectedValue, setSelectedValue] = React.useState(defaultValue || value);
+
+  const handleValueChange = (newValue: string) => {
+    setSelectedValue(newValue);
+    onValueChange?.(newValue);
+  };
 
   return (
     <SelectPrimitive.Root 
       {...props} 
+      value={value || selectedValue}
+      onValueChange={handleValueChange}
       onOpenChange={(open) => setIsOpen(open)}
     >
       {React.Children.map(children, (child) => {
-        if (React.isValidElement(child) && child.type === SelectTrigger) {
-          return React.cloneElement(child, { isOpen } as ExtendedSelectTriggerProps);
+        if (React.isValidElement(child)) {
+          if (child.type === SelectTrigger) {
+            return React.cloneElement(child, { isOpen } as ExtendedSelectTriggerProps);
+          }
         }
         return child;
       })}
