@@ -7,12 +7,17 @@ import { useRouter } from 'next/navigation';
 import * as bcrypt from 'bcryptjs';  // Install bcryptjs
 import { Button } from '@/components/ui/button';
 import { Chrome as GoogleIcon } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { motion } from 'framer-motion';
+
+
 
 
 export default function RegisterPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const router = useRouter();
 
     const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -109,31 +114,40 @@ export default function RegisterPage() {
     };
 
     return (
-        <div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="container mx-auto flex justify-center items-center h-screen"
+        >
+          <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+            <h2 className="text-lg font-bold text-primary mb-4">Register</h2>
             <form onSubmit={handleRegister}>
-                <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Nama"
-                    required
-                />
-                <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email"
-                    required
-                />
-                <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
-                    required
-                />
-                <button type="submit">Daftar</button>
-                <div className="mt-4">
+              <Input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Email"
+                className="mb-4"
+              />
+              <Input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Password"
+                className="mb-4"
+              />
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                placeholder="Konfirmasi Password"
+                className="mb-4"
+              />
+              <Button type="submit" className="w-full">
+                Register
+              </Button>
+              <div className="mt-4">
                     <Button 
                         onClick={handleGoogleSignUp} 
                         variant="outline" 
@@ -144,6 +158,7 @@ export default function RegisterPage() {
                     </Button>
                 </div>
             </form>
-        </div>
-    );
+          </div>
+        </motion.div>
+      );
 }

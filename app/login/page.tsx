@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { Chrome as GoogleIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
+
 
 
 export default function LoginPage() {
@@ -72,44 +74,52 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-md w-96">
-                <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-                <form onSubmit={handleLogin} className="space-y-4">
-                    <Input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                    <Input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                    <Button type="submit" className="w-full">Login</Button>
-                    <div className="mt-4">
-                        <Button 
-                            onClick={handleGoogleSignIn} 
-                            variant="outline" 
-                            className="w-full flex items-center justify-center"
-                        >
-                            <GoogleIcon className="mr-2 h-5 w-5" />
-                            Login dengan Google
-                        </Button>
-                    </div>
-                    <div className="text-center">
-                        <p>Belum punya akun? 
-                            <Link href="/register" className="text-blue-500 ml-1">
-                                Daftar
-                            </Link>
-                        </p>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="container mx-auto flex justify-center items-center h-screen"
+        >
+          <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+            <h2 className="text-lg font-bold text-primary mb-4">Login</h2>
+            <form onSubmit={handleLogin}>
+              <Input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Email"
+                className="mb-4"
+              />
+              <Input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Password"
+                className="mb-4"
+              />
+              
+              <Button type="submit" className="w-full">
+                Login
+              </Button>
+              <div className="mt-4">
+                    <Button 
+                        onClick={handleGoogleSignIn} 
+                        variant="outline" 
+                        className="w-full flex items-center justify-center"
+                    >
+                        <GoogleIcon className="mr-2 h-5 w-5" />
+                        Login dengan Google
+                    </Button>
+                </div>
+                <div className="text-center">
+                    <p>Belum punya akun? 
+                        <Link href="/register" className="text-blue-500 ml-1">
+                            Daftar
+                        </Link>
+                    </p>
+                </div>
+            </form>
+          </div>
+        </motion.div>
+      );
 }
