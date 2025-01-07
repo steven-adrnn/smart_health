@@ -14,7 +14,7 @@ interface ExtendedSelectTriggerProps extends React.ComponentPropsWithoutRef<type
 const Select = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>
->(({ children, ...props }, ref) => {
+>(({ children, ...props }) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
