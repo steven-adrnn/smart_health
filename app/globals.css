@@ -13,7 +13,7 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
-    /* padding-top: 64px; Sesuaikan dengan tinggi header */
+    padding-top: 16px;
   }
 }
 

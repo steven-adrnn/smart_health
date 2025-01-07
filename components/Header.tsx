@@ -52,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
             initial="hidden"
             animate="visible"
             variants={menuVariants}
-            className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md shadow-sm h-64"
+            className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md shadow-sm h-16"
         >
             <div className="container mx-auto flex justify-between items-center py-4 px-4">
                 {/* Logo */}
