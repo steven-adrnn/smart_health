@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo, useCallback, Suspense } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import Fuse from 'fuse.js';
 import { supabase } from '@/lib/supabaseClient';
 import { Database } from '@/lib/database.types';
