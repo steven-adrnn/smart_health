@@ -14,6 +14,7 @@ import {
     SelectTrigger, 
     SelectValue 
 } from '@/components/ui/select';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 
 // Definisi tipe produk yang lebih spesifik
@@ -33,6 +34,9 @@ const ShopPage = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [searchCategory, setSearchCategory] = useState<string>('all');
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const categoryFromQuery = searchParams.get('category');
     
 
     // Kategori yang tersedia
@@ -82,7 +86,16 @@ const ShopPage = () => {
                 }
 
                 setProducts(data || []);
-                setFilteredProducts(data || []);
+                // Filter produk berdasarkan kategori dari query
+                if (categoryFromQuery) {
+                    const filteredByCategory = data.filter(
+                        product => product.category.toLowerCase() === categoryFromQuery.toLowerCase()
+                    );
+                    setFilteredProducts(filteredByCategory);
+                } else {
+                    setFilteredProducts(data || []);
+                }
+                // setFilteredProducts(data || []);
                 setLoading(false);
             } catch (err: unknown) {
                 const errorMessage = err instanceof Error 
@@ -97,7 +110,7 @@ const ShopPage = () => {
         };
 
         fetchProducts();
-    }, []); 
+    }, [categoryFromQuery]); 
 
     const handleSearchCategoryChange = (category: string) => {
         setSearchCategory(category);
