@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, Suspense } from 'react';
 import Fuse from 'fuse.js';
 import { supabase } from '@/lib/supabaseClient';
 import { Database } from '@/lib/database.types';
@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/select';
 import { useSearchParams } from 'next/navigation';
 
-
 // Definisi tipe produk yang lebih spesifik
 type Product = Database['public']['Tables']['products']['Row'];
 
@@ -26,7 +25,10 @@ interface Suggestion {
     value: string;
 }
 
-const ShopPage = () => {
+function ShopPageContent() {
+    const searchParams = useSearchParams();
+    const categoryFromQuery = searchParams ? searchParams.get('category') : null;
+
     const [products, setProducts] = useState<Product[]>([]);
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -34,9 +36,6 @@ const ShopPage = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [searchCategory, setSearchCategory] = useState<string>('all');
     const [error, setError] = useState<string | null>(null);
-    const searchParams = useSearchParams();
-    const categoryFromQuery = searchParams?.get('category') || null;
-    
 
     // Kategori yang tersedia
     const CATEGORIES = [
@@ -53,66 +52,68 @@ const ShopPage = () => {
                 'farm'
             ],
             includeScore: true,
-            threshold: 0.2, // Semakin rendah, semakin ketat pencocokan
+            threshold: 0.2,
             minMatchCharLength: 2
         });
     }, [products]);
 
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                setLoading(true);
-                
-                // Pastikan sesi valid sebelum fetch
-                const { data: { session } } = await supabase.auth.getSession();
-                
-                if (!session?.user) {
-                    throw new Error('Anda harus login terlebih dahulu');
-                }
-
-                const { data, error } = await supabase
-                    .from('products')
-                    .select('*')
-                    .gt('quantity', 0) // Hanya produk dengan stok > 0
-                    .order('created_at', { ascending: false });
-
-                if (error) {
-                    throw error;
-                }
-
-                if (!data || data.length === 0) {
-                    toast.error('Tidak ada produk yang tersedia');
-                }
-
-                setProducts(data || []);
-                // Filter produk berdasarkan kategori dari query
-                let filteredData = data || [];
-                if (categoryFromQuery && categoryFromQuery !== 'all') {
-                    filteredData = filteredData.filter(
-                        product => product.category.toLowerCase() === categoryFromQuery.toLowerCase()
-                    );
-                }
-
-                setFilteredProducts(filteredData);
-                setLoading(false);
-            } catch (err: unknown) {
-                const errorMessage = err instanceof Error 
-                    ? err.message 
-                    : 'Gagal memuat produk';
-                
-                console.error('Error fetching products:', err);
-                toast.error(errorMessage);
-                setError(errorMessage);
-                setLoading(false);
+    // Fungsi fetch produk dengan useCallback untuk optimasi
+    const fetchProducts = useCallback(async () => {
+        try {
+            setLoading(true);
+            
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session?.user) {
+                throw new Error('Anda harus login terlebih dahulu');
             }
-        };
 
+            const { data, error } = await supabase
+                .from('products')
+                .select('*')
+                .gt('quantity', 0)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                throw error;
+            }
+
+            if (!data || data.length === 0) {
+                toast.error('Tidak ada produk yang tersedia');
+            }
+
+            // Filter produk berdasarkan kategori dari query
+            let filteredData = data || [];
+            if (categoryFromQuery && categoryFromQuery !== 'all') {
+                filteredData = filteredData.filter(
+                    product => product.category.toLowerCase() === categoryFromQuery.toLowerCase()
+                );
+            }
+
+            setProducts(data);
+            setFilteredProducts(filteredData);
+            setLoading(false);
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error 
+                ? err.message 
+                : 'Gagal memuat produk';
+            
+            console.error('Error fetching products:', err);
+            toast.error(errorMessage);
+            setError(errorMessage);
+            setLoading(false);
+        }
+    }, [categoryFromQuery]);
+
+    useEffect(() => {
         fetchProducts();
-    }, [categoryFromQuery]); 
+    }, [fetchProducts]); 
 
     const handleSearchCategoryChange = (category: string) => {
         setSearchCategory(category);
-        const filteredProducts = products.filter(p => p.category === category || category === 'all');
+        const filteredProducts = products.filter(p => 
+            p.category === category || category === 'all'
+        );
         setFilteredProducts(filteredProducts);
     };
 
@@ -229,36 +230,28 @@ const ShopPage = () => {
                         </div>
                     )}
                 </div>
-                <Select 
-                    value={searchCategory} 
-                    onValueChange={handleSearchCategoryChange}
-                >
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Pilih Kategori" />
+                <Select onValueChange={handleSearchCategoryChange} defaultValue="all">
+                    <SelectTrigger>
+                        <SelectValue placeholder="Pilih kategori" />
                     </SelectTrigger>
                     <SelectContent>
-                        {CATEGORIES.map(category => (
+                        {CATEGORIES.map((category) => (
                             <SelectItem key={category} value={category}>
-                                {category === 'all' ? 'Semua Kategori' : category}
+                                {category.charAt(0).toUpperCase() + category.slice(1)}
                             </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
             </div>
-
-            <h1 className="text-2xl font-bold mb-4">
-                {searchTerm || searchCategory !== 'all'
-                    ? `Hasil Pencarian: ${searchTerm ? `"${searchTerm}"` : ''} ${searchCategory !== 'all' ? `Kategori: ${searchCategory}` : ''}`
-                    : 'Produk Tersedia'}
-            </h1>
-
-            {filteredProducts.length > 0 ? (
-                <ProductList products={filteredProducts} />
-            ) : (
-                <p>Tidak ada produk yang cocok dengan pencarian Anda.</p>
-            )}
+            <ProductList products={filteredProducts} />
         </div>
     );
-};
+}
 
-export default ShopPage;
+export default function ShopPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ShopPageContent />
+        </Suspense>
+    );
+}
