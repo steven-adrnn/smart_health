@@ -205,7 +205,7 @@ export default function ForumPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl fixed font-bold mb-4">Forum Diskusi Smart Health</h1>
+      <h1 className="text-2xl font-bold mb-4">Forum Diskusi Smart Health</h1>
 
       {/* Buat Post Baru */}
       <div className="mb-6 p-4 border rounded">
