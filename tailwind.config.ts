@@ -48,7 +48,7 @@ const config: Config = {
           DEFAULT: "#f1f5f9",
           foreground: "#64748b",
         },
-        border: "#d1d5db", // Warna border default
+        border: "transparent", // Warna border default
       },
       borderRadius: {
         lg: "var(--radius)",
