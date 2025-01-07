@@ -35,7 +35,7 @@ const ShopPage = () => {
     const [searchCategory, setSearchCategory] = useState<string>('all');
     const [error, setError] = useState<string | null>(null);
     const searchParams = useSearchParams();
-    const categoryFromQuery = searchParams.get('category');
+    const categoryFromQuery = searchParams?.get('category') || null;
     
 
     // Kategori yang tersedia
@@ -86,15 +86,14 @@ const ShopPage = () => {
 
                 setProducts(data || []);
                 // Filter produk berdasarkan kategori dari query
-                if (categoryFromQuery) {
-                    const filteredByCategory = data.filter(
+                let filteredData = data || [];
+                if (categoryFromQuery && categoryFromQuery !== 'all') {
+                    filteredData = filteredData.filter(
                         product => product.category.toLowerCase() === categoryFromQuery.toLowerCase()
                     );
-                    setFilteredProducts(filteredByCategory);
-                } else {
-                    setFilteredProducts(data || []);
                 }
-                // setFilteredProducts(data || []);
+
+                setFilteredProducts(filteredData);
                 setLoading(false);
             } catch (err: unknown) {
                 const errorMessage = err instanceof Error 
