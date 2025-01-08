@@ -7,17 +7,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Database } from '@/lib/database.types';
 import { toast } from 'react-hot-toast';
 import { ThumbsUp, MessageCircle } from 'lucide-react';
 
 type Post = Database['public']['Tables']['forum_posts']['Row'] & {
-  likes_count: number;
-  comments_count: number;
+  likes_count?: number;
+  comments_count?: number;
 };
 
-type Comment = Database['public']['Tables']['forum_comments']['Row'];
+type Comment = Database['public']['Tables']['forum_comments']['Row'] & {
+  user?: { name: string };
+};
 
 export default function ForumPage() {
     const [posts, setPosts] = useState<Post[]>([]);
@@ -41,22 +43,43 @@ export default function ForumPage() {
             return;
         }
 
-        const { data: postsData, error } = await supabase
-            .from('forum_posts')
-            .select(`
-                *,
-                likes_count: forum_likes(count),
-                comments_count: forum_comments(count)
-            `)
-            .order(sortOrder === 'newest' ? 'created_at' : 'likes_count', { ascending: false });
+        try {
+            // Fetch posts with separate count queries
+            const { data: postsData, error: postsError } = await supabase
+                .from('forum_posts')
+                .select('*')
+                .order(sortOrder === 'newest' ? 'created_at' : 'id', { ascending: false });
 
-        if (error) {
+            if (postsError) throw postsError;
+
+            // Fetch likes and comments counts separately
+            const postsWithCounts = await Promise.all(
+                (postsData || []).map(async (post) => {
+                    const { count: likesCount } = await supabase
+                        .from('forum_likes')
+                        .select('*', { count: 'exact' })
+                        .eq('post_id', post.id);
+
+                    const { count: commentsCount } = await supabase
+                        .from('forum_comments')
+                        .select('*', { count: 'exact' })
+                        .eq('post_id', post.id);
+
+                    return {
+                        ...post,
+                        likes_count: likesCount || 0,
+                        comments_count: commentsCount || 0
+                    };
+                })
+            );
+
+            setPosts(postsWithCounts);
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching posts:', error);
             toast.error('Gagal memuat postingan');
-            console.error(error);
-        } else {
-            setPosts(postsData || []);
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const handleCreatePost = async () => {
@@ -67,22 +90,30 @@ export default function ForumPage() {
             return;
         }
 
-        const { error } = await supabase
-            .from('forum_posts')
-            .insert({
-                user_id: session.user.id,
-                title: newPost.title,
-                content: newPost.content,
-                category: newPost.category,
-                likes_count: 0
-            });
+        // Validasi input
+        if (!newPost.title.trim() || !newPost.content.trim()) {
+            toast.error('Judul dan konten tidak boleh kosong');
+            return;
+        }
 
-        if (error) {
-            toast.error('Gagal membuat postingan');
-        } else {
+        try {
+            const { error } = await supabase
+                .from('forum_posts')
+                .insert({
+                    user_id: session.user.id,
+                    title: newPost.title,
+                    content: newPost.content,
+                    category: newPost.category
+                });
+
+            if (error) throw error;
+
             toast.success('Postingan berhasil dibuat');
             setNewPost({ title: '', content: '', category: 'general' });
             fetchPosts();
+        } catch (error) {
+            console.error('Error creating post:', error);
+            toast.error('Gagal membuat postingan');
         }
     };
 
@@ -94,30 +125,61 @@ export default function ForumPage() {
             return;
         }
 
-        const { error } = await supabase
-            .from('forum_likes')
-            .insert({
-                post_id: postId,
-                user_id: session.user.id
-            });
+        try {
+            // Cek apakah user sudah pernah like
+            const { data: existingLike, error: existingLikeError } = await supabase
+                .from('forum_likes')
+                .select('*')
+                .eq('post_id', postId)
+                .eq('user_id', session.user.id)
+                .single();
 
-        if (error) {
-            toast.error('Gagal memberikan like');
-        } else {
+            if (existingLikeError && existingLikeError.code !== 'PGRST116') {
+                throw existingLikeError;
+            }
+
+            if (existingLike) {
+                // Jika sudah pernah like, hapus like
+                const { error: unlikeError } = await supabase
+                    .from('forum_likes')
+                    .delete()
+                    .eq('post_id', postId)
+                    .eq('user_id', session.user.id);
+
+                if (unlikeError) throw unlikeError;
+            } else {
+                // Jika belum pernah like, tambahkan like
+                const { error: likeError } = await supabase
+                    .from('forum_likes')
+                    .insert({
+                        post_id: postId,
+                        user_id: session.user.id
+                    });
+
+                if (likeError) throw likeError;
+            }
+
+            // Refresh posts setelah like/unlike
             fetchPosts();
+        } catch (error) {
+            console.error('Error liking post:', error);
+            toast.error('Gagal memproses like');
         }
     };
 
     const fetchComments = async (postId: string) => {
-        const { data: commentsData, error } = await supabase
-            .from('forum_comments')
-            .select('*')
-            .eq('post_id', postId);
+        try {
+            const { data: commentsData, error } = await supabase
+                .from('forum_comments')
+                .select('*, user:users(name)')
+                .eq('post_id', postId);
 
-        if (error) {
-            toast.error('Gagal memuat komentar');
-        } else {
+            if (error) throw error;
+
             setComments(commentsData || []);
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+            toast.error('Gagal memuat komentar');
         }
     };
 
@@ -129,20 +191,29 @@ export default function ForumPage() {
             return;
         }
 
-        const { error } = await supabase
-            .from('forum_comments')
-            .insert({
-                post_id: selectedPost.id,
-                user_id: session.user.id,
-                content: newComment
-            });
+        // Validasi komentar
+        if (!newComment.trim()) {
+            toast.error('Komentar tidak boleh kosong');
+            return;
+        }
 
-        if (error) {
-            toast.error('Gagal menambahkan komentar');
-        } else {
+        try {
+            const { error } = await supabase
+                .from('forum_comments')
+                .insert({
+                    post_id: selectedPost.id,
+                    user_id: session.user.id,
+                    content: newComment
+                });
+
+            if (error) throw error;
+
             toast.success('Komentar berhasil ditambahkan');
             setNewComment('');
             fetchComments(selectedPost.id);
+        } catch (error) {
+            console.error('Error adding comment:', error);
+            toast.error('Gagal menambahkan komentar');
         }
     };
 
@@ -225,7 +296,7 @@ export default function ForumPage() {
                     <div className="space-y-4">
                         {comments.map(comment => (
                             <div key={comment.id} className="border p-2 rounded">
-                                <p>{comment.content}</p>
+                                <p>{comment.user?.name}: {comment.content}</p>
                             </div>
                         ))}
                     </div>
