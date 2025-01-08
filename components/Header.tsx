@@ -18,7 +18,6 @@ import {
   ShoppingCart, 
   User, 
   LogOut, 
-  Menu,
   Globe
 } from 'lucide-react';
 import Image from 'next/image';
