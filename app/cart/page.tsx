@@ -172,6 +172,13 @@ export default function CartPage() {
             // Hitung total setelah menggunakan poin
             const totalAfterPoints = Math.max(0, total - pointsToUse);
 
+            // Pastikan total tidak negatif
+            if (totalAfterPoints < 0) {
+                toast.error('Jumlah poin yang digunakan melebihi total biaya');
+                setTotal(totalAfterPoints);
+                return;
+            }
+            const pointsEarned = Math.floor(total / 100); 
             // Buat array untuk bulk insert
             const checkoutItems = cartItems.map(item => ({
                 user_id: session.user.id,
@@ -215,9 +222,10 @@ export default function CartPage() {
             await Promise.all(stockUpdatePromises);
 
             // Update poin pengguna
+
             const { error: pointError } = await supabase
                 .from('users')
-                .update({ point: points - pointsToUse })
+                .update({ point: points - pointsToUse + pointsEarned })
                 .eq('id', session.user.id);
 
             if (pointError) {
@@ -312,7 +320,7 @@ export default function CartPage() {
 
             {/* Total dan Poin */}
             <div className="flex justify-between items-center p-4 border-t">
-                <h2 className="text-xl font-bold">Total: Rp {total.toLocaleString()}</h2>
+                <h2 className="text-xl font-bold">Total: Rp {(total-pointsToUse).toLocaleString()}</h2>
                 <div>
                     <p>Poin Anda: {points}</p>
                     <input 
