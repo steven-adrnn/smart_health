@@ -16,7 +16,7 @@ const SelectValue = SelectPrimitive.Value
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
@@ -25,10 +25,10 @@ const SelectTrigger = React.forwardRef<
     )}
     {...props}
   >
-    {/* {children}
+    {children}
     <SelectPrimitive.Icon asChild>
       <ChevronDown className="h-4 w-4 opacity-70 text-primary" />
-    </SelectPrimitive.Icon> */}
+    </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ))
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
@@ -71,7 +71,7 @@ SelectScrollDownButton.displayName =
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Portal>
     <SelectPrimitive.Content
       ref={ref}
@@ -89,9 +89,9 @@ const SelectContent = React.forwardRef<
         transition={{ duration: 0.2 }}
         className="absolute w-full"
       >
-        {/* <SelectPrimitive.Viewport className="p-1">
+        <SelectPrimitive.Viewport className="p-1">
           {children}
-        </SelectPrimitive.Viewport> */}
+        </SelectPrimitive.Viewport>
       </motion.div>
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
