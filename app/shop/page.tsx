@@ -7,13 +7,6 @@ import { Database } from '@/lib/database.types';
 import { ProductList } from '@/components/ProductList';
 import { toast } from 'react-hot-toast';
 import { Input } from '@/components/ui/input';
-import { 
-    Select, 
-    SelectContent, 
-    SelectItem, 
-    SelectTrigger, 
-    SelectValue 
-} from '@/components/ui/select';
 import { useSearchParams } from 'next/navigation';
 
 // Definisi tipe produk yang lebih spesifik
@@ -108,14 +101,6 @@ function ShopPageContent() {
     useEffect(() => {
         fetchProducts();
     }, [fetchProducts]); 
-
-    const handleSearchCategoryChange = (category: string) => {
-        setSearchCategory(category);
-        const filteredProducts = products.filter(p => 
-            p.category === category || category === 'all'
-        );
-        setFilteredProducts(filteredProducts);
-    };
 
     const handleSearch = (term: string) => {
         setSearchTerm(term);
@@ -230,21 +215,6 @@ function ShopPageContent() {
                         </div>
                     )}
                 </div>
-                <Select 
-                    defaultValue="all"
-                    onValueChange={handleSearchCategoryChange}
-                >
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Pilih Kategori" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {CATEGORIES.map(category => (
-                            <SelectItem key={category} value={category}>
-                                {category === 'all' ? 'Semua Kategori' : category}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
             </div>
 
             <h1 className="text-2xl font-bold mb-4">

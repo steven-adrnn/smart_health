@@ -95,36 +95,18 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
                                     />
                                 </motion.div>
                             </Link>
-
-                            {/* User Dropdown */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <motion.button
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.9 }}
-                                        className="focus:outline-none"
-                                    >
-                                        <User 
-                                            className="text-foreground hover:text-primary" 
-                                            size={24} 
-                                        />
-                                    </motion.button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-56">
-                                    <DropdownMenuLabel>
-                                        {session.user?.email}
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onSelect={() => router.push('/profile')}>
-                                        <User className="mr-2 h-4 w-4" />
-                                        <span>Profile</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={handleLogout}>
-                                        <LogOut className="mr-2 h-4 w-4" />
-                                        <span>Logout</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                            {/* Profil Icon */}
+                            <Link href="/profile" className="relative">
+                                <motion.div
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <User
+                                        className="text-foreground hover:text-primary" 
+                                        size={24} 
+                                    />
+                                </motion.div>
+                            </Link>
                         </div>
                     ) : (
                         <div className="flex space-x-4">
