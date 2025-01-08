@@ -77,15 +77,29 @@ const Addresses: React.FC<AddressesProps> = ({
 
                         const addressComponents = data.address;
                         const addressDetail: Database['public']['Tables']['addresses']['Row'] = {
-                            id: addressComponents.id, // Dummy value
-                            user_id: addressComponents.user_id, // Dummy value
-                            address: addressComponents.address,
-                            latitude,
-                            longitude,
-                            street: addressComponents.streat || '',
-                            city: addressComponents.city || addressComponents.town || '',
-                            province: addressComponents.state || addressComponents.province || '',
+                            id: addressComponents.id, 
+                            user_id: addressComponents.user_id, 
+                            address: [
+                                addressComponents.street || '',
+                                addressComponents.city || '',
+                                addressComponents.province || ''
+                            ].filter(Boolean).join(', '),
+                            
+                            street: addressComponents.road || 
+                                addressComponents.street || 
+                                addressComponents.address || '',
+                            
+                            city: addressComponents.city || 
+                                addressComponents.town || 
+                                addressComponents.municipality || '',
+                            
+                            province: addressComponents.state || 
+                                addressComponents.province || 
+                                addressComponents.county || '',
+                            
                             postal_code: addressComponents.postcode || '',
+                            latitude: latitude,
+                            longitude: longitude,
                             created_at: addressComponents.created_at
                         };
 
