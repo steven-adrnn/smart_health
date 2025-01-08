@@ -191,10 +191,6 @@ export default function ProfilePage() {
                     >
                         <div className="flex justify-between mb-4">
                             <div className="flex space-x-2">
-                                <Button onClick={() => setRecipeSortOrder('newest')}>Terbaru</Button>
-                                <Button onClick={() => setRecipeSortOrder('oldest')}>Terlama</Button>
-                            </div>
-                            <div className="flex space-x-2">
                                 <Button onClick={() => setRecipeFilterDifficulty('all')}>Semua</Button>
                                 <Button onClick={() => setRecipeFilterDifficulty('easy')}>Mudah</Button>
                                 <Button onClick={() => setRecipeFilterDifficulty('medium')}>Sedang</Button>

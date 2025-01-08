@@ -324,7 +324,7 @@ export default function CartPage() {
                 <div>
                     <p>Poin Anda: {points}</p>
                     <input 
-                        type="number" 
+                        type="number defaultValue={null}" 
                         value={pointsToUse} 
                         onChange={(e) => setPointsToUse(Number(e.target.value))} 
                         placeholder="Gunakan Poin" 
@@ -357,10 +357,10 @@ export default function CartPage() {
                         <div>
                             <p className="font-semibold">{selectedAddress.address}</p>
                             {selectedAddress.address && (
-                                <p className="text-sm text-gray-600">{selectedAddress.address}</p>
+                                <p className="text-sm text-gray-600">{selectedAddress.street}, {selectedAddress.city}, {selectedAddress.province}</p>
                             )}
                             <p className="text-sm text-gray-600">
-                                {selectedAddress.address}
+                                {selectedAddress.postal_code}
                             </p>
                         </div>
                     </motion.div>
