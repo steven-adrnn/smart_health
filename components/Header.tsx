@@ -7,17 +7,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
 import { motion } from 'framer-motion';
 import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from './ui/dropdown-menu';
-import { 
   ShoppingCart, 
   User, 
-  LogOut, 
   Globe
 } from 'lucide-react';
 import Image from 'next/image';
@@ -28,12 +19,6 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ session }) => {
     const router = useRouter();
-
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
-        localStorage.removeItem('user_session');
-        router.push('/login');
-    };
 
     const menuVariants = {
         hidden: { opacity: 0, y: -20 },
