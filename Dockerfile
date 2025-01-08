@@ -42,10 +42,12 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy build artifacts
-# COPY --from=builder /smart-health-tst/public ./public
-COPY --from=builder /smart-health-tst/.next/standalone ./
-COPY --from=builder /smart-health-tst/.next/static ./.next/static
-COPY --from=builder /smart-health-tst/ ./
+COPY --from=builder /smart-health-tst/public ./public
+COPY --from=builder --chown=nextjs:nodejs /smart-health-tst/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /smart-health-tst/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /smart-health-tst/ ./
+
+COPY --chown=nextjs:nodejs public/ ./public/
 
 # Set environment variables in runtime
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL

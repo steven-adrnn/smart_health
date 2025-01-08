@@ -58,9 +58,11 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
                 {/* Logo */}
                 <Link href="/" className="text-2xl font-bold text-primary flex items-center">
                     <Image
-                        src="/logo.png" 
+                        src="/icon.png" 
                         alt="Smart Health Logo" 
-                        className="h-10 mr-2"
+                        width={40} 
+                        height={40}  
+                        className="h-10 mr-2 object-contain"
                     />
                     Smart Health
                 </Link>
