@@ -154,112 +154,88 @@ export default function CartPage() {
             return;
         }
 
-        if (pointsToUse > points) {
-            toast.error('Jumlah poin yang digunakan melebihi poin yang Anda miliki');
-            return;
-        }
-
         try {
             const { data: { session } } = await supabase.auth.getSession();
             
-            if (!session) {
-                toast.error('Anda harus login terlebih dahulu');
+            if (!session?.user) {
+                toast.error('Anda harus login');
                 router.push('/login');
                 return;
             }
 
-            // Hitung total setelah menggunakan poin
-            const totalAfterPoints = total - pointsToUse;
-            
-            // Pastikan total tidak negatif
-            if (totalAfterPoints < 0) {
-                toast.error('Jumlah poin yang digunakan melebihi total biaya');
-                setTotal(totalAfterPoints);
+            // Validasi poin
+            if (pointsToUse > points) {
+                toast.error('Jumlah poin yang digunakan melebihi poin Anda');
                 return;
             }
-            const pointsEarned = Math.floor(total / 1000); // Asumsi 1 poin = 1000 rupiah
 
-            // Update produk di database (kurangi stok)
-            const updateProductPromises = cartItems.map(async (item) => {
-                const { data: productData, error: fetchError } = await supabase
+            // Hitung total setelah menggunakan poin
+            const totalAfterPoints = Math.max(0, total - pointsToUse);
+
+            // Buat array untuk bulk insert
+            const checkoutItems = cartItems.map(item => ({
+                user_id: session.user.id,
+                product_id: item.id,
+                quantity: item.quantity,
+                // Pastikan menggunakan ID alamat yang benar
+                address_id: selectedAddress.id,
+                // Tambahkan field lain yang mungkin diperlukan
+                created_at: new Date().toISOString()
+            }));
+
+            // Debug: Log item yang akan diinsert
+            console.log('Checkout Items:', checkoutItems);
+
+            // Insert ke tabel cart dengan error handling yang lebih detail
+            const { data, error } = await supabase
+                .from('cart')
+                .insert(checkoutItems)
+                .select();
+
+            if (error) {
+                console.error('Detailed Checkout Error:', error);
+                toast.error(`Gagal checkout: ${error.message}`);
+                return;
+            }
+
+            // Kurangi stok produk
+            const stockUpdatePromises = cartItems.map(async (item) => {
+                const { error: stockError } = await supabase
                     .from('products')
-                    .select('quantity')
-                    .eq('id', item.id)
-                    .single();
-
-                if (fetchError) {
-                    console.error(`Error fetching product ${item.id}:`, fetchError);
-                    return null;
-                }
-
-                const newQuantity = productData.quantity - item.quantity;
-                
-                if (newQuantity < 0) {
-                    toast.error(`Stok ${item.name} tidak mencukupi`);
-                    throw new Error(`Stok ${item.name} tidak mencukupi`);
-                }
-
-                const { error: updateError } = await supabase
-                    .from('products')
-                    .update({ quantity: newQuantity })
+                    .update({ 
+                        quantity: Math.max(0, item.quantity - item.quantity) 
+                    })
                     .eq('id', item.id);
 
-                if (updateError) {
-                    console.error(`Error updating product ${item.id}:`, updateError);
-                    throw updateError;
+                if (stockError) {
+                    console.error(`Gagal update stok untuk produk ${item.id}:`, stockError);
                 }
-
-                return true;
             });
 
-            // Tunggu semua update produk selesai
-            await Promise.all(updateProductPromises);
+            await Promise.all(stockUpdatePromises);
 
             // Update poin pengguna
-            const newPointTotal = points - pointsToUse + pointsEarned;
-            const { error: updatePointsError } = await supabase
+            const { error: pointError } = await supabase
                 .from('users')
-                .update({ point: newPointTotal })
+                .update({ point: points - pointsToUse })
                 .eq('id', session.user.id);
 
-            if (updatePointsError) {
-                console.error('Error updating points:', updatePointsError);
-                toast.error('Gagal mengurangi poin');
-                return;
+            if (pointError) {
+                console.error('Gagal update poin:', pointError);
             }
 
-            // Simpan setiap item ke tabel cart
-            const cartInsertPromises = cartItems.map(item => 
-                supabase
-                    .from('cart')
-                    .insert({
-                        user_id: session.user.id,
-                        address_id: selectedAddress,
-                        product_id: item.id,
-                        quantity: item.quantity
-                    })
-            );
-
-            const results = await Promise.all(cartInsertPromises);
-            const hasError = results.some(result => result.error);
-
-            if (hasError) {
-                toast.error('Gagal menyimpan item ke keranjang');
-                return;
-            }
-
-            // Kosongkan keranjang setelah checkout
-            setCartItems([]);
+            // Bersihkan keranjang
             localStorage.removeItem('cart');
-            toast.success('Checkout berhasil! Anda mendapatkan ${pointsEarned} poin.');
-
-            // Redirect ke halaman konfirmasi atau beranda
+            setCartItems([]);
+            
+            toast.success('Checkout berhasil!');
             router.push('/');
+
         } catch (error) {
-            console.error('Unexpected error during checkout:', error);
+            console.error('Checkout error:', error);
             toast.error('Terjadi kesalahan saat checkout');
         }
-    };
+    };    
 
     return (
         <motion.div 
