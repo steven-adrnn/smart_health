@@ -23,7 +23,7 @@ export default function ProfilePage() {
     const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
     const router = useRouter();
     const [activeSection, setActiveSection] = useState<'dashboard' | 'recipes' | 'addresses'>('dashboard');
-    const [recipeSortOrder, setRecipeSortOrder] = useState<'newest' | 'oldest'>('newest');
+    const [recipeSortOrder] = useState<'newest' | 'oldest'>('newest');
     const [recipeFilterDifficulty, setRecipeFilterDifficulty] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
 
     // Dashboard Mini Statistik
