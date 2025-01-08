@@ -1,3 +1,4 @@
+// app/profile/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react';
@@ -9,138 +10,100 @@ import { useRouter } from 'next/navigation';
 import { Database } from '@/lib/database.types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    Activity, 
+    Book, 
+    Star, 
+    LogOut, 
+    Filter, 
+    ArrowDown, 
+    ArrowUp 
+} from 'lucide-react';
 
 type User = Database['public']['Tables']['users']['Row'];
 type Address = Database['public']['Tables']['addresses']['Row'];
 type Recipe = Database['public']['Tables']['recipes']['Row'];
 
 export default function ProfilePage() {
-    const [user, setUser ] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [points, setPoints] = useState(0);
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [newAddress, setNewAddress] = useState('');
     const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
     const router = useRouter();
+    const [activeSection, setActiveSection] = useState<'dashboard' | 'recipes' | 'addresses'>('dashboard');
+    const [recipeSortOrder, setRecipeSortOrder] = useState<'newest' | 'oldest'>('newest');
+    const [recipeFilterDifficulty, setRecipeFilterDifficulty] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
+
+    // Dashboard Mini Statistik
+    const [stats, setStats] = useState({
+        totalRecipes: 0,
+        totalPosts: 0,
+        totalPoints: 0,
+        completedChallenges: 0
+    });
 
     useEffect(() => {
         const fetchUserData = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             
             if (session?.user) {
-                // Fetch user details and points
-                const { data: userData, error: userError } = await supabase
+                // Fetch user details
+                const { data: userData } = await supabase
                     .from('users')
-                    .select('*, point') // Ambil kolom point
+                    .select('*, point')
                     .eq('id', session.user.id)
                     .single();
 
-                if (userError) {
-                    console.error('Error fetching user:', userError);
-                }
-
-                // Fetch user addresses
-                const { data: addressData, error: addressFetchError } = await supabase
+                // Fetch addresses
+                const { data: addressData } = await supabase
                     .from('addresses')
                     .select('*')
                     .eq('user_id', session.user.id);
 
-                if (addressFetchError) {
-                    console.error('Error fetching addresses:', addressFetchError);
-                }
+                // Fetch saved recipes
+                const { data: recipes } = await supabase
+                    .from('recipes')
+                    .select('*')
+                    .eq('user_id', session.user.id);
+
+                // Fetch forum posts and challenges
+                const { count: postCount } = await supabase
+                    .from('forum_posts')
+                    .select('*', { count: 'exact' })
+                    .eq('user_id', session.user.id);
 
                 if (userData) {
-                    setUser (userData);
-                    setPoints(userData.point); // Set poin dari userData
+                    setUser(userData);
+                    setPoints(userData.point);
+                    setAddresses(addressData || []);
+                    setSavedRecipes(recipes || []);
+                    
+                    setStats({
+                        totalRecipes: recipes?.length || 0,
+                        totalPosts: postCount || 0,
+                        totalPoints: userData.point,
+                        completedChallenges: 0 // Implement challenge tracking
+                    });
                 }
-                if (addressData) setAddresses(addressData);
             }
         };
-
-        const fetchSavedRecipes = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (!session?.user) return;
-      
-            const { data: recipes, error } = await supabase
-              .from('recipes')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .order('created_at', { ascending: false });
-      
-            if (error) {
-              console.error('Error fetching saved recipes:', error);
-              return;
-            }
-      
-            setSavedRecipes(recipes);
-          };
-      
-        fetchSavedRecipes();
 
         fetchUserData();
     }, []);
 
-    const handleAddAddress = async () => {
-        if (!newAddress.trim()) {
-            toast.error('Alamat tidak boleh kosong');
-            return;
-        }
-
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (!session?.user) {
-                toast.error('Anda harus login');
-                return;
-            }
-
-            const { data, error } = await supabase
-                .from('addresses')
-                .insert({
-                    user_id: session.user.id,
-                    address: newAddress.trim()
-                })
-                .select();
-
-            if (error) {
-                console.error('Error adding address:', error);
-                toast.error('Gagal menambahkan alamat');
-                return;
-            }
-
-            // Update local state
-            if (data) {
-                setAddresses([...addresses, data[0]]);
-                setNewAddress('');
-                toast.success('Alamat berhasil ditambahkan');
-            }
-        } catch (error) {
-            console.error('Unexpected error:', error);
-            toast.error('Terjadi kesalahan');
-        }
-    };
-
-    const handleDeleteAddress = async (addressId: string) => {
-        try {
-            const { error } = await supabase
-                .from('addresses')
-                .delete()
-                .eq('id', addressId);
-
-            if (error) {
-                console.error('Error deleting address:', error);
-                toast.error('Gagal menghapus alamat');
-                return;
-            }
-
-            // Update local state
-            setAddresses(addresses.filter(addr => addr.id !== addressId));
-            toast.success('Alamat berhasil dihapus');
-        } catch (error) {
-            console.error('Unexpected error:', error);
-            toast.error('Terjadi kesalahan');
-        }
-    };
+    // Filtering and Sorting Recipes
+    const filteredAndSortedRecipes = savedRecipes
+        .filter(recipe => 
+            recipeFilterDifficulty === 'all' || 
+            recipe.difficulty === recipeFilterDifficulty
+        )
+        .sort((a, b) => 
+            recipeSortOrder === 'newest'
+                ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                : new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
@@ -149,147 +112,160 @@ export default function ProfilePage() {
         toast.success('Logout berhasil');
     };
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: { 
+            opacity: 1,
+            transition: { 
+                staggerChildren: 0.1 
+            } 
+        }
+    };
+
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: { 
+            y: 0, 
+            opacity: 1,
+            transition: { type: "spring", stiffness: 300 }
+        }
+    };
+
     if (!user) return <div>Loading...</div>;
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2 px-4">Profil Pengguna</h1>
-            <div className="profile-info">
-                <h2>Nama: {user.name}</h2>
-                <h3>Email: {user.email}</h3>
-                <h3>Poin Anda: {points}</h3>
-            </div>
+        <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="container mx-auto p-4 space-y-6"
+        >
+            {/* Header */}
+            <motion.div 
+                variants={itemVariants}
+                className="flex justify-between items-center"
+            >
+                <h1 className="text-3xl font-bold text-primary">Profil Pengguna</h1>
+                <Button 
+                    onClick={handleLogout} 
+                    variant="destructive"
+                    className="flex items-center"
+                >
+                    <LogOut className="mr-2 h-4 w-4" /> Logout
+                </Button>
+            </motion.div>
 
-            <div className="address-section">
-                <h2>Alamat Anda</h2>
-                <ul>
-                    {addresses.map(address => (
-                        <li key={address.id} className="address-item">
-                            {address.address}
-                            <Button onClick={() => handleDeleteAddress(address.id)}>Hapus</Button>
-                        </li>
-                    ))}
-                </ul>
-                <Textarea
-                    value={newAddress}
-                    onChange={(e) => setNewAddress(e.target.value)}
-                    placeholder="Tambahkan alamat baru"
-                />
-                <Button onClick={handleAddAddress}>Tambah Alamat</Button>
-            </div>
+            {/* Navigation */}
+            <motion.div 
+                variants={itemVariants}
+                className="flex space-x-4 mb-6"
+            >
+                {['dashboard', 'recipes', 'addresses'].map(section => (
+                    <Button
+                        key={section}
+                        variant={activeSection === section ? 'default' : 'outline'}
+                        onClick={() => setActiveSection(section as any)}
+                    >
+                        {section.charAt(0).toUpperCase() + section.slice(1)}
+                    </Button>
+                ))}
+            </motion.div>
 
-            <section className="saved-recipes">
-                <h2>Resep Tersimpan</h2>
-                {savedRecipes.length === 0 ? (
-                <p>Anda belum menyimpan resep apapun</p>
-                ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {savedRecipes.map(recipe => (
-                        <SavedRecipeCard 
-                            key={recipe.id} 
-                            recipe={recipe} 
-                            onDelete={() => {
-                                // Implementasi fungsi hapus resep
-                                setSavedRecipes(prev => 
-                                    prev.filter(r => r.id !== recipe.id)
-                            );
-                            }} 
-                        />
-                    ))}
-                </div>
+            <AnimatePresence mode="wait">
+                {activeSection === 'dashboard' && (
+                    <motion.div
+                        key="dashboard"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="grid md:grid-cols-2 lg:grid-cols-4 gap-4"
+                    >
+                        {Object.entries(stats).map(([key, value]) => (
+                            <Card key={key}>
+                                <CardHeader>
+                                    <CardTitle>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-3xl font-bold text-primary">{value}</p>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </motion.div>
                 )}
-            </section>
 
-            <Button onClick={handleLogout}>Logout</Button>
-        </div>
+                {activeSection === 'recipes' && (
+                    <motion.div
+                        key="recipes"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <div className="flex justify-between mb-4">
+                            <div className="flex space-x-2">
+                                <Button onClick= {() => setRecipeSortOrder('newest')}>Terbaru</Button>
+                                <Button onClick={() => setRecipeSortOrder('oldest')}>Terlama</Button>
+                            </div>
+                            <div className="flex space-x-2">
+                                <Button onClick={() => setRecipeFilterDifficulty('all')}>Semua</Button>
+                                <Button onClick={() => setRecipeFilterDifficulty('easy')}>Mudah</Button>
+                                <Button onClick={() => setRecipeFilterDifficulty('medium')}>Sedang</Button>
+                                <Button onClick={() => setRecipeFilterDifficulty('hard')}>Sulit</Button>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {filteredAndSortedRecipes.map(recipe => (
+                                <Card key={recipe.id}>
+                                    <CardHeader>
+                                        <CardTitle>{recipe.name}</CardTitle>
+                                        <CardDescription>{recipe.description}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-sm">Kesulitan: {recipe.difficulty}</p>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+
+                {activeSection === 'addresses' && (
+                    <motion.div
+                        key="addresses"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <h2 className="text-xl font-bold">Alamat Tersimpan</h2>
+                        <ul className="space-y-2">
+                            {addresses.map(address => (
+                                <li key={address.id} className="border p-2 rounded">
+                                    {address.street}, {address.city}, {address.province}, {address.postal_code}
+                                </li>
+                            ))}
+                        </ul>
+                        <Textarea
+                            value={newAddress}
+                            onChange={(e) => setNewAddress(e.target.value)}
+                            placeholder="Tambahkan alamat baru"
+                            className="mt-4"
+                        />
+                        <Button onClick={async () => {
+                            const { error } = await supabase
+                                .from('addresses')
+                                .insert([{ user_id: user.id, address: newAddress }]);
+                            if (error) {
+                                toast.error('Gagal menambahkan alamat');
+                            } else {
+                                setAddresses([...addresses, { id: Date.now().toString(), user_id: user.id, address: newAddress, latitude: null, longitude: null, street: null, city: null, province: null, postal_code: null, created_at: new Date().toISOString() }]);
+                                setNewAddress('');
+                                toast.success('Alamat berhasil ditambahkan');
+                            }
+                        }}>
+                            Tambah Alamat
+                        </Button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
     );
 }
-
-// Komponen baru untuk menampilkan resep tersimpan dengan dialog
-function SavedRecipeCard({ 
-    recipe, 
-    onDelete 
-  }: { 
-    recipe: Recipe, 
-    onDelete?: () => void 
-  }) {
-    const handleDeleteRecipe = async () => {
-      try {
-        const { error } = await supabase
-          .from('recipes')
-          .delete()
-          .eq('id', recipe.id);
-  
-        if (error) {
-          toast.error('Gagal menghapus resep');
-          return;
-        }
-  
-        toast.success('Resep berhasil dihapus');
-        onDelete?.();
-      } catch (error) {
-        console.error('Error deleting recipe:', error);
-        toast.error('Terjadi kesalahan');
-      }
-    };
-  
-    return (
-      <Dialog>
-        <DialogTrigger asChild>
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle>{recipe.name}</CardTitle>
-              <CardDescription>{recipe.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between">
-                <span>Tingkat Kesulitan: {recipe.difficulty}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </DialogTrigger>
-        
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{recipe.name}</DialogTitle>
-            <DialogDescription>{recipe.description}</DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Bahan:</h3>
-              <ul className="list-disc pl-4">
-                {recipe.ingredients.map((ingredient, idx) => (
-                  <li key={idx}>{ingredient}</li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Instruksi Memasak:</h3>
-              <ol className="list-decimal pl-4">
-                {recipe.instructions.map((instruction, index) => (
-                  <li key={index}>{instruction}</li>
-                ))}
-              </ol>
-            </div>
-  
-            <div className="flex justify-between">
-              <div>
-                <strong>Tingkat Kesulitan:</strong> {recipe.difficulty}
-              </div>
-            </div>
-          </div>
-  
-          <DialogFooter>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteRecipe}
-            >
-              Hapus Resep
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
