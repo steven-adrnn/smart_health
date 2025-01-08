@@ -9,25 +9,15 @@ import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Database } from '@/lib/database.types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Activity, 
-    Book, 
-    Star, 
-    LogOut, 
-    Filter, 
-    ArrowDown, 
-    ArrowUp 
-} from 'lucide-react';
+import { LogOut } from 'lucide-react';
 
 type User = Database['public']['Tables']['users']['Row'];
 type Address = Database['public']['Tables']['addresses']['Row'];
 type Recipe = Database['public']['Tables']['recipes']['Row'];
 
 export default function ProfilePage() {
-    const [user, setUser] = useState<User | null>(null);
-    const [points, setPoints] = useState(0);
+    const [user, setUser ] = useState<User | null>(null);
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [newAddress, setNewAddress] = useState('');
     const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
@@ -75,8 +65,7 @@ export default function ProfilePage() {
                     .eq('user_id', session.user.id);
 
                 if (userData) {
-                    setUser(userData);
-                    setPoints(userData.point);
+                    setUser (userData);
                     setAddresses(addressData || []);
                     setSavedRecipes(recipes || []);
                     
@@ -164,8 +153,8 @@ export default function ProfilePage() {
                     <Button
                         key={section}
                         variant={activeSection === section ? 'default' : 'outline'}
-                        onClick={() => setActiveSection(section as any)}
-                    >
+                        onClick={() => setActiveSection(section as 'addresses' | 'recipes' | 'dashboard')}
+                        >
                         {section.charAt(0).toUpperCase() + section.slice(1)}
                     </Button>
                 ))}
@@ -202,7 +191,7 @@ export default function ProfilePage() {
                     >
                         <div className="flex justify-between mb-4">
                             <div className="flex space-x-2">
-                                <Button onClick= {() => setRecipeSortOrder('newest')}>Terbaru</Button>
+                                <Button onClick={() => setRecipeSortOrder('newest')}>Terbaru</Button>
                                 <Button onClick={() => setRecipeSortOrder('oldest')}>Terlama</Button>
                             </div>
                             <div className="flex space-x-2">
