@@ -23,7 +23,6 @@ export default function ProfilePage() {
     const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
     const router = useRouter();
     const [activeSection, setActiveSection] = useState<'dashboard' | 'recipes' | 'addresses'>('dashboard');
-    const [recipeSortOrder] = useState<'newest' | 'oldest'>('newest');
     const [recipeFilterDifficulty, setRecipeFilterDifficulty] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
 
     // Dashboard Mini Statistik
@@ -31,7 +30,6 @@ export default function ProfilePage() {
         totalRecipes: 0,
         totalPosts: 0,
         totalPoints: 0,
-        completedChallenges: 0
     });
 
     useEffect(() => {
@@ -73,7 +71,6 @@ export default function ProfilePage() {
                         totalRecipes: recipes?.length || 0,
                         totalPosts: postCount || 0,
                         totalPoints: userData.point,
-                        completedChallenges: 0 // Implement challenge tracking
                     });
                 }
             }
@@ -88,11 +85,6 @@ export default function ProfilePage() {
             recipeFilterDifficulty === 'all' || 
             recipe.difficulty === recipeFilterDifficulty
         )
-        .sort((a, b) => 
-            recipeSortOrder === 'newest'
-                ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-                : new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
