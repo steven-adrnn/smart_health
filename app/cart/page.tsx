@@ -1,120 +1,153 @@
 'use client'
 
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Database } from '@/lib/database.types';
+import { MapPin } from 'lucide-react';
+import Addresses from '@/components/Addresses';
+
 
 import { RecipeRecommendations } from '@/components/RecipeRecommendation';
-
-
-// interface CartItem {
-//     id: string;
-//     name: string;
-//     price: number;
-//     quantity: number;
-//     image: string | null;
-// }
-
-interface Address {
-    id: string;
-    address: string;
-}
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger
+} from '@/components/ui/dialog';
+import { Trash2, Plus, Minus } from 'lucide-react';
 
 type CartItem = Database['public']['Tables']['products']['Row'] & { quantity: number };
+
+type Address = Database['public']['Tables']['addresses']['Row'];
 
 
 export default function CartPage() {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [total, setTotal] = useState(0);
-    const [addresses, setAddresses] = useState<Address[]>([]);
-    const [selectedAddress, setSelectedAddress] = useState<string>('');
+    // const [addressList, setAddressesList] = useState<Address[]>([]);
+    const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
     const [points, setPoints] = useState(0);
     const [pointsToUse, setPointsToUse] = useState(0);
     const router = useRouter();
 
+    // Animasi Variants
+    const cartItemVariants = {
+        hidden: { opacity: 0, x: -50 },
+        visible: { opacity: 1, x: 0 },
+        exit: { opacity: 0, x: 50 }
+    };
+
+    // Efek untuk memuat data awal
     useEffect(() => {
         const storedCart = JSON.parse(localStorage.getItem('cart') || '[]') as CartItem[];
         setCartItems(storedCart);
         calculateTotal(storedCart);
+        fetchUserData();
     }, []);
 
-    useEffect(() => {
-        const fetchAddresses = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                const { data, error } = await supabase
-                    .from('addresses')
-                    .select('*')
-                    .eq('user_id', session.user.id);
+    // Fetch user data (addresses, points)
+    const fetchUserData = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+            // Fetch Addresses
+            // const { data: addressData } = await supabase
+            //     .from('addresses')
+            //     .select('*')
+            //     .eq('user_id', session.user.id);
+            // setAddressesList(addressData || []);
 
-                if (error) {
-                    console.error('Error fetching addresses:', error);
-                } else {
-                    setAddresses(data || []);
-                }
-            }
-        };
+            // Fetch Points
+            const { data: userData } = await supabase
+                .from('users')
+                .select('point')
+                .eq('id', session.user.id)
+                .single();
+            setPoints(userData?.point || 0);
+        }
+    };
 
-        const fetchUserPoints = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                const { data, error } = await supabase
-                    .from('users')
-                    .select('point')
-                    .eq('id', session.user.id)
-                    .single();
-
-                if (error) {
-                    console.error('Error fetching points:', error);
-                } else {
-                    setPoints(data?.point || 0);
-                }
-            }
-        };
-
-        fetchAddresses();
-        fetchUserPoints();
-    }, []);
-
+    // Kalkulasi Total
     const calculateTotal = (items: CartItem[]) => {
         const totalAmount = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
         setTotal(totalAmount);
     };
 
+    // Increment Quantity
     const incrementQuantity = (itemId: string) => {
         const updatedCart = cartItems.map(item => 
             item.id === itemId 
                 ? { ...item, quantity: item.quantity + 1 } 
                 : item
         );
-        setCartItems(updatedCart);
-        localStorage.setItem('cart', JSON.stringify(updatedCart));
-        calculateTotal(updatedCart);
+        updateCart(updatedCart);
     };
 
+    // Decrement Quantity
     const decrementQuantity = (itemId: string) => {
         const updatedCart = cartItems.map(item => 
             item.id === itemId && item.quantity > 1
                 ? { ...item, quantity: item.quantity - 1 }
                 : item
         ).filter(item => item.quantity > 0);
+        updateCart(updatedCart);
+    };
+
+    // Update Cart
+    const updateCart = (updatedCart: CartItem[]) => {
         setCartItems(updatedCart);
         localStorage.setItem('cart', JSON.stringify(updatedCart));
         calculateTotal(updatedCart);
     };
 
-    const removeItem = (itemId: string) => {
-        const updatedCart = cartItems.filter(item => item.id !== itemId);
-        setCartItems(updatedCart);
-        localStorage.setItem('cart', JSON.stringify(updatedCart));
-        calculateTotal(updatedCart);
-        toast.success('Produk dihapus dari keranjang');
+    // Remove Item Modal Component
+    const RemoveItemConfirmationModal = ({ item, onConfirm }: { 
+        item: CartItem, 
+        onConfirm: () => void 
+    }) => {
+        return (
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button variant="destructive" size="icon">
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Konfirmasi Hapus Produk</DialogTitle>
+                        <DialogDescription>
+                            Apakah Anda yakin ingin menghapus {item.name} dari keranjang?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button onClick={onConfirm} variant="destructive">
+                            Ya, Hapus
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        );
     };
 
+    // Get Image URL
+    const getPublicImageUrl = (path: string) => {
+        const cleanPath = path.replace(/\s+/g, '%20');
+        return `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${cleanPath}`;
+    };
+
+    // Handler untuk memilih alamat
+    const handleAddressSelect = (address: Address) => {
+        setSelectedAddress(address);
+    };
+
+    // Checkout Handler
     const handleCheckout = async () => {
         if (!selectedAddress) {
             toast.error('Silakan pilih alamat pengiriman');
@@ -227,59 +260,137 @@ export default function CartPage() {
             toast.error('Terjadi kesalahan saat checkout');
         }
     };
-    
-    const getPublicImageUrl = (path: string) => {
-        const cleanPath = path.replace(/\s+/g, '%20');
-        return `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${cleanPath}`;
-    };
-    
+
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl">Keranjang </h1>
-            <div>
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="container mx-auto p-4 space-y-6"
+        >
+            {/* Judul */}
+            <motion.h1 
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="text-3xl font-bold text-primary"
+            >
+                Keranjang Belanja
+            </motion.h1>
+
+            {/* Daftar Produk */}
+            <AnimatePresence>
                 {cartItems.map(item => (
-                    <div key={item.id} className="flex justify-between items-center border-b py-2">
-                        <Image src={item.image ? getPublicImageUrl(item.image) : '/placeholder.png'} alt={item.name} width={50} height={50} />
-                        <div className="flex-1 mx-2">
+                    <motion.div 
+                        key={item.id}
+                        variants={cartItemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        className="flex items-center space-x-4 p-4 border rounded-lg"
+                    >
+                        {/* Gambar Produk */}
+                        <Image 
+                            src={item.image ? getPublicImageUrl(item.image) : '/placeholder.png'}
+                            alt={item.name}
+                            width={80}
+                            height={80}
+                            className="rounded-lg"
+                        />
+
+                        {/* Detail Produk */}
+                        <div className="flex-grow">
                             <h2 className="font-bold">{item.name}</h2>
-                            <p>Harga: Rp {item.price}</p>
-                            <p>Jumlah: {item.quantity}</p>
+                            <p>Rp {item.price.toLocaleString()}</p>
                         </div>
-                        <div>
-                            <Button onClick={() => incrementQuantity(item.id)}>+</Button>
-                            <Button onClick={() => decrementQuantity(item.id)}>-</Button>
-                            <Button onClick={() => removeItem(item.id)}>Hapus</Button>
+
+                        {/* Kontrol Kuantitas */}
+                        <div className="flex items-center space-x-2">
+                            <Button 
+                                variant="outline" 
+                                size="icon" 
+                                onClick={() => decrementQuantity(item.id)}
+                            >
+                                <Minus className="h-4 w-4" />
+                            </Button>
+                            <span>{item.quantity}</span>
+                            <Button 
+                                variant="outline" 
+                                size="icon" 
+                                onClick={() => incrementQuantity(item.id)}
+                            >
+                                <Plus className="h-4 w-4" />
+                            </Button>
+
+                            {/* Modal Hapus */}
+                             <RemoveItemConfirmationModal 
+                                item={item} 
+                                onConfirm={() => {
+                                    const updatedCart = cartItems.filter(cartItem => cartItem.id !== item.id);
+                                    updateCart(updatedCart);
+                                }} 
+                            />
                         </div>
-                    </div>
+                    </motion.div>
                 ))}
+            </AnimatePresence>
+
+            {/* Total dan Poin */}
+            <div className="flex justify-between items-center p-4 border-t">
+                <h2 className="text-xl font-bold">Total: Rp {total.toLocaleString()}</h2>
+                <div>
+                    <p>Poin Anda: {points}</p>
+                    <input 
+                        type="number" 
+                        value={pointsToUse} 
+                        onChange={(e) => setPointsToUse(Number(e.target.value))} 
+                        placeholder="Gunakan Poin" 
+                        className="border rounded p-1"
+                    />
+                </div>
             </div>
 
-            <div className="mt-4">
-                <h2 className="text-lg">Total: Rp {total - pointsToUse}</h2>
-                <h3 className="text-lg">Poin Anda: {points}</h3>
-                <input
-                    type="number"
-                    value={pointsToUse}
-                    onChange={(e) => setPointsToUse(Number(e.target.value))}
-                    placeholder="Masukkan poin yang ingin digunakan"
-                    className="border p-2"
-                />
-                <Button onClick={handleCheckout} className="mt-2">Checkout</Button>
-            </div>
-
-            <div className="mt-4">
-                <h2 className="text-lg">Alamat Pengiriman</h2>
-                <select onChange={(e) => setSelectedAddress(e.target.value)} className="border p-2">
-                    <option value="">Pilih alamat</option>
-                    {addresses.map(address => (
-                        <option key={address.id} value={address.id}>{address.address}</option>
-                    ))}
-                </select>
-            </div>
-
+            {/* Rekomendasi Resep */}
             {cartItems.length > 0 && (
                 <RecipeRecommendations cartItems={cartItems} />
             )}
-        </div>
+
+            {/* Pemilihan Alamat */}
+            <div className="mt-6">
+                <h2 className="text-xl font-bold mb-4">Pilih Alamat Pengiriman</h2>
+                <Addresses 
+                    onSelectAddress={handleAddressSelect} 
+                    allowAddNew={true} 
+                />
+                
+                {/* Tampilkan alamat yang dipilih */}
+                {selectedAddress && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-4 p-4 bg-green-50 rounded-lg flex items-center"
+                    >
+                        <MapPin className="mr-2 text-primary" />
+                        <div>
+                            <p className="font-semibold">{selectedAddress.address}</p>
+                            {selectedAddress.address && (
+                                <p className="text-sm text-gray-600">{selectedAddress.address}</p>
+                            )}
+                            <p className="text-sm text-gray-600">
+                                {selectedAddress.address}
+                            </p>
+                        </div>
+                    </motion.div>
+                )}
+            </div>
+
+            {/* Tombol Checkout */}
+            <Button 
+                onClick={handleCheckout} 
+                className="w-full mt-4" 
+            >
+                {selectedAddress ? 'Checkout' : 'Pilih Alamat Terlebih Dahulu'}
+            </Button>
+        </motion.div>
     );
 }
+

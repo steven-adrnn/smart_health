@@ -228,7 +228,7 @@ export default function ProfilePage() {
                         <ul className="space-y-2">
                             {addresses.map(address => (
                                 <li key={address.id} className="border p-2 rounded">
-                                    {address.street}, {address.city}, {address.province}, {address.postal_code}
+                                    {address.address}
                                 </li>
                             ))}
                         </ul>

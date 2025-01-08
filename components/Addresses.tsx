@@ -10,6 +10,7 @@ import { MapPin, Locate } from 'lucide-react';
 
 
 
+
 interface AddressesProps {
     onSelectAddress?: (address: Database['public']['Tables']['addresses']['Row']) => void;
     allowAddNew?: boolean;
