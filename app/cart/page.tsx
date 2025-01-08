@@ -194,7 +194,7 @@ export default function CartPage() {
             console.log('Checkout Items:', checkoutItems);
 
             // Insert ke tabel cart dengan error handling yang lebih detail
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('cart')
                 .insert(checkoutItems)
                 .select();
