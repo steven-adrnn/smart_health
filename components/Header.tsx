@@ -2,7 +2,6 @@
 
 import { Session } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import { Button } from './ui/button';
 import { motion } from 'framer-motion';
