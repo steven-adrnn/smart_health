@@ -18,7 +18,8 @@ import {
   ShoppingCart, 
   User, 
   LogOut, 
-  Menu 
+  Menu,
+  Globe
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -67,22 +68,6 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
                     Smart Health
                 </Link>
 
-                {/* Navigation */}
-                <nav className="hidden md:flex space-x-6 items-center">
-                    <Link 
-                        href="/shop" 
-                        className="text-foreground hover:text-primary transition-colors"
-                    >
-                        Shop
-                    </Link>
-                    <Link 
-                        href="/forum" 
-                        className="text-foreground hover:text-primary transition-colors"
-                    >
-                        Forum
-                    </Link>
-                </nav>
-
                 {/* User Actions */}
                 <div className="flex items-center space-x-4">
                     {session ? (
@@ -94,6 +79,18 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
                                     whileTap={{ scale: 0.9 }}
                                 >
                                     <ShoppingCart 
+                                        className="text-foreground hover:text-primary" 
+                                        size={24} 
+                                    />
+                                </motion.div>
+                            </Link>
+                            {/* Forum Icon */}
+                            <Link href="/forum" className="relative">
+                                <motion.div
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <Globe
                                         className="text-foreground hover:text-primary" 
                                         size={24} 
                                     />
@@ -145,30 +142,6 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
                             </Button>
                         </div>
                     )}
-
-                    {/* Mobile Menu Toggle */}
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild className="md:hidden">
-                            <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                className="focus:outline-none"
-                            >
-                                <Menu 
-                                    className="text-foreground hover:text-primary" 
-                                    size={24} 
-                                />
-                            </motion.button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => router.push('/shop')}>
-                                Shop
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => router.push('/forum')}>
-                                Forum
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
                 </div>
             </div>
         </motion.header>
