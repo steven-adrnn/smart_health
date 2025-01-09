@@ -65,6 +65,7 @@ export default function ForumPage() {
                 .from('forum_posts')
                 .select(`
                     *,
+                    user:user_id(name),
                     likes_count:forum_likes(count),
                     comments_count:forum_comments(count)
                 `)
@@ -307,7 +308,7 @@ export default function ForumPage() {
                     <Card key={post.id} className="mb-4">
                         <CardHeader>
                             <CardTitle>{post.title}</CardTitle>
-                            <p>{post.user.name}</p>
+                            <p>{post.user?.name || 'Anonymous'}</p>
                             <p>{post.created_at}</p>
                         </CardHeader>
                         <CardContent>
