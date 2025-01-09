@@ -60,28 +60,15 @@ export default function ForumPage() {
             const calculatedTotalPages = Math.ceil((totalCount || 0) / POSTS_PER_PAGE);
             setTotalPages(calculatedTotalPages);
 
-            // Fetch posts with sorting and pagination
-            let query = supabase
-                .from('forum_posts')
-                .select(`
-                    *,
-                    user:users(name),
-                    likes_count:forum_likes(count),
-                    comments_count:forum_comments(count)
-                `)
-                .range((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE - 1);
-
-            // Sorting logic
-            if (sortOrder === 'newest') {
-                query = query.order('created_at', { ascending: false });
-            } else {
-                // Calculate engagement score with custom sorting
-                query = query.order('likes_count', { ascending: false })
-                             .order('comments_count', { ascending: false });
-            }
-
-            // Fetch posts with separate count queries
-            const { data: postsData, error: postsError } = await query;
+            // Ambil data dari Supabase
+            const { data: postsData, error: postsError } = await supabase
+            .from('forum_posts')
+            .select(`
+                *,
+                user:users(name),
+                likes_count:forum_likes(count),
+                comments_count:forum_comments(count)
+            `);
 
             if (postsError) throw postsError;
 
@@ -93,7 +80,18 @@ export default function ForumPage() {
                 engagement_score: (post.likes_count?.count || 0) + (post.comments_count?.count || 0)
             }));
 
-            setPosts(processedPosts);
+            // Sorting di client-side
+            if (sortOrder === 'newest') {
+                processedPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+            } else if (sortOrder === 'popular') {
+                processedPosts.sort((a, b) => b.engagement_score - a.engagement_score);
+            }
+
+            // Pagination di client-side
+            const paginatedPosts = processedPosts.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE);
+
+
+            setPosts(paginatedPosts);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching posts:', error);
