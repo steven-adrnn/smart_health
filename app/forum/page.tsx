@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { AnimatePresence } from 'framer-motion';
 import { Database } from '@/lib/database.types';
 import { toast } from 'react-hot-toast';
-import { ThumbsUp, MessageCircle } from 'lucide-react';
+import { ThumbsUp, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type Post = Database['public']['Tables']['forum_posts']['Row'] & {
   likes_count?: number;
@@ -29,6 +29,9 @@ export default function ForumPage() {
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPosts, setTotalPosts] = useState(0);
+    const POSTS_PER_PAGE = 5;
 
     useEffect(() => {
         fetchPosts();
@@ -44,6 +47,19 @@ export default function ForumPage() {
         }
 
         try {
+
+            // Calculate range for pagination
+            const from = (currentPage - 1) * POSTS_PER_PAGE;
+            const to = from + POSTS_PER_PAGE - 1;
+
+            // First, get total count of posts
+            const { count: totalCount, error: countError } = await supabase
+                .from('forum_posts')
+                .select('*', { count: 'exact' });
+
+            if (countError) throw countError;
+            setTotalPosts(totalCount || 0);
+
             // Fetch posts with likes and comments counts
             const { data: postsData, error: postsError } = await supabase
                 .from('forum_posts')
@@ -51,7 +67,9 @@ export default function ForumPage() {
                     *,
                     likes_count:forum_likes(count),
                     comments_count:forum_comments(count)
-                `);
+                `)
+                .range(from, to)
+                .order(sortOrder === 'newest' ? 'created_at' : 'likes_count', { ascending: false });
 
             if (postsError) throw postsError;
 
@@ -80,6 +98,23 @@ export default function ForumPage() {
             setLoading(false);
         }
     };
+
+    // Pagination Handlers
+    const handleNextPage = () => {
+        if (currentPage * POSTS_PER_PAGE < totalPosts) {
+            setCurrentPage(prev => prev + 1);
+        }
+    };
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(prev => prev - 1);
+        }
+    };
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
+
 
     const handleCreatePost = async () => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -227,8 +262,18 @@ export default function ForumPage() {
             {/* Tombol Sorting dan Posting */}
             <div className="flex justify-between items-center mb-4">
                 <div className="space-x-4">
-                    <Button onClick={() => setSortOrder('newest')}>Terbaru</Button>
-                    <Button onClick={() => setSortOrder('popular')}>Terpopuler</Button>
+                    <Button 
+                        onClick={() => setSortOrder('newest')}
+                        variant={sortOrder === 'newest' ? 'default' : 'outline'}
+                    >
+                        Terbaru
+                    </Button>
+                    <Button 
+                        onClick={() => setSortOrder('popular')}
+                        variant={sortOrder === 'popular' ? 'default' : 'outline'}
+                    >
+                        Terpopuler
+                    </Button>
                 </div>
                 
                 <Dialog>
@@ -262,6 +307,8 @@ export default function ForumPage() {
                     <Card key={post.id} className="mb-4">
                         <CardHeader>
                             <CardTitle>{post.title}</CardTitle>
+                            <p>{post.user.name}</p>
+                            <p>{post.created_at}</p>
                         </CardHeader>
                         <CardContent>
                             <p>{post.content}</p>
@@ -287,6 +334,29 @@ export default function ForumPage() {
                     </Card>
                 ))}
             </AnimatePresence>
+
+            {/* Pagination Controls */}
+            <div className="flex justify-center items-center space-x-4 mt-6">
+                <Button 
+                    onClick={handlePrevPage} 
+                    disabled={currentPage === 1}
+                    variant="outline"
+                >
+                    <ChevronLeft className="mr-2 h-4 w-4" /> Sebelumnya
+                </Button>
+                
+                <span className="text-sm">
+                    Halaman {currentPage} dari {totalPages}
+                </span>
+                
+                <Button 
+                    onClick={handleNextPage} 
+                    disabled={currentPage === totalPages}
+                    variant="outline"
+                >
+                    Selanjutnya <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+            </div>
 
             {/* Komentar */}
             {selectedPost && (
