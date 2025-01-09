@@ -55,7 +55,7 @@ export default function HomePage () {
                 }}
             />
             <Script
-                src="https://spotify-bot.azurewebsites.net/api/chat"
+                src="https://spotify-bot.azurewebsites.net/static/js/widget-loader.js"
                 strategy="afterInteractive"
             />
             <Footer />
