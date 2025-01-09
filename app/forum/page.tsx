@@ -15,8 +15,6 @@ import { ThumbsUp, MessageCircle } from 'lucide-react';
 type Post = Database['public']['Tables']['forum_posts']['Row'] & {
   likes_count?: number;
   comments_count?: number;
-  engagement_score?: number;
-  user?: { name: string };
 };
 
 type Comment = Database['public']['Tables']['forum_comments']['Row'] & {
@@ -28,15 +26,13 @@ export default function ForumPage() {
     const [sortOrder, setSortOrder] = useState<'newest' | 'popular'>();
     const [loading, setLoading] = useState(true);
     const [newPost, setNewPost] = useState({ title: '', content: '', category: 'general' });
-    const [selectedPost] = useState<Post | null>(null);
+    const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState('');
-    const [page, setPage] = useState(1);
-    const POSTS_PER_PAGE = 5;
-    const [totalPages, setTotalPages] = useState(1);
 
-
-    
+    useEffect(() => {
+        fetchPosts();
+    }, [sortOrder]);
 
     const fetchPosts = async () => {
         setLoading(true);
@@ -48,50 +44,41 @@ export default function ForumPage() {
         }
 
         try {
-
-            // First, count total posts for pagination
-            const { count: totalCount, error: countError } = await supabase
+            let query = supabase
                 .from('forum_posts')
-                .select('*', { count: 'exact' });
+                .select(`
+                    *,
+                    likes_count:forum_likes(count),
+                    comments_count:forum_comments(count)
+                `);
 
-            if (countError) throw countError;
+            // Implementasi Sorting Dinamis
+            if (sortOrder === 'newest') {
+                query = query.order('created_at', { ascending: false });
+            } else if (sortOrder === 'popular') {
+                query = query
+                    .order('likes_count', { ascending: false })
+                    .order('comments_count', { ascending: false });
+            }
 
-            // Calculate total pages
-            const calculatedTotalPages = Math.ceil((totalCount || 0) / POSTS_PER_PAGE);
-            setTotalPages(calculatedTotalPages);
-
-            // Ambil data dari Supabase
-            const { data: postsData, error: postsError } = await supabase
-            .from('forum_posts')
-            .select(`
-                *,
-                user:users(name),
-                likes_count:forum_likes(count),
-                comments_count:forum_comments(count)
-            `);
+            const { data: postsData, error: postsError } = await query;
 
             if (postsError) throw postsError;
 
-            // Transform posts to include counts and engagement score
-            const processedPosts = postsData.map(post => ({
-                ...post,
-                likes_count: post.likes_count?.count || 0,
-                comments_count: post.comments_count?.count || 0,
-                engagement_score: (post.likes_count?.count || 0) + (post.comments_count?.count || 0)
-            }));
+            // Manual sorting untuk kasus kompleks
+            const sortedPosts = postsData?.sort((a, b) => {
+                if (sortOrder === 'newest') {
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                } else if (sortOrder === 'popular') {
+                    // Bobot untuk likes dan comments
+                    const aPopularity = (a.likes_count?.count || 0) * 2 + (a.comments_count?.count || 0);
+                    const bPopularity = (b.likes_count?.count || 0) * 2 + (b.comments_count?.count || 0);
+                    return bPopularity - aPopularity;
+                }
+                return 0;
+            }) || [];
 
-            // Sorting di client-side
-            if (sortOrder === 'newest') {
-                processedPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-            } else if (sortOrder === 'popular') {
-                processedPosts.sort((a, b) => b.engagement_score - a.engagement_score);
-            }
-
-            // Pagination di client-side
-            const paginatedPosts = processedPosts.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE);
-
-
-            setPosts(paginatedPosts);
+            setPosts(sortedPosts);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching posts:', error);
@@ -99,17 +86,6 @@ export default function ForumPage() {
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        fetchPosts();
-    }, [sortOrder, page]);
-
-    const handlePageChange = (newPage: number) => {
-        if (newPage > 0 && newPage <= totalPages) {
-            setPage(newPage);
-        }
-    };
-
 
     const handleCreatePost = async () => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -292,17 +268,24 @@ export default function ForumPage() {
                     <Card key={post.id} className="mb-4">
                         <CardHeader>
                             <CardTitle>{post.title}</CardTitle>
-                            <p className="text-sm text-gray-500">Dibuat oleh {post.user?.name} pada {new Date(post.created_at).toLocaleString()}</p>
                         </CardHeader>
                         <CardContent>
                             <p>{post.content}</p>
-                            <div className="flex justify-between mt-2">
-                                <div>
-                                    <Button onClick={() => handleLikePost(post.id)}>
-                                        <ThumbsUp /> {post.likes_count} Likes
+                            <div className="flex justify-between items-center mt-4">
+                                <div className="flex items-center space-x-4">
+                                    <Button 
+                                        variant="ghost" 
+                                        onClick={() => handleLikePost(post.id)}
+                                    > <ThumbsUp className="mr-2" /> {post.likes_count} Like
                                     </Button>
-                                    <Button onClick={() => fetchComments(post.id)}>
-                                        <MessageCircle /> {post.comments_count} Komentar
+                                    <Button 
+                                        variant="ghost" 
+                                        onClick={() => {
+                                            setSelectedPost(post);
+                                            fetchComments(post.id);
+                                        }}
+                                    >
+                                        <MessageCircle className="mr-2" /> {post.comments_count} Komentar
                                     </Button>
                                 </div>
                             </div>
@@ -310,23 +293,6 @@ export default function ForumPage() {
                     </Card>
                 ))}
             </AnimatePresence>
-
-            {/* Pagination Controls */}
-            <div className="flex justify-center items-center space-x-4 mt-4">
-                <Button 
-                    onClick={() => handlePageChange(page - 1)} 
-                    disabled={page === 1}
-                >
-                    Sebelumnya
-                </Button>
-                <span>Halaman {page} dari {totalPages}</span>
-                <Button 
-                    onClick={() => handlePageChange(page + 1)} 
-                    disabled={page === totalPages}
-                >
-                    Selanjutnya
-                </Button>
-            </div>
 
             {/* Komentar */}
             {selectedPost && (
