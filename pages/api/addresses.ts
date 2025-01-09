@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const { data: newAddress, error } = await supabase
             .from('addresses')
-            .insert({ user_id: userId, address })
+            .insert({ user_id: userId, address: address })
             .select('*')
             .single();
 
