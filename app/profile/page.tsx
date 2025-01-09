@@ -20,7 +20,7 @@ type Recipe = Database['public']['Tables']['recipes']['Row'];
 
 export default function ProfilePage() {
     const [user, setUser ] = useState<User | null>(null);
-    const [addresses, setAddresses] = useState<Address[]>([]);
+    // const [addresses, setAddresses] = useState<Address[]>([]);
     const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
     const router = useRouter();
     const [activeSection, setActiveSection] = useState<'dashboard' | 'recipes' | 'addresses'>('dashboard');
@@ -65,7 +65,7 @@ export default function ProfilePage() {
 
                 if (userData) {
                     setUser (userData);
-                    setAddresses(addressData || []);
+                    // setAddresses(addressData || []);
                     setSavedRecipes(recipes || []);
                     
                     setStats({
@@ -213,17 +213,17 @@ export default function ProfilePage() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                     >
-                        <h2 className="text-xl font-bold">Alamat Tersimpan</h2>
+                        {/* <h2 className="text-xl font-bold">Alamat Tersimpan</h2> */}
                         <Addresses 
                             allowAddNew={true} 
                         />
-                        <ul className="space-y-2">
+                        {/* <ul className="space-y-2">
                             {addresses.map(address => (
                                 <li key={address.id} className="border p-2 rounded">
                                     {address.address}
                                 </li>
                             ))}
-                        </ul>
+                        </ul> */}
                         
                     </motion.div>
                 )}
