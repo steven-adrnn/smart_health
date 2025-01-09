@@ -56,7 +56,7 @@ export async function generateRecipesWithAI(
 
 function createDetailedPrompt(cartItems: Product[]): string {
   const ingredientNames = cartItems.map(item => item.name).join(', ');
-  return `Harap buat minimal 3 resep makanan Indonesia menggunakan kombinasi bahan: ${ingredientNames}. 
+  return `Harap buat minimal 4 resep makanan menggunakan kombinasi bahan: ${ingredientNames}. 
   Format setiap resep dalam JSON dengan struktur:
   {
     "name": "Nama Resep",
@@ -87,10 +87,8 @@ function createDetailedPrompt(cartItems: Product[]): string {
     - Gunakan huruf kecil untuk keys
     - Pastikan array ingredients dan instructions
     - difficulty HANYA "easy", "medium", ATAU "hard"
-    - Resep makanan yang dihasilkan dapat berupa makanan penutup, makanan utama, atau makanan ringan
-    - Resep makanan dapat berupa makanan tradisional atau modern maupun makanan luar negeri
+    - Resep makanan yang dihasilkan harus menggunakan menggunakan bahan yang diberikan
     - Pastikan jawaban yang dihasilkan menggunakan bahasa Indonesia yang formal
-    - Jika bahan yang dimasukan bukan bahan makanan, resep tidak akan dihasilkan
   `;
 }
 
