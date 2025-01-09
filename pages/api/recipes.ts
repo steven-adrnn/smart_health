@@ -13,10 +13,11 @@ export default async function handler(
   req: NextApiRequest, 
   res: NextApiResponse
 ) {
-  // Middleware CORS
+  // Middleware CORSs
   const allowedOrigins = [
     'http://localhost:3000',
     'https://spotify-bot.azurewebsites.net',
+    'https://fit-kitchen-frontend-tst.vercel.app'
   ];
   
   const origin = req.headers.origin;
