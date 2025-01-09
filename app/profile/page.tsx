@@ -12,6 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import Addresses from '@/components/Addresses';
+
 
 
 type User = Database['public']['Tables']['users']['Row'];
@@ -222,7 +224,11 @@ export default function ProfilePage() {
                                 </li>
                             ))}
                         </ul>
-                        <Textarea
+                        <Addresses 
+                            // onSelectAddress={handleAddressSelect} 
+                            allowAddNew={true} 
+                        />
+                        {/* <Textarea
                             value={newAddress}
                             onChange={(e) => setNewAddress(e.target.value)}
                             placeholder="Tambahkan alamat baru"
@@ -246,7 +252,7 @@ export default function ProfilePage() {
                             }
                         }}>
                             Tambah Alamat
-                        </Button>
+                        </Button> */}
                     </motion.div>
                 )}
             </AnimatePresence>
