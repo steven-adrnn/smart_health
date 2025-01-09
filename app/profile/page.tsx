@@ -11,6 +11,7 @@ import { Database } from '@/lib/database.types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut } from 'lucide-react';
+import { randomUUID } from 'node:crypto';
 
 type User = Database['public']['Tables']['users']['Row'];
 type Address = Database['public']['Tables']['addresses']['Row'];
@@ -233,7 +234,7 @@ export default function ProfilePage() {
                             if (error) {
                                 toast.error('Gagal menambahkan alamat');
                             } else {
-                                setAddresses([...addresses, { id: Date.now().toString(), user_id: user.id, address: newAddress, latitude: null, longitude: null, street: null, city: null, province: null, postal_code: null, created_at: new Date().toISOString() }]);
+                                setAddresses([...addresses, { id: randomUUID(), user_id: user.id, address: newAddress, latitude: null, longitude: null, street: null, city: null, province: null, postal_code: null, created_at: new Date().toISOString() }]);
                                 setNewAddress('');
                                 toast.success('Alamat berhasil ditambahkan');
                             }
