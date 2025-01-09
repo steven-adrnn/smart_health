@@ -1,4 +1,3 @@
-// pages/api/reviews.ts
 import { supabase } from '@/lib/supabaseClient';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
@@ -6,9 +5,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Middleware CORS
     res.setHeader('Access-Control-Allow-Origin', 'https://ii3160-production.up.railway.app');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key, Accept, Access-Control-Allow-Origin');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key, Accept');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-pre-flight', 'false');
+
+    // Handle preflight OPTIONS request
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     const { method } = req;
 
     if (method === 'GET') {
