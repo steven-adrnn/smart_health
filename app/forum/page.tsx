@@ -28,7 +28,7 @@ export default function ForumPage() {
     const [sortOrder, setSortOrder] = useState<'newest' | 'popular'>();
     const [loading, setLoading] = useState(true);
     const [newPost, setNewPost] = useState({ title: '', content: '', category: 'general' });
-    const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+    const [selectedPost] = useState<Post | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState('');
     const [page, setPage] = useState(1);
