@@ -212,10 +212,19 @@ export default function ProfilePage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                    >   
+                    >
+                        <h2 className="text-xl font-bold">Alamat Tersimpan</h2>
                         <Addresses 
                             allowAddNew={true} 
                         />
+                        <ul className="space-y-2">
+                            {addresses.map(address => (
+                                <li key={address.id} className="border p-2 rounded">
+                                    {address.address}
+                                </li>
+                            ))}
+                        </ul>
+                        
                     </motion.div>
                 )}
             </AnimatePresence>
