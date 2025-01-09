@@ -213,44 +213,10 @@ export default function ProfilePage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                    >
-                        <h2 className="text-xl font-bold">Alamat Tersimpan</h2>
-                        <ul className="space-y-2">
-                            {addresses.map(address => (
-                                <li key={address.id} className="border p-2 rounded">
-                                    {address.address}
-                                </li>
-                            ))}
-                        </ul>
+                    >   
                         <Addresses 
-                            // onSelectAddress={handleAddressSelect} 
                             allowAddNew={true} 
                         />
-                        {/* <Textarea
-                            value={newAddress}
-                            onChange={(e) => setNewAddress(e.target.value)}
-                            placeholder="Tambahkan alamat baru"
-                            className="mt-4"
-                        />
-                        <Button onClick={async () => {
-                            if (!newAddress.trim()) {
-                                toast.error('Alamat tidak boleh kosong');
-                                return;
-                            }
-                            console.log('New Address:', newAddress);
-                            const { error } = await supabase
-                                .from('addresses')
-                                .insert([{ user_id: user.id, address: newAddress.trim(), latitude: null, longitude: null, street: null, city: null, province: null, postal_code: null }]);
-                            if (error) {
-                                toast.error('Gagal menambahkan alamat: ' + error.message);
-                            } else {
-                                setAddresses([...addresses, { id: uuidv4(), user_id: user.id, address: newAddress.trim(), latitude: null, longitude: null, street: null, city: null, province: null, postal_code: null, created_at: new Date().toISOString() }]);
-                                setNewAddress('');
-                                toast.success('Alamat berhasil ditambahkan');
-                            }
-                        }}>
-                            Tambah Alamat
-                        </Button> */}
                     </motion.div>
                 )}
             </AnimatePresence>
