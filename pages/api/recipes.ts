@@ -17,7 +17,8 @@ export default async function handler(
   const allowedOrigins = [
     'http://localhost:3000',
     'https://spotify-bot.azurewebsites.net',
-    'https://fit-kitchen-frontend-tst.vercel.app'
+    'https://fit-kitchen-frontend-tst.vercel.app',
+    'https://ii3160-production.up.railway.app'
   ];
   
   const origin = req.headers.origin;
@@ -32,7 +33,7 @@ export default async function handler(
   if (!apiKey || apiKey !== process.env.RECIPE_API_KEY) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  
+
   // Handle preflight request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
