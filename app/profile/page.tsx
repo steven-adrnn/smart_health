@@ -20,8 +20,7 @@ type Recipe = Database['public']['Tables']['recipes']['Row'];
 
 export default function ProfilePage() {
     const [user, setUser ] = useState<User | null>(null);
-    const [_addresses, setAddresses] = useState<Address[]>([]);
-    // const [newAddress, setNewAddress] = useState('');
+    const [addresses, setAddresses] = useState<Address[]>([]);
     const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
     const router = useRouter();
     const [activeSection, setActiveSection] = useState<'dashboard' | 'recipes' | 'addresses'>('dashboard');
