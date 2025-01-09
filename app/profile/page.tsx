@@ -9,9 +9,16 @@ import { useRouter } from 'next/navigation';
 import { Database } from '@/lib/database.types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut } from 'lucide-react';
+import { LogOut, Trash2, Printer, Share2 } from 'lucide-react';
 import Addresses from '@/components/Addresses';
-
+import { 
+    Dialog, 
+    DialogContent, 
+    DialogHeader, 
+    DialogTitle, 
+    DialogDescription,
+    DialogFooter
+} from '@/components/ui/dialog';
 
 
 type User = Database['public']['Tables']['users']['Row'];
@@ -24,7 +31,10 @@ export default function ProfilePage() {
     const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
     const router = useRouter();
     const [activeSection, setActiveSection] = useState<'dashboard' | 'recipes' | 'addresses'>('dashboard');
+    const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
     const [recipeFilterDifficulty, setRecipeFilterDifficulty] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
 
     // Dashboard Mini Statistik
     const [stats, setStats] = useState({
@@ -44,12 +54,6 @@ export default function ProfilePage() {
                     .select('*, point')
                     .eq('id', session.user.id)
                     .single();
-
-                // // Fetch addresses
-                // const { data: addressData } = await supabase
-                //     .from('addresses')
-                //     .select('*')
-                //     .eq('user_id', session.user.id);
 
                 // Fetch saved recipes
                 const { data: recipes } = await supabase
@@ -86,7 +90,181 @@ export default function ProfilePage() {
             recipeFilterDifficulty === 'all' || 
             recipe.difficulty === recipeFilterDifficulty
         )
+        
+    // Fungsi untuk membuka detail resep
+    const openRecipeDetails = (recipe: Recipe) => {
+        setSelectedRecipe(recipe);
+    };
+    
+    // Fungsi untuk menghapus resep
+    const handleDeleteRecipe = async () => {
+        if (!confirmDelete) return;
 
+        try {
+            const { error } = await supabase
+                .from('recipes')
+                .delete()
+                .eq('id', confirmDelete);
+
+            if (error) throw error;
+
+            // Update local state
+            setSavedRecipes(prevRecipes => 
+                prevRecipes.filter(recipe => recipe.id !== confirmDelete)
+            );
+
+            toast.success('Resep berhasil dihapus');
+            setConfirmDelete(null);
+            setSelectedRecipe(null);
+        } catch (error) {
+            console.error('Error deleting recipe:', error);
+            toast.error('Gagal menghapus resep');
+        }
+    };
+
+    // Fungsi berbagi resep
+    const shareRecipe = (recipe: Recipe) => {
+        // Buat teks untuk dibagikan
+        const shareText = `Resep: ${recipe.name}\n\nDeskripsi: ${recipe.description}\n\nBahan:\n${
+            recipe.ingredients.map((ing, idx) => `${idx + 1}. ${ing}`).join('\n')
+        }\n\nInstruksi:\n${
+            recipe.instructions.map((inst, idx) => `${idx + 1}. ${inst}`).join('\n')
+        }`;
+
+        // Salin ke clipboard
+        navigator.clipboard.writeText(shareText).then(() => {
+            toast.success('Resep berhasil disalin');
+        }).catch(err => {
+            console.error('Gagal menyalin resep:', err);
+            toast.error('Gagal menyalin resep');
+        });
+    };
+
+    // Fungsi cetak resep
+    const printRecipe = (recipe: Recipe) => {
+        // Buat jendela cetak baru
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            toast.error('Gagal membuka jendela cetak');
+            return;
+        }
+
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Resep ${recipe.name}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+                        h1 { color: #2ecc71; }
+                        h2 { color: #34495e; }
+                        ul, ol { margin-bottom: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>${recipe.name}</h1>
+                    <p><em>${recipe.description}</em></p>
+                    <h2>Bahan:</h2>
+                    <ul>
+                        ${recipe.ingredients.map(ing => `<li>${ing}</li>`).join('')}
+                    </ul>
+                    <h2>Instruksi:</h2>
+                    <ol>
+                        ${recipe.instructions.map(inst => `<li>${inst}</li>`).join('')}
+                    </ol>
+                    <p><strong>Tingkat Kesulitan:</strong> ${recipe.difficulty}</p>
+                    <p><em>Dibuat dengan Smart Health</em></p>
+                </body>
+            </html>
+        `);
+
+        printWindow.document.close();
+        printWindow.print();
+    };
+
+
+    // Render recipe details dialog
+    const RecipeDetailsDialog = () => {
+        if (!selectedRecipe) return null;
+
+        return (
+            <Dialog open={!!selectedRecipe} onOpenChange={() => setSelectedRecipe(null)}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>{selectedRecipe.name}</DialogTitle>
+                        <DialogDescription>{selectedRecipe.description}</DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className="text-lg font-semibold mb-2">Bahan:</h3>
+                            <ul className="list-disc pl-4">
+                                {selectedRecipe.ingredients.map((ingredient, idx) => (
+                                    <li key={idx}>{ingredient}</li>
+                                ))}
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h3 className="text-lg font-semibold mb-2">Instruksi Memasak:</h3>
+                            <ol className="list-decimal pl-4">
+                                {selectedRecipe.instructions.map((instruction, index) => (
+                                    <li key={index}>{instruction}</li>
+                                ))}
+                            </ol>
+                        </div>
+                        
+                        <div>
+                            <h3 className="text-lg font-semibold mb-2">Detail Tambahan:</h3>
+                            <p><strong>Tingkat Kesulitan:</strong> {selectedRecipe.difficulty}</p>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="flex justify-between">
+                        <div className="flex space-x-2">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => shareRecipe(selectedRecipe)}
+                            >
+                                <Share2 className="mr-2 h-4 w-4" /> Bagikan
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                onClick={() => printRecipe(selectedRecipe)}
+                            >
+                                <Printer className="mr-2 h-4 w-4" /> Cetak
+                            </Button>
+                        </div>
+                        <Button 
+                            variant="destructive" 
+                            onClick={() => setConfirmDelete(selectedRecipe.id)}
+                        >
+                             <Trash2 className="mr-2 h-4 w-4" /> Hapus Resep
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        );
+    };
+
+    // Konfirmasi penghapusan resep
+    const ConfirmDeleteDialog = () => {
+        return (
+            <Dialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Konfirmasi Penghapusan</DialogTitle>
+                        <DialogDescription>
+                            Apakah Anda yakin ingin menghapus resep ini?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setConfirmDelete(null)}>Batal</Button>
+                        <Button variant="destructive" onClick={handleDeleteRecipe}>Hapus</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        );
+    };
     const handleLogout = async () => {
         await supabase.auth.signOut();
         localStorage.removeItem('user_session');
@@ -192,7 +370,11 @@ export default function ProfilePage() {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {filteredAndSortedRecipes.map(recipe => (
-                                <Card key={recipe.id}>
+                                <Card 
+                                    key={recipe.id} 
+                                    onClick={() => openRecipeDetails(recipe)}
+                                    className="cursor-pointer hover:shadow-lg transition-shadow"
+                                >
                                     <CardHeader>
                                         <CardTitle>{recipe.name}</CardTitle>
                                         <CardDescription>{recipe.description}</CardDescription>
@@ -205,6 +387,12 @@ export default function ProfilePage() {
                         </div>
                     </motion.div>
                 )}
+
+                {/* Recipe Details Dialog */}
+                <RecipeDetailsDialog />
+
+                {/* Confirm Delete Dialog */}
+                <ConfirmDeleteDialog />
 
                 {activeSection === 'addresses' && (
                     <motion.div
