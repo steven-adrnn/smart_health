@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const supabase = createRouteHandlerClient({ cookies });
     
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
-    console.log(data); // or do something else with the data value
+    console.log(data); 
 
     if (error) {
       console.error('OAuth Exchange Error:', error);
