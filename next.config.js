@@ -56,6 +56,12 @@ const nextConfig = {
             { key: 'Access-Control-Allow-Methods', value: 'POST, OPTIONS' },
             { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-API-Key' },
           ],
+          source: '/api/reviews',
+          headers: [
+            { key: 'Access-Control-Allow-Origin', value: 'https://ii3160-production.up.railway.app' },
+            { key: 'Access-Control-Allow-Methods', value: 'POST, OPTIONS' },
+            { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-API-Key' },
+          ],
           source: '/api/(.*)',
           headers: [
               { 
