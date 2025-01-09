@@ -23,7 +23,7 @@ type Comment = Database['public']['Tables']['forum_comments']['Row'] & {
 
 export default function ForumPage() {
     const [posts, setPosts] = useState<Post[]>([]);
-    const [sortOrder, setSortOrder] = useState<'newest' | 'popular'>('newest');
+    const [sortOrder, setSortOrder] = useState<'newest' | 'popular'>();
     const [loading, setLoading] = useState(true);
     const [newPost, setNewPost] = useState({ title: '', content: '', category: 'general' });
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
