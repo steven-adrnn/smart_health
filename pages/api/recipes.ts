@@ -25,7 +25,7 @@ export default async function handler(
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key, Accept, Access-Control-Allow-Origin');
 
   // Handle preflight request
   if (req.method === 'OPTIONS') {
