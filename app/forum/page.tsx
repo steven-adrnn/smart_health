@@ -44,7 +44,8 @@ export default function ForumPage() {
         }
 
         try {
-            let query = supabase
+            // Fetch posts with likes and comments counts
+            const { data: postsData, error: postsError } = await supabase
                 .from('forum_posts')
                 .select(`
                     *,
@@ -52,31 +53,24 @@ export default function ForumPage() {
                     comments_count:forum_comments(count)
                 `);
 
-            // Implementasi Sorting Dinamis
-            if (sortOrder === 'newest') {
-                query = query.order('created_at', { ascending: false });
-            } else if (sortOrder === 'popular') {
-                query = query
-                    .order('likes_count', { ascending: false })
-                    .order('comments_count', { ascending: false });
-            }
-
-            const { data: postsData, error: postsError } = await query;
-
             if (postsError) throw postsError;
 
-            // Manual sorting untuk kasus kompleks
-            const sortedPosts = postsData?.sort((a, b) => {
+            // Manual sorting with complex logic
+            const sortedPosts = (postsData || []).map(post => ({
+                ...post,
+                likes_count: post.likes_count?.[0]?.count || 0,
+                comments_count: post.comments_count?.[0]?.count || 0
+            })).sort((a, b) => {
                 if (sortOrder === 'newest') {
                     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
                 } else if (sortOrder === 'popular') {
-                    // Bobot untuk likes dan comments
-                    const aPopularity = (a.likes_count?.count || 0) * 2 + (a.comments_count?.count || 0);
-                    const bPopularity = (b.likes_count?.count || 0) * 2 + (b.comments_count?.count || 0);
+                    // Weighted popularity calculation
+                    const aPopularity = (a.likes_count || 0) * 2 + (a.comments_count || 0);
+                    const bPopularity = (b.likes_count || 0) * 2 + (b.comments_count || 0);
                     return bPopularity - aPopularity;
                 }
                 return 0;
-            }) || [];
+            });
 
             setPosts(sortedPosts);
             setLoading(false);
