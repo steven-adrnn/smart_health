@@ -231,9 +231,9 @@ export default function ProfilePage() {
                         <Button onClick={async () => {
                             const { error } = await supabase
                                 .from('addresses')
-                                .insert([{ user_id: user.id, address: newAddress }]);
+                                .insert([{ user_id: user.id, address: newAddress, latitude: null, longitude: null, street: null, city: null, province: null, postal_code: null }]);
                             if (error) {
-                                toast.error('Gagal menambahkan alamat');
+                                toast.error('Gagal menambahkan alamat: ' + error.message);
                             } else {
                                 setAddresses([...addresses, { id: uuidv4(), user_id: user.id, address: newAddress, latitude: null, longitude: null, street: null, city: null, province: null, postal_code: null, created_at: new Date().toISOString() }]);
                                 setNewAddress('');
