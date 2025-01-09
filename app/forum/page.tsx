@@ -15,6 +15,8 @@ import { ThumbsUp, MessageCircle } from 'lucide-react';
 type Post = Database['public']['Tables']['forum_posts']['Row'] & {
   likes_count?: number;
   comments_count?: number;
+  engagement_score?: number;
+  user?: { name: string };
 };
 
 type Comment = Database['public']['Tables']['forum_comments']['Row'] & {
@@ -29,10 +31,12 @@ export default function ForumPage() {
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState('');
+    const [page, setPage] = useState(1);
+    const POSTS_PER_PAGE = 5;
+    const [totalPages, setTotalPages] = useState(1);
 
-    useEffect(() => {
-        fetchPosts();
-    }, [sortOrder]);
+
+    
 
     const fetchPosts = async () => {
         setLoading(true);
@@ -44,36 +48,52 @@ export default function ForumPage() {
         }
 
         try {
-            // Fetch posts with separate count queries
-            const { data: postsData, error: postsError } = await supabase
+
+            // First, count total posts for pagination
+            const { count: totalCount, error: countError } = await supabase
                 .from('forum_posts')
-                .select('*')
-                .order(sortOrder === 'newest' ? 'created_at' : 'id', { ascending: false });
+                .select('*', { count: 'exact' });
+
+            if (countError) throw countError;
+
+            // Calculate total pages
+            const calculatedTotalPages = Math.ceil((totalCount || 0) / POSTS_PER_PAGE);
+            setTotalPages(calculatedTotalPages);
+
+            // Fetch posts with sorting and pagination
+            let query = supabase
+                .from('forum_posts')
+                .select(`
+                    *,
+                    user:users(name),
+                    likes_count:forum_likes(count),
+                    comments_count:forum_comments(count)
+                `)
+                .range((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE - 1);
+
+            // Sorting logic
+            if (sortOrder === 'newest') {
+                query = query.order('created_at', { ascending: false });
+            } else {
+                // Calculate engagement score with custom sorting
+                query = query.order('likes_count', { ascending: false })
+                             .order('comments_count', { ascending: false });
+            }
+
+            // Fetch posts with separate count queries
+            const { data: postsData, error: postsError } = await query;
 
             if (postsError) throw postsError;
 
-            // Fetch likes and comments counts separately
-            const postsWithCounts = await Promise.all(
-                (postsData || []).map(async (post) => {
-                    const { count: likesCount } = await supabase
-                        .from('forum_likes')
-                        .select('*', { count: 'exact' })
-                        .eq('post_id', post.id);
+            // Transform posts to include counts and engagement score
+            const processedPosts = postsData.map(post => ({
+                ...post,
+                likes_count: post.likes_count?.count || 0,
+                comments_count: post.comments_count?.count || 0,
+                engagement_score: (post.likes_count?.count || 0) + (post.comments_count?.count || 0)
+            }));
 
-                    const { count: commentsCount } = await supabase
-                        .from('forum_comments')
-                        .select('*', { count: 'exact' })
-                        .eq('post_id', post.id);
-
-                    return {
-                        ...post,
-                        likes_count: likesCount || 0,
-                        comments_count: commentsCount || 0
-                    };
-                })
-            );
-
-            setPosts(postsWithCounts);
+            setPosts(processedPosts);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching posts:', error);
@@ -81,6 +101,17 @@ export default function ForumPage() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchPosts();
+    }, [sortOrder, page]);
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage > 0 && newPage <= totalPages) {
+            setPage(newPage);
+        }
+    };
+
 
     const handleCreatePost = async () => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -263,24 +294,17 @@ export default function ForumPage() {
                     <Card key={post.id} className="mb-4">
                         <CardHeader>
                             <CardTitle>{post.title}</CardTitle>
+                            <p className="text-sm text-gray-500">Dibuat oleh {post.user?.name} pada {new Date(post.created_at).toLocaleString()}</p>
                         </CardHeader>
                         <CardContent>
                             <p>{post.content}</p>
-                            <div className="flex justify-between items-center mt-4">
-                                <div className="flex items-center space-x-4">
-                                    <Button 
-                                        variant="ghost" 
-                                        onClick={() => handleLikePost(post.id)}
-                                    > <ThumbsUp className="mr-2" /> {post.likes_count} Like
+                            <div className="flex justify-between mt-2">
+                                <div>
+                                    <Button onClick={() => handleLikePost(post.id)}>
+                                        <ThumbsUp /> {post.likes_count} Likes
                                     </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        onClick={() => {
-                                            setSelectedPost(post);
-                                            fetchComments(post.id);
-                                        }}
-                                    >
-                                        <MessageCircle className="mr-2" /> {post.comments_count} Komentar
+                                    <Button onClick={() => fetchComments(post.id)}>
+                                        <MessageCircle /> {post.comments_count} Komentar
                                     </Button>
                                 </div>
                             </div>
@@ -288,6 +312,23 @@ export default function ForumPage() {
                     </Card>
                 ))}
             </AnimatePresence>
+
+            {/* Pagination Controls */}
+            <div className="flex justify-center items-center space-x-4 mt-4">
+                <Button 
+                    onClick={() => handlePageChange(page - 1)} 
+                    disabled={page === 1}
+                >
+                    Sebelumnya
+                </Button>
+                <span>Halaman {page} dari {totalPages}</span>
+                <Button 
+                    onClick={() => handlePageChange(page + 1)} 
+                    disabled={page === totalPages}
+                >
+                    Selanjutnya
+                </Button>
+            </div>
 
             {/* Komentar */}
             {selectedPost && (
