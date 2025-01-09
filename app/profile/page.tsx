@@ -4,14 +4,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Database } from '@/lib/database.types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
 import Addresses from '@/components/Addresses';
 
 
@@ -23,7 +21,7 @@ type Recipe = Database['public']['Tables']['recipes']['Row'];
 export default function ProfilePage() {
     const [user, setUser ] = useState<User | null>(null);
     const [addresses, setAddresses] = useState<Address[]>([]);
-    const [newAddress, setNewAddress] = useState('');
+    // const [newAddress, setNewAddress] = useState('');
     const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
     const router = useRouter();
     const [activeSection, setActiveSection] = useState<'dashboard' | 'recipes' | 'addresses'>('dashboard');
