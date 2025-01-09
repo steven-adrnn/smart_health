@@ -207,16 +207,36 @@ export default function CartPage() {
 
             // Kurangi stok produk
             const stockUpdatePromises = cartItems.map(async (item) => {
-                const { error: stockError } = await supabase
+                const { data: productData, error: fetchError } = await supabase
                     .from('products')
-                    .update({ 
-                        quantity: Math.max(0, item.quantity - item.quantity) 
-                    })
+                    .select('quantity')
+                    .eq('id', item.id)
+                    .single();
+
+                if (fetchError) {
+                    console.error(`Error fetching product ${item.id}:`, fetchError);
+                    return null;
+                }
+
+                const newQuantity = productData.quantity - item.quantity;
+                
+                if (newQuantity < 0) {
+                    toast.error(`Stok ${item.name} tidak mencukupi`);
+                    throw new Error(`Stok ${item.name} tidak mencukupi`);
+                }
+
+                const { error: updateError } = await supabase
+                    .from('products')
+                    .update({ quantity: newQuantity })
                     .eq('id', item.id);
 
-                if (stockError) {
-                    console.error(`Gagal update stok untuk produk ${item.id}:`, stockError);
+                if (updateError) {
+                    console.error(`Error updating product ${item.id}:`, updateError);
+                    throw updateError;
                 }
+
+                return true;
+
             });
 
             await Promise.all(stockUpdatePromises);
