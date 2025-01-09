@@ -14,7 +14,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   // Middleware CORS
-  res.setHeader('Access-Control-Allow-Origin', 'https://fit-kitchen-frontend-tst.vercel.app');
+  res.setHeader('Access-Control-Allow-Origin', 'https://fit-kitchen-frontend-tst.vercel.app, https://ii3160-production.up.railway.app, https://spotify-bot.azurewebsites.net, https://localhost:3000');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
