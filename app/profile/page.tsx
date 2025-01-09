@@ -15,7 +15,7 @@ import Addresses from '@/components/Addresses';
 
 
 type User = Database['public']['Tables']['users']['Row'];
-type Address = Database['public']['Tables']['addresses']['Row'];
+// type Address = Database['public']['Tables']['addresses']['Row'];
 type Recipe = Database['public']['Tables']['recipes']['Row'];
 
 export default function ProfilePage() {
@@ -45,11 +45,11 @@ export default function ProfilePage() {
                     .eq('id', session.user.id)
                     .single();
 
-                // Fetch addresses
-                const { data: addressData } = await supabase
-                    .from('addresses')
-                    .select('*')
-                    .eq('user_id', session.user.id);
+                // // Fetch addresses
+                // const { data: addressData } = await supabase
+                //     .from('addresses')
+                //     .select('*')
+                //     .eq('user_id', session.user.id);
 
                 // Fetch saved recipes
                 const { data: recipes } = await supabase
