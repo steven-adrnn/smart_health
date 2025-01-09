@@ -229,13 +229,18 @@ export default function ProfilePage() {
                             className="mt-4"
                         />
                         <Button onClick={async () => {
+                            if (!newAddress.trim()) {
+                                toast.error('Alamat tidak boleh kosong');
+                                return;
+                            }
+                            console.log('New Address:', newAddress);
                             const { error } = await supabase
                                 .from('addresses')
-                                .insert([{ user_id: user.id, address: newAddress, latitude: null, longitude: null, street: null, city: null, province: null, postal_code: null }]);
+                                .insert([{ user_id: user.id, address: newAddress.trim(), latitude: null, longitude: null, street: null, city: null, province: null, postal_code: null }]);
                             if (error) {
                                 toast.error('Gagal menambahkan alamat: ' + error.message);
                             } else {
-                                setAddresses([...addresses, { id: uuidv4(), user_id: user.id, address: newAddress, latitude: null, longitude: null, street: null, city: null, province: null, postal_code: null, created_at: new Date().toISOString() }]);
+                                setAddresses([...addresses, { id: uuidv4(), user_id: user.id, address: newAddress.trim(), latitude: null, longitude: null, street: null, city: null, province: null, postal_code: null, created_at: new Date().toISOString() }]);
                                 setNewAddress('');
                                 toast.success('Alamat berhasil ditambahkan');
                             }
