@@ -18,7 +18,8 @@ export default async function handler(
     'http://localhost:3000',
     'https://spotify-bot.azurewebsites.net',
     'https://fit-kitchen-frontend-tst.vercel.app',
-    'https://ii3160-production.up.railway.app'
+    'https://ii3160-production.up.railway.app',
+    'http://localhost:8000',
   ];
   
   const origin = req.headers.origin;
