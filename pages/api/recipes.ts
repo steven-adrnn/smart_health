@@ -28,12 +28,6 @@ export default async function handler(
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key, Accept, Access-Control-Allow-Origin');
 
-  // Validasi API Key
-  const apiKey = req.headers['x-api-key'];
-  if (!apiKey || apiKey !== process.env.RECIPE_API_KEY) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
   // Handle preflight request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -44,7 +38,11 @@ export default async function handler(
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  
+  // Validasi API Key
+  const apiKey = req.headers['x-api-key'];
+  if (!apiKey || apiKey !== process.env.RECIPE_API_KEY) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
 
   try {
     // Ekstrak bahan dari request body
