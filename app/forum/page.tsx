@@ -63,7 +63,6 @@ export default function ForumPage() {
                 },
                 headers: {
                     'X-API-Key': process.env.FORUM_API_KEY,
-                    'Accept': 'application/json',
                     'Cache-Control': 'no-cache, no-store, must-revalidate'
                 }
             });
@@ -112,7 +111,6 @@ export default function ForumPage() {
             }, {
                 headers: {
                     'X-API-Key': process.env.FORUM_API_KEY,
-                    'Accept': 'application/json',
                     'Cache-Control': 'no-cache, no-store, must-revalidate'
                 }
             });
@@ -136,7 +134,6 @@ export default function ForumPage() {
                 },
                 headers: {
                     'X-API-Key': process.env.FORUM_API_KEY,
-                    'Accept': 'application/json',
                     'Cache-Control': 'no-cache, no-store, must-revalidate'
                 }
             });
@@ -163,7 +160,6 @@ export default function ForumPage() {
             }, {
                 headers: {
                     'X-API-Key': process.env.FORUM_API_KEY,
-                    'Accept': 'application/json',
                     'Cache-Control': 'no-cache, no-store, must-revalidate'
                 }
             });
@@ -191,7 +187,6 @@ export default function ForumPage() {
             }, {
                 headers: {
                     'X-API-Key': process.env.FORUM_API_KEY,
-                    'Accept': 'application/json',
                     'Cache-Control': 'no-cache, no-store, must-revalidate'
                 }
             });
