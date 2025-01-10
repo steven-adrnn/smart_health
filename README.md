@@ -13,6 +13,7 @@ Proyek ini menggunakan **Supabase Auth** untuk otentikasi pengguna. Setiap permi
 
 ---
 
+
 ## **2. Endpoint API**
 
 ### **2.1. Endpoint Supabase**
@@ -52,6 +53,53 @@ Supabase menyediakan REST API untuk mengakses database dan layanan lainnya. Beri
       }
       ```
     - **Respons**: Sama seperti login.
+
+    ### **1.1. Login**
+    ```javascript
+    async function login(email, password) {
+    const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+    });
+    const data = await response.json();
+    if (response.ok) {
+        console.log('Login successful:', data);
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('refresh_token', data.refresh_token);
+    } else {
+        console.error('Login failed:', data);
+    }
+    }
+
+    // Contoh penggunaan
+    login('user@example.com', 'password123');
+    ```
+
+    ### **1.2. Logout**
+    ```javascript
+    async function logout() {
+    const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+    });
+    const data = await response.json();
+    if (response.ok) {
+        console.log('Logout successful:', data);
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+    } else {
+        console.error('Logout failed:', data);
+    }
+    }
+
+    // Contoh penggunaan
+    logout();
+    ```
 
 #### **2.1.2. Database**
 - **URL**: `https://<SUPABASE_PROJECT_REF>.supabase.co/rest/v1`
@@ -419,3 +467,5 @@ async function addProduct(product) {
 
 ## **5. Kesimpulan**
 Dokumentasi API ini memberikan gambaran menyeluruh tentang cara menggunakan endpoint API dalam proyek Anda. Pastikan untuk mengikuti petunjuk otentikasi dan format permintaan/respons yang telah dijelaskan. Jika ada pertanyaan lebih lanjut atau jika Anda memerlukan penjelasan tambahan, silakan beri tahu saya.
+
+
