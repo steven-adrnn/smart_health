@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
+import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { Database } from '@/lib/database.types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -25,8 +26,40 @@ type User = Database['public']['Tables']['users']['Row'];
 // type Address = Database['public']['Tables']['addresses']['Row'];
 type Recipe = Database['public']['Tables']['recipes']['Row'];
 
+
+// Definisi tipe sesuai dengan respons API
+interface UserProfile {
+    user: {
+        id: string;
+        email: string;
+        name: string;
+        point: number;
+    };
+    recipes: Array<{
+        id: string;
+        name: string;
+        description: string;
+        difficulty: 'easy' | 'medium' | 'hard';
+        ingredients: string[];
+        instructions: string[];
+    }>;
+    forumPosts: Array<{
+        id: string;
+        title: string;
+        content: string;
+        likes_count: number;
+        comments_count: number;
+    }>;
+    stats: {
+        totalRecipes: number;
+        totalPosts: number;
+        totalPoints: number;
+    };
+}
+
 export default function ProfilePage() {
-    const [user, setUser ] = useState<User | null>(null);
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [user] = useState<User | null>(null);
     // const [addresses, setAddresses] = useState<Address[]>([]);
     const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
     const router = useRouter();
@@ -37,7 +70,7 @@ export default function ProfilePage() {
 
 
     // Dashboard Mini Statistik
-    const [stats, setStats] = useState({
+    const [stats] = useState({
         totalRecipes: 0,
         totalPosts: 0,
         totalPoints: 0,
@@ -45,55 +78,35 @@ export default function ProfilePage() {
 
     useEffect(() => {
         const fetchUserData = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (session?.user) {
-                // Fetch user details
-                const { data: userData } = await supabase
-                    .from('users')
-                    .select('*, point')
-                    .eq('id', session.user.id)
-                    .single();
-
-                // Fetch saved recipes
-                const { data: recipes } = await supabase
-                    .from('recipes')
-                    .select('*')
-                    .eq('user_id', session.user.id);
-
-                // Fetch forum posts and challenges
-                const { count: postCount } = await supabase
-                    .from('forum_posts')
-                    .select('*', { count: 'exact' })
-                    .eq('user_id', session.user.id);
-
-                if (userData) {
-                    setUser (userData);
-                    // setAddresses(addressData || []);
-                    setSavedRecipes(recipes || []);
-                    
-                    setStats({
-                        totalRecipes: recipes?.length || 0,
-                        totalPosts: postCount || 0,
-                        totalPoints: userData.point,
-                    });
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.user) {
+                    router.push('/login');
+                    return;
                 }
+
+                const response = await axios.get(`/api/profile?userId=${session.user.id}`);
+                setProfile(response.data);
+            } catch (error) {
+                console.error('Profile fetch error:', error);
+                toast.error('Gagal memuat profil');
             }
+        
         };
 
         fetchUserData();
-    }, []);
+    }, [router]);
 
     // Filtering and Sorting Recipes
-    const filteredAndSortedRecipes = savedRecipes
+    const filteredAndSortedRecipes = profile?.recipes
         .filter(recipe => 
             recipeFilterDifficulty === 'all' || 
             recipe.difficulty === recipeFilterDifficulty
-        )
+        ) || [];
         
     // Fungsi untuk membuka detail resep
-    const openRecipeDetails = (recipe: Recipe) => {
-        setSelectedRecipe(recipe);
+    const openRecipeDetails = () => {
+        if (!selectedRecipe) return null;
     };
     
     // Fungsi untuk menghapus resep
@@ -372,7 +385,7 @@ export default function ProfilePage() {
                             {filteredAndSortedRecipes.map(recipe => (
                                 <Card 
                                     key={recipe.id} 
-                                    onClick={() => openRecipeDetails(recipe)}
+                                    onClick={() => openRecipeDetails()}
                                     className="cursor-pointer hover:shadow-lg transition-shadow"
                                 >
                                     <CardHeader>
