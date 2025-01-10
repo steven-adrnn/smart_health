@@ -209,7 +209,7 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
 
 // Handler PUT (Update)
 async function handlePutRequest(req: NextApiRequest, res: NextApiResponse) {
-  const { type, id, user_id, content } = req.body;
+  const { type, id, user_id } = req.body;
 
   if (!user_id) {
     return res.status(401).json({ error: 'Autentikasi diperlukan' });
