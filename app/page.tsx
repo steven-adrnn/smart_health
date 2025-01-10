@@ -3,10 +3,11 @@
 import { Hero } from '@/components/Hero';
 import { Footer } from '@/components/Footer';
 import CategoryCard from '@/components/CategoryCard';
-import Script from 'next/script'
 import { supabase } from '@/lib/supabaseClient';
 import { useState, useEffect } from 'react';
 import { Database } from '@/lib/database.types';
+import ChatWidget from '../components/ChatWidget';
+
 
 // Definisikan tipe kategori dari database
 type Category = Database['public']['Tables']['categories']['Row'];
@@ -45,20 +46,8 @@ export default function HomePage () {
                 </div>
             </div>
 
-            <Script 
-                id="musicmate-config"
-                strategy="beforeInteractive"
-                dangerouslySetInnerHTML={{
-                    __html: `
-                        window.MUSICMATE_API_KEY = '${process.env.MUSICMATE_API_KEY}';
-                    `
-                }}
-            />
-            <Script
-                src="https://spotify-bot.azurewebsites.net/static/js/widget-loader.js"
-                
-                strategy="afterInteractive"
-            />
+            <h1>Spotify Support Chatbot</h1>
+            <ChatWidget/>
             <Footer />
         </div>
     );
