@@ -53,7 +53,7 @@ const nextConfig = {
         {
           source: '/api/recipes',
           headers: [
-            { key: 'Access-Control-Allow-Origin', value: 'https://fit-kitchen-frontend-tst.vercel.app, https://ii3160-production.up.railway.app, https://spotify-bot.azurewebsites.net, http://localhost:3000' },
+            { key: 'Access-Control-Allow-Origin', value: 'https://fit-kitchen-frontend-tst.vercel.app, https://tubes-tst-recipe-snap-production.up.railway.app, https://ii3160-production.up.railway.app, https://spotify-bot.azurewebsites.net, http://localhost:3000' },
             { key: 'Access-Control-Allow-Methods', value: 'POST, OPTIONS' },
             { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-API-Key' },
           ],

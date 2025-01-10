@@ -19,6 +19,7 @@ export default async function handler(
     'https://spotify-bot.azurewebsites.net',
     'https://fit-kitchen-frontend-tst.vercel.app',
     'https://ii3160-production.up.railway.app',
+    'https://tubes-tst-recipe-snap-production.up.railway.app',
     'http://localhost:8000',
   ];
   
