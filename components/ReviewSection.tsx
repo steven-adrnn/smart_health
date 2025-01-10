@@ -1,70 +1,100 @@
 'use client'
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { Database } from '@/lib/database.types';
 import { Button } from './ui/button';
 // import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Star } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 interface ReviewSectionProps {
   productId: string;
-  userId: string;
 }
 
 type Review = Database['public']['Tables']['reviews']['Row'] & {
   user?: { name: string }
 };
 
-export function ReviewSection({ productId, userId }: ReviewSectionProps) {
+export function ReviewSection({ productId }: ReviewSectionProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [hoveredRating, setHoveredRating] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-
 
   useEffect(() => {
     fetchReviews();
   }, [productId]);
 
   const fetchReviews = async () => {
-    try {
-      const response = await fetch(`/api/review?productId=${productId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch reviews');
-      }
-      const data = await response.json();
-      setReviews(data);
-    } catch (error) {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) return;
+
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*, user:users(name)')
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
       console.error('Error fetching reviews:', error);
+      return;
     }
+
+    setReviews(data as Review[]);
   };
 
-  const handleSubmitReview = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const handleSubmitReview = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      toast.error('Anda harus login untuk memberikan review');
+      return;
+    }
 
-    try {
-      const response = await fetch('/api/review', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, userId, rating, comment }),
+    if (rating === 0) {
+      toast.error('Pilih rating terlebih dahulu');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('reviews')
+      .insert({
+        user_id: session.user.id,
+        product_id: productId,
+        rating,
+        comment: comment || null
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to submit review');
-      }
-
-      const newReview = await response.json();
-      setReviews((prevReviews) => [newReview, ...prevReviews]);
-      setRating(0);
-      setComment('');
-    } catch (error) {
+    if (error) {
       console.error('Error submitting review:', error);
-    } finally {
-      setIsLoading(false);
+      toast.error('Gagal mengirim review');
+      return;
     }
+
+    // Update product rating
+    const { data: reviewsData } = await supabase
+      .from('reviews')
+      .select('rating')
+      .eq('product_id', productId);
+
+    const avgRating = reviewsData && reviewsData.length > 0
+      ? Math.round(
+          reviewsData.reduce((sum, r) => sum + Number(r.rating), 0) / reviewsData.length
+        )
+      : rating;
+
+    await supabase
+      .from('products')
+      .update({ rating: avgRating })
+      .eq('id', productId);
+
+    toast.success('Review berhasil dikirim');
+    setRating(0);
+    setComment('');
+    fetchReviews();
   };
 
   return (
@@ -98,7 +128,7 @@ export function ReviewSection({ productId, userId }: ReviewSectionProps) {
           className="mb-4"
         />
         
-        <Button onClick={handleSubmitReview} disabled={isLoading}>
+        <Button onClick={handleSubmitReview}>
           Kirim Review
         </Button>
       </div>
