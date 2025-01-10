@@ -62,7 +62,9 @@ export default function ForumPage() {
                     category: 'general' 
                 },
                 headers: {
-                    'X-API-Key': process.env.FORUM_API_KEY
+                    'X-API-Key': process.env.FORUM_API_KEY,
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate'
                 }
             });
 
@@ -109,7 +111,9 @@ export default function ForumPage() {
                 category: newPost.category
             }, {
                 headers: {
-                    'X-API-Key': process.env.FORUM_API_KEY
+                    'X-API-Key': process.env.FORUM_API_KEY,
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate'
                 }
             });
 
@@ -131,7 +135,9 @@ export default function ForumPage() {
                     id: postId 
                 },
                 headers: {
-                    'X-API-Key': process.env.FORUM_API_KEY
+                    'X-API-Key': process.env.FORUM_API_KEY,
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate'
                 }
             });
 
@@ -156,7 +162,9 @@ export default function ForumPage() {
                 post_id: postId
             }, {
                 headers: {
-                    'X-API-Key': process.env.FORUM_API_KEY
+                    'X-API-Key': process.env.FORUM_API_KEY,
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate'
                 }
             });
 
@@ -182,7 +190,9 @@ export default function ForumPage() {
                 content: newComment
             }, {
                 headers: {
-                    'X-API-Key': process.env.FORUM_API_KEY
+                    'X-API-Key': process.env.FORUM_API_KEY,
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache, no-store, must-revalidate'
                 }
             });
 

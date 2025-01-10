@@ -30,10 +30,38 @@ export default async function handler(
   req: NextApiRequest, 
   res: NextApiResponse
 ) {
+
+// Generate ETag
+  const etag = generateETag(req.query);
+
+  // Periksa If-None-Match
+  if (req.headers['if-none-match'] === etag) {
+    res.setHeader('ETag', etag);
+    return res.status(304).end();
+  }
+
   // CORS Configuration
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://smart-health-tst.up.railway.app',
+    'http://localhost:3000'
+  ];
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
+  res.setHeader('Etag', etag);
+
+  // Fungsi utilitas untuk generate ETag
+    function generateETag(query: NextApiRequest['query']): string {
+        const queryString = JSON.stringify(query);
+        return require('crypto')
+        .createHash('md5')
+        .update(queryString)
+        .digest('hex');
+    }
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -84,9 +112,16 @@ async function handleGetRequest(req: NextApiRequest, res: NextApiResponse) {
         .eq('category', category || 'general')
         .order('created_at', { ascending: false });
 
-      if (postsError) throw postsError;
-      return res.status(200).json(posts);
+    if (postsError) {
+        console.error('Posts Fetch Error:', postsError);
+        return res.status(500).json({ error: 'Failed to fetch posts' });
+    }
 
+    // Tambahkan logging
+    console.log('Fetched Posts:', posts);
+
+    return res.status(200).json(posts);
+    
     case 'comments':
       if (!id) {
         return res.status(400).json({ error: 'Post ID diperlukan untuk mengambil komentar' });
