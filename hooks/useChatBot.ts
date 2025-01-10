@@ -26,7 +26,7 @@ export const useChatbot = () => {
     fetchUserId();
   }, []);
 
-  const sendMessage = async (message: string, mode: 'support' | 'ai' = 'support') => {
+  const sendMessage = async (message: string) => {
     // Pastikan userId sudah tersedia sebelum mengirim pesan
     if (!userId) {
       console.error('User ID tidak tersedia');
@@ -41,7 +41,7 @@ export const useChatbot = () => {
         {
           user_id: userId,
           message: message,
-          mode: mode
+          mode: 'ai'
         },
         {
           headers: {

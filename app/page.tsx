@@ -6,7 +6,7 @@ import CategoryCard from '@/components/CategoryCard';
 import { supabase } from '@/lib/supabaseClient';
 import { useState, useEffect } from 'react';
 import { Database } from '@/lib/database.types';
-import ChatWidget from '../components/ChatWidget';
+import { ChatbotWidget } from '../components/ChatWidget';
 
 
 // Definisikan tipe kategori dari database
@@ -47,7 +47,7 @@ export default function HomePage () {
             </div>
 
             <h1>Spotify Support Chatbot</h1>
-            <ChatWidget/>
+            <ChatbotWidget/>
             <Footer />
         </div>
     );
