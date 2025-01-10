@@ -61,7 +61,7 @@ export default function ProfilePage() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [user] = useState<User | null>(null);
     // const [addresses, setAddresses] = useState<Address[]>([]);
-    const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
+    // const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
     const router = useRouter();
     const [activeSection, setActiveSection] = useState<'dashboard' | 'recipes' | 'addresses'>('dashboard');
     const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
@@ -122,9 +122,9 @@ export default function ProfilePage() {
             if (error) throw error;
 
             // Update local state
-            setSavedRecipes(prevRecipes => 
-                prevRecipes.filter(recipe => recipe.id !== confirmDelete)
-            );
+            // setSavedRecipes(prevRecipes => 
+            //     prevRecipes.filter(recipe => recipe.id !== confirmDelete)
+            // );
 
             toast.success('Resep berhasil dihapus');
             setConfirmDelete(null);
