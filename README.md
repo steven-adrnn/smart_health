@@ -746,7 +746,7 @@ Dokumentasi ini juga mencakup beberapa pesan kesalahan umum dan kode status yang
 ### **Dokumentasi API Chatbot AI**
 
 #### **1. Deskripsi Umum**
-Chatbot AI ini diintegrasikan melalui API endpoint dari webapp eksternal. Chatbot ini menggunakan model AI (kemungkinan besar berbasis GPT atau model NLP lainnya) untuk memberikan respons interaktif dan kontekstual berdasarkan input pengguna.
+Chatbot AI ini diintegrasikan melalui API endpoint dari webapp eksternal. Chatbot ini menggunakan model AI Grok untuk memberikan respons interaktif dan kontekstual berdasarkan input pengguna.
 
 #### **2. Endpoint API**
 - **URL Endpoint**: `https://spotify-bot.azurewebsites.net/v1/chat`
