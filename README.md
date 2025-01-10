@@ -1077,9 +1077,8 @@ Dengan dokumentasi dan panduan implementasi ini, Anda dapat mengintegrasikan fit
 
 ---
 ### **C. Integrasi dengan AI Geolocation**
-Baik, mari kita pahami dan analisis integrasi fitur **address** yang menggunakan API geolocation. Berikut adalah dokumentasi lengkap API endpoint dan panduan implementasinya.
+Berikut adalah dokumentasi lengkap API endpoint dan panduan implementasinya.
 
----
 
 ### **Dokumentasi API Geolocation untuk Fitur Address**
 

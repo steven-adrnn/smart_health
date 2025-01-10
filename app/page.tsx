@@ -46,7 +46,6 @@ export default function HomePage () {
                 </div>
             </div>
 
-            <h1>Spotify Support Chatbot</h1>
             <ChatbotWidget/>
             <Footer />
         </div>
