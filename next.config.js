@@ -22,7 +22,8 @@ const nextConfig = {
       NEXT_PUBLIC_HUGGING_FACE_MODEL_NAME: process.env.NEXT_PUBLIC_HUGGING_FACE_MODEL_NAME,
       MUSICMATE_API_KEY: process.env.MUSICMATE_API_KEY,
       RECIPE_API_KEY: process.env.RECIPE_API_KEY,
-      CHATBOT_BASE_URL: process.env.CHATBOT_BASE_URL
+      CHATBOT_BASE_URL: process.env.CHATBOT_BASE_URL,
+      FORUM_API_KEY: process.env.FORUM_API_KEY
 
     },
 
