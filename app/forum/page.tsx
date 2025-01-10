@@ -62,7 +62,7 @@ export default function ForumPage() {
                     category: 'general' 
                 },
                 headers: {
-                    'X-API-Key': process.env.NEXT_PUBLIC_FORUM_API_KEY
+                    'X-API-Key': process.env.FORUM_API_KEY
                 }
             });
 
@@ -109,7 +109,7 @@ export default function ForumPage() {
                 category: newPost.category
             }, {
                 headers: {
-                    'X-API-Key': process.env.NEXT_PUBLIC_FORUM_API_KEY
+                    'X-API-Key': process.env.FORUM_API_KEY
                 }
             });
 
@@ -131,7 +131,7 @@ export default function ForumPage() {
                     id: postId 
                 },
                 headers: {
-                    'X-API-Key': process.env.NEXT_PUBLIC_FORUM_API_KEY
+                    'X-API-Key': process.env.FORUM_API_KEY
                 }
             });
 
@@ -156,7 +156,7 @@ export default function ForumPage() {
                 post_id: postId
             }, {
                 headers: {
-                    'X-API-Key': process.env.NEXT_PUBLIC_FORUM_API_KEY
+                    'X-API-Key': process.env.FORUM_API_KEY
                 }
             });
 
@@ -182,7 +182,7 @@ export default function ForumPage() {
                 content: newComment
             }, {
                 headers: {
-                    'X-API-Key': process.env.NEXT_PUBLIC_FORUM_API_KEY
+                    'X-API-Key': process.env.FORUM_API_KEY
                 }
             });
 
