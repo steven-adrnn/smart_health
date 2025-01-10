@@ -87,7 +87,6 @@ function createDetailedPrompt(cartItems: Product[]): string {
     - Gunakan huruf kecil untuk keys
     - Pastikan array ingredients dan instructions
     - difficulty HANYA "easy", "medium", ATAU "hard"
-    - Resep makanan yang dihasilkan harus menggunakan menggunakan bahan yang diberikan
     - Pastikan jawaban yang dihasilkan menggunakan bahasa Indonesia yang formal
   `;
 }
