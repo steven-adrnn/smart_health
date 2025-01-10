@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { Database } from '@/lib/database.types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -26,42 +25,10 @@ type User = Database['public']['Tables']['users']['Row'];
 // type Address = Database['public']['Tables']['addresses']['Row'];
 type Recipe = Database['public']['Tables']['recipes']['Row'];
 
-
-// Definisi tipe sesuai dengan respons API
-interface UserProfile {
-    user: {
-        id: string;
-        email: string;
-        name: string;
-        point: number;
-    };
-    recipes: Array<{
-        id: string;
-        name: string;
-        description: string;
-        difficulty: 'easy' | 'medium' | 'hard';
-        ingredients: string[];
-        instructions: string[];
-    }>;
-    forumPosts: Array<{
-        id: string;
-        title: string;
-        content: string;
-        likes_count: number;
-        comments_count: number;
-    }>;
-    stats: {
-        totalRecipes: number;
-        totalPosts: number;
-        totalPoints: number;
-    };
-}
-
 export default function ProfilePage() {
-    const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [user] = useState<User | null>(null);
+    const [user, setUser ] = useState<User | null>(null);
     // const [addresses, setAddresses] = useState<Address[]>([]);
-    // const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
+    const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
     const router = useRouter();
     const [activeSection, setActiveSection] = useState<'dashboard' | 'recipes' | 'addresses'>('dashboard');
     const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
@@ -70,7 +37,7 @@ export default function ProfilePage() {
 
 
     // Dashboard Mini Statistik
-    const [stats] = useState({
+    const [stats, setStats] = useState({
         totalRecipes: 0,
         totalPosts: 0,
         totalPoints: 0,
@@ -78,35 +45,55 @@ export default function ProfilePage() {
 
     useEffect(() => {
         const fetchUserData = async () => {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session?.user) {
-                    router.push('/login');
-                    return;
-                }
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session?.user) {
+                // Fetch user details
+                const { data: userData } = await supabase
+                    .from('users')
+                    .select('*, point')
+                    .eq('id', session.user.id)
+                    .single();
 
-                const response = await axios.get(`/api/profile?userId=${session.user.id}`);
-                setProfile(response.data);
-            } catch (error) {
-                console.error('Profile fetch error:', error);
-                toast.error('Gagal memuat profil');
+                // Fetch saved recipes
+                const { data: recipes } = await supabase
+                    .from('recipes')
+                    .select('*')
+                    .eq('user_id', session.user.id);
+
+                // Fetch forum posts and challenges
+                const { count: postCount } = await supabase
+                    .from('forum_posts')
+                    .select('*', { count: 'exact' })
+                    .eq('user_id', session.user.id);
+
+                if (userData) {
+                    setUser (userData);
+                    // setAddresses(addressData || []);
+                    setSavedRecipes(recipes || []);
+                    
+                    setStats({
+                        totalRecipes: recipes?.length || 0,
+                        totalPosts: postCount || 0,
+                        totalPoints: userData.point,
+                    });
+                }
             }
-        
         };
 
         fetchUserData();
-    }, [router]);
+    }, []);
 
     // Filtering and Sorting Recipes
-    const filteredAndSortedRecipes = profile?.recipes
+    const filteredAndSortedRecipes = savedRecipes
         .filter(recipe => 
             recipeFilterDifficulty === 'all' || 
             recipe.difficulty === recipeFilterDifficulty
-        ) || [];
+        )
         
     // Fungsi untuk membuka detail resep
-    const openRecipeDetails = () => {
-        if (!selectedRecipe) return null;
+    const openRecipeDetails = (recipe: Recipe) => {
+        setSelectedRecipe(recipe);
     };
     
     // Fungsi untuk menghapus resep
@@ -122,9 +109,9 @@ export default function ProfilePage() {
             if (error) throw error;
 
             // Update local state
-            // setSavedRecipes(prevRecipes => 
-            //     prevRecipes.filter(recipe => recipe.id !== confirmDelete)
-            // );
+            setSavedRecipes(prevRecipes => 
+                prevRecipes.filter(recipe => recipe.id !== confirmDelete)
+            );
 
             toast.success('Resep berhasil dihapus');
             setConfirmDelete(null);
@@ -385,7 +372,7 @@ export default function ProfilePage() {
                             {filteredAndSortedRecipes.map(recipe => (
                                 <Card 
                                     key={recipe.id} 
-                                    onClick={() => openRecipeDetails()}
+                                    onClick={() => openRecipeDetails(recipe)}
                                     className="cursor-pointer hover:shadow-lg transition-shadow"
                                 >
                                     <CardHeader>
