@@ -1,16 +1,18 @@
+// app/shop/page.tsx
 'use client'
 
-import { useEffect, useState, useMemo, useCallback, Suspense } from 'react';
+import { useEffect, useState, useMemo, Suspense } from 'react';
 import Fuse from 'fuse.js';
-import { supabase } from '@/lib/supabaseClient';
-import { Database } from '@/lib/database.types';
 import { ProductList } from '@/components/ProductList';
 import { toast } from 'react-hot-toast';
 import { Input } from '@/components/ui/input';
 import { useSearchParams } from 'next/navigation';
+import axios from 'axios';
+import { Database } from '@/lib/database.types';
 
 // Definisi tipe produk yang lebih spesifik
 type Product = Database['public']['Tables']['products']['Row'];
+
 
 // Tipe untuk suggestion
 interface Suggestion {
@@ -50,36 +52,25 @@ function ShopPageContent() {
         });
     }, [products]);
 
-    // Fungsi fetch produk dengan useCallback untuk optimasi
-    const fetchProducts = useCallback(async () => {
+    // Fungsi fetch produk
+    const fetchProducts = async () => {
         try {
             setLoading(true);
             
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (!session?.user) {
-                throw new Error('Anda harus login terlebih dahulu');
-            }
+            // Gunakan axios untuk fetch dari API endpoint
+            const response = await axios.get('/api/products', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('user_session')}`
+                }
+            });
 
-            const { data, error } = await supabase
-                .from('products')
-                .select('*')
-                .gt('quantity', 0)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                throw error;
-            }
-
-            if (!data || data.length === 0) {
-                toast.error('Tidak ada produk yang tersedia');
-            }
+            const data = response.data;
 
             // Filter produk berdasarkan kategori dari query
             let filteredData = data || [];
             if (categoryFromQuery && categoryFromQuery !== 'all') {
                 filteredData = filteredData.filter(
-                    product => product.category.toLowerCase() === categoryFromQuery.toLowerCase()
+                    (product: Product) => product.category.toLowerCase() === categoryFromQuery.toLowerCase()
                 );
             }
 
@@ -96,11 +87,11 @@ function ShopPageContent() {
             setError(errorMessage);
             setLoading(false);
         }
-    }, [categoryFromQuery]);
+    };
 
     useEffect(() => {
         fetchProducts();
-    }, [fetchProducts]); 
+    }, [categoryFromQuery]); 
 
     const handleSearch = (term: string) => {
         setSearchTerm(term);
@@ -226,15 +217,15 @@ function ShopPageContent() {
             {filteredProducts.length > 0 ? (
                 <ProductList products={filteredProducts} />
             ) : (
-                <p>Tidak ada produk yang cocok dengan pencarian Anda.</p>
+                <p> Tidak ada produk yang ditemukan.</p>
             )}
         </div>
     );
-};
+}
 
 export default function ShopPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div>Memuat...</div>}>
             <ShopPageContent />
         </Suspense>
     );
