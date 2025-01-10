@@ -1,77 +1,84 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { AnimatePresence } from 'framer-motion';
-import { Database } from '@/lib/database.types';
 import { toast } from 'react-hot-toast';
 import { ThumbsUp, MessageCircle } from 'lucide-react';
+import axios from 'axios';
+import { supabase } from '@/lib/supabaseClient';
 
-type Post = Database['public']['Tables']['forum_posts']['Row'] & {
+type Post = {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  created_at: string;
+  user?: { name: string };
   likes_count?: number;
   comments_count?: number;
 };
 
-type Comment = Database['public']['Tables']['forum_comments']['Row'] & {
+type Comment = {
+  id: string;
+  post_id: string;
+  content: string;
   user?: { name: string };
 };
 
 export default function ForumPage() {
     const [posts, setPosts] = useState<Post[]>([]);
-    const [sortOrder, setSortOrder] = useState<'newest' | 'popular'>();
+    const [sortOrder, setSortOrder] = useState<'newest' | 'popular'>('newest');
     const [loading, setLoading] = useState(true);
     const [newPost, setNewPost] = useState({ title: '', content: '', category: 'general' });
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
     const [newComment, setNewComment] = useState('');
+    const [userId, setUserId] = useState<string | null>(null);
 
+    // Fetch user ID
     useEffect(() => {
-        fetchPosts();
-    }, [sortOrder]);
+        const fetchUserId = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                setUserId(session.user.id);
+            }
+        };
+        fetchUserId();
+    }, []);
 
+    // Fetch Posts
     const fetchPosts = async () => {
-        setLoading(true);
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.user) {
-            toast.error('Anda harus login');
-            return;
-        }
-
         try {
-            // Fetch posts with likes and comments counts
-            const { data: postsData, error: postsError } = await supabase
-                .from('forum_posts')
-                .select(`
-                    *,
-                    user:user_id(name),
-                    likes_count:forum_likes(count),
-                    comments_count:forum_comments(count)
-                `);
+            if (!userId) return;
 
-            if (postsError) throw postsError;
+            const response = await axios.get('/api/forum', {
+                params: { 
+                    type: 'posts', 
+                    category: 'general' 
+                },
+                headers: {
+                    'X-API-Key': process.env.NEXT_PUBLIC_FORUM_API_KEY
+                }
+            });
 
-            // Manual sorting with complex logic
-            const sortedPosts = (postsData || []).map(post => ({
-                ...post,
-                likes_count: post.likes_count?.[0]?.count || 0,
-                comments_count: post.comments_count?.[0]?.count || 0
-            })).sort((a, b) => {
-                if (sortOrder === 'newest') {
-                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-                } else if (sortOrder === 'popular') {
-                    // Weighted popularity calculation
+            let sortedPosts = response.data;
+
+            if (sortOrder === 'newest') {
+                sortedPosts = sortedPosts.sort((a: Post, b: Post) => 
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                );
+            } else if (sortOrder === 'popular') {
+                sortedPosts = sortedPosts.sort((a: Post, b: Post) => {
                     const aPopularity = (a.likes_count || 0) * 2 + (a.comments_count || 0);
                     const bPopularity = (b.likes_count || 0) * 2 + (b.comments_count || 0);
                     return bPopularity - aPopularity;
-                }
-                return 0;
-            });
+                });
+            }
 
             setPosts(sortedPosts);
             setLoading(false);
@@ -82,31 +89,29 @@ export default function ForumPage() {
         }
     };
 
+    useEffect(() => {
+        fetchPosts();
+    }, [sortOrder, userId]);
+
+    // Create Post
     const handleCreatePost = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.user) {
+        if (!userId) {
             toast.error('Anda harus login');
             return;
         }
 
-        // Validasi input
-        if (!newPost.title.trim() || !newPost.content.trim()) {
-            toast.error('Judul dan konten tidak boleh kosong');
-            return;
-        }
-
         try {
-            const { error } = await supabase
-                .from('forum_posts')
-                .insert({
-                    user_id: session.user.id,
-                    title: newPost.title,
-                    content: newPost.content,
-                    category: newPost.category
-                });
-
-            if (error) throw error;
+            await axios.post('/api/forum', {
+                type: 'post',
+                user_id: userId,
+                title: newPost.title,
+                content: newPost.content,
+                category: newPost.category
+            }, {
+                headers: {
+                    'X-API-Key': process.env.NEXT_PUBLIC_FORUM_API_KEY
+                }
+            });
 
             toast.success('Postingan berhasil dibuat');
             setNewPost({ title: '', content: '', category: 'general' });
@@ -117,49 +122,44 @@ export default function ForumPage() {
         }
     };
 
+    // Fetch Comments
+    const fetchComments = async (postId: string) => {
+        try {
+            const response = await axios.get('/api/forum', {
+                params: { 
+                    type: 'comments', 
+                    id: postId 
+                },
+                headers: {
+                    'X-API-Key': process.env.NEXT_PUBLIC_FORUM_API_KEY
+                }
+            });
+
+            setComments(response.data);
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+            toast.error('Gagal memuat komentar');
+        }
+    };
+
+    // Like Post
     const handleLikePost = async (postId: string) => {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.user) {
+        if (!userId) {
             toast.error('Anda harus login');
             return;
         }
 
         try {
-            // Cek apakah user sudah pernah like
-            const { data: existingLike, error: existingLikeError } = await supabase
-                .from('forum_likes')
-                .select('*')
-                .eq('post_id', postId)
-                .eq('user_id', session.user.id)
-                .single();
+            await axios.post('/api/forum', {
+                type: 'like',
+                user_id: userId,
+                post_id: postId
+            }, {
+                headers: {
+                    'X-API-Key': process.env.NEXT_PUBLIC_FORUM_API_KEY
+                }
+            });
 
-            if (existingLikeError && existingLikeError.code !== 'PGRST116') {
-                throw existingLikeError;
-            }
-
-            if (existingLike) {
-                // Jika sudah pernah like, hapus like
-                const { error: unlikeError } = await supabase
-                    .from('forum_likes')
-                    .delete()
-                    .eq('post_id', postId)
-                    .eq('user_id', session.user.id);
-
-                if (unlikeError) throw unlikeError;
-            } else {
-                // Jika belum pernah like, tambahkan like
-                const { error: likeError } = await supabase
-                    .from('forum_likes')
-                    .insert({
-                        post_id: postId,
-                        user_id: session.user.id
-                    });
-
-                if (likeError) throw likeError;
-            }
-
-            // Refresh posts setelah like/unlike
             fetchPosts();
         } catch (error) {
             console.error('Error liking post:', error);
@@ -167,46 +167,24 @@ export default function ForumPage() {
         }
     };
 
-    const fetchComments = async (postId: string) => {
-        try {
-            const { data: commentsData, error } = await supabase
-                .from('forum_comments')
-                .select('*, user:users(name)')
-                .eq('post_id', postId);
-
-            if (error) throw error;
-
-            setComments(commentsData || []);
-        } catch (error) {
-            console.error('Error fetching comments:', error);
-            toast.error('Gagal memuat komentar');
-        }
-    };
-
+    // Add Comment
     const handleAddComment = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.user || !selectedPost) {
+        if (!userId || !selectedPost) {
             toast.error('Anda harus login');
             return;
         }
 
-        // Validasi komentar
-        if (!newComment.trim()) {
-            toast.error('Komentar tidak boleh kosong');
-            return;
-        }
-
         try {
-            const { error } = await supabase
-                .from('forum_comments')
-                .insert({
-                    post_id: selectedPost.id,
-                    user_id: session.user.id,
-                    content: newComment
-                });
-
-            if (error) throw error;
+            await axios.post('/api/forum', {
+                type: 'comment',
+                user_id: userId,
+                post_id: selectedPost.id,
+                content: newComment
+            }, {
+                headers: {
+                    'X-API-Key': process.env.NEXT_PUBLIC_FORUM_API_KEY
+                }
+            });
 
             toast.success('Komentar berhasil ditambahkan');
             setNewComment('');
