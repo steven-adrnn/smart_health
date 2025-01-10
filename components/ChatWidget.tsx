@@ -6,7 +6,7 @@ import { useChatbot } from '@/hooks/useChatBot';
 
 const ChatWidget: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
-  const [mode, setMode] = useState<'support' | 'ai'>('support');
+  const [mode, setMode] = useState<'support' | 'ai'>('ai');
   const { messages, sendMessage, isLoading } = useChatbot();
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
@@ -29,7 +29,7 @@ const ChatWidget: React.FC = () => {
         <button 
           onClick={() => setMode(mode === 'support' ? 'ai' : 'support')}
         >
-          {mode === 'support' ? 'Support Mode' : 'AI Mode'}
+          {mode === 'ai' ? 'Support Mode' : 'AI Mode'}
         </button>
       </div>
       
