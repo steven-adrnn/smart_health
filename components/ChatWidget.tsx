@@ -28,7 +28,7 @@ export function ChatbotWidget() {
             >
                 <Button 
                     onClick={() => setIsOpen(!isOpen)}
-                    className="bg-primary text-white flex items-center"
+                    className="bg-primary-foreground text-primary flex items-center"
                 >
                     {isOpen ? <X className="mr-2" /> : <MessageCircle className="mr-2" />}
                     CHATBOT
