@@ -916,7 +916,7 @@ Dengan dokumentasi dan panduan implementasi ini, Anda dapat mengintegrasikan Cha
 
 ---
 
-### **B. Integrasi dengan AI hugging Face LLM: mistralai/Mistral-7B-Instruct-v0.2**
+### **B. Integrasi dengan AI hugging Face LLM: mistralai/Mistral-Nemo-Instruct-2407**
 
 Berikut adalah dokumentasi lengkap API endpoint dan panduan implementasinya.
 
@@ -926,7 +926,7 @@ Berikut adalah dokumentasi lengkap API endpoint dan panduan implementasinya.
 Fitur rekomendasi resep menggunakan model LLM Mistral dari Hugging Face untuk menghasilkan resep makanan berdasarkan bahan-bahan yang ada di keranjang belanja pengguna. API ini mengambil input berupa daftar bahan dan mengembalikan resep yang relevan.
 
 #### **2. Endpoint API**
-- **URL Endpoint**: `https://api.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2`
+- **URL Endpoint**: `https://api.huggingface.co/models/mistralai/Mistral-Nemo-Instruct-2407`
 - **Metode**: `POST`
 - **Content-Type**: `application/json`
 
@@ -974,7 +974,7 @@ Contoh Response Body:
 
 #### **1. Persiapan**
 - Dapatkan API key dari Hugging Face.
-- Pastikan Anda memiliki akses ke model Mistral-7b.
+- Pastikan Anda memiliki akses ke model Mistral-Nemo-Instruct-2407.
 
 #### **2. Integrasi di Frontend**
 Berikut contoh implementasi menggunakan React dan Axios:
@@ -985,7 +985,7 @@ import axios from 'axios';
 const getRecipeRecommendation = async (ingredients) => {
   try {
     const response = await axios.post(
-      'https://api.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2',
+      'https://api.huggingface.co/models/mistralai/Mistral-Nemo-Instruct-2407',
       {
         inputs: `Bahan: ${ingredients.join(', ')}`,
         parameters: {
@@ -1029,7 +1029,7 @@ const axios = require('axios');
 const getRecipeRecommendation = async (ingredients) => {
   try {
     const response = await axios.post(
-      'https://api.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2',
+      'https://api.huggingface.co/models/mistralai/Mistral-Nemo-Instruct-2407',
       {
         inputs: `Bahan: ${ingredients.join(', ')}`,
         parameters: {
