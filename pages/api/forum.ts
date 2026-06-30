@@ -6,7 +6,7 @@ import { z } from 'zod'; // Tambahkan zod untuk validasi input
 import { createHash } from 'crypto';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseServiceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY!;
 
 const supabase = createClient<Database>(supabaseUrl, supabaseServiceRoleKey);
 
