@@ -83,23 +83,23 @@ export const setupRealtimeReconnect = () => {
 };
 
 // Fungsi Monitoring Koneksi
-export const monitorRealtimeConnection = () => {
-    const wsUrl = `wss://${new URL(supabaseUrl).hostname}/realtime/v1/websocket`;
+// export const monitorRealtimeConnection = () => {
+//     const wsUrl = `wss://${new URL(supabaseUrl).hostname}/realtime/v1/websocket`;
     
-    const socket = new WebSocket(wsUrl);
+//     const socket = new WebSocket(wsUrl);
     
-    socket.onopen = () => {
-        console.log('WebSocket connection established');
-    };
+//     socket.onopen = () => {
+//         console.log('WebSocket connection established');
+//     };
     
-    socket.onerror = (error) => {
-        console.error('WebSocket Connection Error:', error);
-    };
+//     socket.onerror = (error) => {
+//         console.error('WebSocket Connection Error:', error);
+//     };
     
-    socket.onclose = (event) => {
-        console.warn('WebSocket Connection Closed:', event);
-    };
-};
+//     socket.onclose = (event) => {
+//         console.warn('WebSocket Connection Closed:', event);
+//     };
+// };
 
 // Fungsi untuk login dengan Google
 export const signInWithGoogle = async () => {
