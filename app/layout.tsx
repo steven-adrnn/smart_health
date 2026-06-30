@@ -23,7 +23,7 @@ export default function RootLayout({
     checkSession();
     // Setup Realtime Reconnect
     setupRealtimeReconnect();
-    monitorRealtimeConnection();
+    // monitorRealtimeConnection();
 
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
