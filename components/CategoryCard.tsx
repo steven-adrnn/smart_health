@@ -11,7 +11,7 @@ interface CategoryCardProps {
 const CategoryCard: React.FC<CategoryCardProps> = ({ category }) => {
     // PENTING: Konstruksi URL yang PASTI
     const imageUrl = category.images 
-      ? `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${category.images}`
+      ? `https://nddylkwmicoxunayrbxm.supabase.co/storage/v1/object/public/bucket1/${category.images}`
       : undefined;  
     return (
       <Link 

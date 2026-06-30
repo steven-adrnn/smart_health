@@ -83,7 +83,7 @@ const ProductPage = () => {
 
     const getPublicImageUrl = (path: string) => {
         const cleanPath = path.replace(/\s+/g, '%20');
-        return `https://enyvqjbqavjdzxmktahy.supabase.co/storage/v1/object/public/bucket1/${cleanPath}`;
+        return `https://nddylkwmicoxunayrbxm.supabase.co/storage/v1/object/public/bucket1/${cleanPath}`;
     };
     
     return (

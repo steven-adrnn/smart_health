@@ -32,7 +32,7 @@ const nextConfig = {
         imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
         domains: [
             // Domain existing
-            'enyvqjbqavjdzxmktahy.supabase.co',
+            'nddylkwmicoxunayrbxm.supabase.co',
             'smart-health-tst.up.railway.app'
         ],
         path: '/_next/image',
@@ -40,7 +40,7 @@ const nextConfig = {
       remotePatterns: [
         {
           protocol: 'https',
-          hostname: 'enyvqjbqavjdzxmktahy.supabase.co',
+          hostname: 'nddylkwmicoxunayrbxm.supabase.co',
           port: '',
           pathname: '/storage/v1/object/public/**',
         },
