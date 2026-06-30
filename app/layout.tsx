@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react";
-import { supabase, setupRealtimeReconnect, monitorRealtimeConnection } from "@/lib/supabaseClient";
+import { supabase, setupRealtimeReconnect } from "@/lib/supabaseClient";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import { Session } from "@supabase/supabase-js";
